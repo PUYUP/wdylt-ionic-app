@@ -1,0 +1,7 @@
+{
+  "name": "What Did You Learn Today?",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
