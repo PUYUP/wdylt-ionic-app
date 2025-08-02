@@ -1,0 +1,100 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/" />
+    </ion-buttons>
+    <ion-title>Archive</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light" class="ion-padding">
+  @if (enrolledLessons$ | async; as enrolled) {
+    @if (enrolled.isLoading) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Waiting magic...</span>
+        </div>
+      </div>
+    } @else {
+      @for (item of enrolled.data; track item) {
+        <ion-card mode="ios" class="mb-5">
+          <ion-card-content>
+            <div [innerHTML]="item.lessons.description" class="text-lg block text-neutral-800"></div>
+            <div class="mt-2 border-t border-neutral-200 pt-2 text-sm">
+              <table>
+                <tr>
+                  <td class="w-36">Status</td>
+                  <td>: 
+                    @if (item.status === 'in_progress') {
+                      <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">In progress</span>
+                    } @else if (item.status === 'completed') {
+                      <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">Completed</span>
+                    } @else if (item.status === 'waiting_answer') {
+                      <span class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">Waiting quiz completion</span>
+                    } @else if (item.status === 'failed') {
+                      <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">Failed</span>
+                    }
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="w-36">Created</td>
+                  <td>: {{ item.start_datetime | date: 'short' }}</td>
+                </tr>
+
+                <tr>
+                  <td class="w-36">Quiz start on</td>
+                  <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
+                </tr>
+
+                <tr>
+                  <td class="w-36">Duration</td>
+                  <td>: {{ item.start_datetime | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="mt-4">
+              @if (item.status === 'waiting_answer') {
+                <div class="w-full grid grid-cols-2 gap-2">
+                  <ion-button 
+                    mode="ios" 
+                    color="secondary" 
+                    shape="round" 
+                    expand="block" 
+                    (click)="onStartQuiz(item, 'mcq')"
+                    size="small"
+                    [ngStyle]="{
+                      '--padding-top': '12px',
+                      '--padding-bottom': '12px',
+                    }"
+                  >
+                    {{ 'MCQ (10)' }}
+                  </ion-button>
+
+                  <ion-button 
+                    mode="ios" 
+                    color="secondary" 
+                    shape="round" 
+                    expand="block" 
+                    (click)="onStartQuiz(item, 'essay')"
+                    size="small"
+                    [ngStyle]="{
+                      '--padding-top': '12px',
+                      '--padding-bottom': '12px',
+                    }"
+                  >
+                    {{ 'Essay (5)' }}
+                  </ion-button>
+                </div>
+              } @else if (item.status === 'completed') {
+                <ion-button expand="block" mode="ios" fill="outline" shape="round" color="success">View Results</ion-button>
+              }
+            </div>
+          </ion-card-content>
+        </ion-card>
+      }
+    }
+  } 
+</ion-content>

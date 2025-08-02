@@ -1,0 +1,8 @@
+swiper-container {
+    --swiper-pagination-color: var(--ion-color-primary);
+    
+    &::part(pagination) {
+        top: 234px !important;
+        bottom: auto !important;
+    }
+}

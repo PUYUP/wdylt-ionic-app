@@ -1,0 +1,70 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+
+    <ion-title class="ion-padding-start">
+      What Did You Learn Today?
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  @if (latestEnrolledLessons$ | async; as enrolled) {
+    @if (enrolled.isLoading) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Waiting magic...</span>
+        </div>
+      </div>
+    } @else {
+      @if (enrolled.data.length > 0) {
+        <swiper-container 
+          slide-per-view="1" 
+          loop="false" 
+          speed="300"
+          pagination="true"
+          auto-height="true"
+        >
+          @for (item of enrolled.data; track item) {
+            <swiper-slide>
+              <app-learn-card [item]="item"></app-learn-card>
+            </swiper-slide>
+          }
+        </swiper-container>
+      } @else {
+        <div class="ion-padding">
+          @if (session$ | async; as session) {
+            <app-entry-form 
+              [placeholder]="'Want to learn today ' + session.user.user_metadata.full_name + '?'"
+              (onRecording)="onRecordingListener($event)"
+              (onRecordStop)="onRecordStopListener($event)"
+              (onTextChange)="onTextChangeListener($event)"
+            ></app-entry-form>
+
+            <div class="ion-padding-top">
+              <div class="text-neutral-700 mb-1">Time to start the quiz.</div>
+              <app-entry-time 
+                (onHourChanged)="onHourChangedListener($event)"
+              ></app-entry-time>
+            </div>
+
+            <ion-button 
+              expand="block" 
+              mode="ios" 
+              shape="round" 
+              class="mt-6" 
+              [disabled]="(!goalText || !hourSelected) && !currentRecordingData"
+              (click)="onStartLearning(session.user.id)"
+            >
+              <ion-icon slot="start" name="stopwatch"></ion-icon>
+              <ion-text class="ml-2">Start Learning</ion-text>
+            </ion-button>
+          }
+        </div>
+      }
+    }
+  }
+</ion-content>

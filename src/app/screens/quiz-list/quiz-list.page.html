@@ -1,0 +1,26 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Complete the Quiz</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <div class="ion-padding">
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <ion-button expand="block" mode="ios" shape="round" size="large">
+          MCQ (10 Questions)
+        </ion-button>
+      </div>
+
+      <div>
+        <ion-button expand="block" mode="ios" shape="round" size="large">
+          Essay (5 Questions)
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,133 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-title class="ion-padding-start">
+      What Did You Learn Today?
+    </ion-title>
+
+    <ion-buttons slot="end" class="pr-2">
+      <ion-button (click)="onSignOut()" fill="clear" mode="ios" shape="round">
+        <ion-icon name="person" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  @if (latestEnrolledLessons$ | async; as enrolled) {
+    @if (enrolled.isLoading) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Waiting magic...</span>
+        </div>
+      </div>
+    } @else {
+      @if (enrolled.data.length > 0) {
+        <swiper-container 
+          slide-per-view="1" 
+          loop="true" 
+          speed="300"
+          pagination="true"
+          class="pb-6"
+        >
+          @for (item of enrolled.data; track item) {
+            <swiper-slide>
+              <div class="!pt-2">
+                <app-progress-card 
+                  [data]="item"
+                  [startDatetime]="item.start_datetime | uctToLocalTime" 
+                  [targetCompletionDatetime]="item.target_completion_datetime | uctToLocalTime"
+                  (onTimerComplete)="onTimerCompleteListener($event)"
+                ></app-progress-card>
+
+                <div class="ion-padding mt-1">
+                  <div class="bg-white rounded-xl shadow-md p-4 relative">
+                    <div (click)="openActionSheet(item)" class="block">
+                      <div 
+                        class="text-xl font-semibold" 
+                        [innerHTML]="item.lessons.description"
+                      ></div>
+
+                      <div class="mt-2 mb-4 border-t border-neutral-200 pt-2">
+                        <table>
+                          <tr>
+                            <td class="w-36">Created</td>
+                            <td>: {{ item.start_datetime | date: 'short' }}</td>
+                          </tr>
+
+                          <tr>
+                            <td class="w-36">Quiz start on</td>
+                            <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
+                          </tr>
+
+                          <tr>
+                            <td class="w-36">Duration</td>
+                            <td>: {{ item.start_datetime | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
+                          </tr>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                      <div>
+                        <ion-button (click)="openActionSheet(item)" mode="ios" color="light">
+                          <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+                        </ion-button>
+                      </div>
+                      <div class="w-full">
+                        <ion-button 
+                          mode="ios" 
+                          color="secondary" 
+                          shape="round" 
+                          expand="block" 
+                          (click)="onSeeQuizs(item)"
+                          size="small"
+                          [ngStyle]="{
+                            '--padding-top': '12px',
+                            '--padding-bottom': '12px',
+                          }"
+                        >
+                          {{ item.status === 'in_progress' ? 'Start Quiz Right Now' : 'Complete the Quiz' }}
+                        </ion-button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </swiper-slide>
+          }
+        </swiper-container>
+      } @else {
+        <div class="ion-padding">
+          @if (user$ | async; as user) {
+            <app-entry-form 
+              [placeholder]="'Want to learn today ' + user.data.user.user_metadata.full_name + '?'"
+              (onRecording)="onRecordingListener($event)"
+              (onRecordStop)="onRecordStopListener($event)"
+              (onTextChange)="onTextChangeListener($event)"
+            ></app-entry-form>
+
+            <div class="ion-padding-top">
+              <div class="text-neutral-700 mb-1">Time to start the quiz.</div>
+              <app-entry-time 
+                (onHourChanged)="onHourChangedListener($event)"
+              ></app-entry-time>
+            </div>
+
+            <ion-button 
+              expand="block" 
+              mode="ios" 
+              shape="round" 
+              class="mt-6" 
+              [disabled]="(!goalText || !hourSelected) && !currentRecordingData"
+              (click)="onStartLearning(user.data.user.id)"
+            >`
+              <ion-icon slot="start" name="stopwatch"></ion-icon>
+              <ion-text class="ml-2">Start Learning</ion-text>
+            </ion-button>
+          }
+        </div>
+      }
+    }
+  }
+</ion-content>

@@ -1,0 +1,31 @@
+<div class="block relative">
+  <ion-textarea 
+    mode="ios" 
+    class="border-2 border-neutral-200 rounded-2xl shadow-lg bg-white px-4 py-2 goal-textarea"
+    [autoGrow]="true"
+    rows="2"
+    [placeholder]="isRecording ? 'Listening...' : placeholder"
+    [counter]="true"
+    [readonly]="isRecording"
+    [disabled]="isRecording"
+    (ionInput)="onGoalInput($event)"
+    [maxlength]="maxLength"
+    [(ngModel)]="goalText"
+  >
+  </ion-textarea>
+
+  <div class="absolute right-0 left-0 bottom-4 pr-4 z-20">
+    <div class="flex items-center">
+      <div class="w-22 ml-auto">
+        <ion-button (click)="onRecord()" color="light" mode="ios" shape="round" expand="block" class="relative z-30">
+          <ion-icon slot="icon-only" [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
+          <ion-text class="ml-2">{{ isRecording ? 'Stop' : 'Speak' }}</ion-text>
+        </ion-button>
+      
+        @if (isRecording) {
+          <span class="absolute inline-flex h-6 w-14 animate-ping rounded-full bg-sky-500 z-10 bottom-[5px] right-[32px]"></span>
+        }
+      </div>
+    </div>
+  </div>
+</div>

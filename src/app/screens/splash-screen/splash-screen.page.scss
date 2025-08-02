@@ -1,0 +1,32 @@
+swiper-container {
+    --swiper-pagination-bottom: auto;
+    --swiper-pagination-top: 16px;
+    --swiper-pagination-bullet-width: 100%;
+    --swiper-pagination-bullet-height: 4px;
+    --swiper-pagination-bullet-border-radius: 5px;
+
+    &::part(pagination) {
+        display: flex;
+        justify-content: space-around;
+        width: calc(100% - 32px);
+        left: 16px;
+    }
+
+    &::part(bullet-active) {
+        background-color: var(--ion-color-primary);
+    }
+}
+
+ion-button {
+    &.custom-padding {
+        &::part(native) {
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+    }
+}
+
+ion-textarea {
+    --padding-bottom: 48px;
+    --border-width: 0;
+}

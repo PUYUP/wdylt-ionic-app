@@ -1,0 +1,75 @@
+<div class="relative flex items-center justify-center">
+  <div 
+    class="absolute left-auto right-auto top-auto bottom-auto bg-white rounded-full"
+    [ngStyle]="{
+      'width': size + 'px',
+      'height': size + 'px',
+    }"
+  ></div>
+  <svg
+    [attr.width]="size + 20"
+    [attr.height]="size + 20"
+    class="transform -rotate-90"
+  >
+    <defs>
+      <linearGradient id="red-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" [attr.stop-color]="currentGradient.start" />
+        <stop offset="100%" [attr.stop-color]="currentGradient.end" />
+      </linearGradient>
+    </defs>
+    
+    <circle
+      [attr.cx]="size / 2 + 10"
+      [attr.cy]="size / 2 + 10"
+      [attr.r]="radius"
+      fill="transparent"
+      class="stroke-gray-200"
+      [attr.stroke-width]="strokeWidth"
+    />
+    
+    @if (!isTimerComplete) {
+      <circle
+        [attr.cx]="size / 2 + 10"
+        [attr.cy]="size / 2 + 10"
+        [attr.r]="radius"
+        fill="transparent"
+        [attr.stroke]="'url(#red-gradient)'"
+        [attr.stroke-width]="strokeWidth"
+        [attr.stroke-dasharray]="strokeDasharray"
+        [attr.stroke-dashoffset]="strokeDashoffset"
+        [attr.stroke-linecap]="'round'"
+        [ngStyle]="{
+          'transition': 'stroke-dashoffset 2ms ease-in-out',
+          'filter': 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.3))'
+        }"
+      />
+    }
+  </svg>
+  
+  <div class="absolute inset-0 flex flex-col items-center justify-center">
+    @if (isTimerComplete) {
+      <ion-text class="text-2xl text-red-500">Time Out!</ion-text>
+    } @else {
+      <span 
+        class="text-3xl font-black bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent"
+        [ngStyle]="{ 
+          'background-image': `linear-gradient(135deg, {{currentGradient.start}}, {{currentGradient.end}})`,
+          'webkit-background-clip': 'text',
+          'webkit-text-fill-color': 'transparent'
+        }"
+      >
+        <cd-timer 
+          #cdTimer 
+          [countdown]="true" 
+          [startTime]="secondsDifference" 
+          format="hms" 
+          (onTick)="onTick()"
+          (onComplete)="onComplete()"
+        ></cd-timer>
+      </span>
+      <span class="text-base text-gray-500 font-bold">
+        Time left
+      </span>
+    }
+  </div>
+</div>

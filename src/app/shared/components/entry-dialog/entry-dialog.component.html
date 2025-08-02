@@ -1,0 +1,55 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-button (click)="closeModal()" mode="ios" shape="round">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    @if (data) {
+      <ion-button 
+        slot="end"
+        mode="ios" 
+        shape="round" 
+        color="danger" 
+        size="small"
+        fill="clear"
+        (click)="onDelete()"
+      >
+        <ion-icon slot="start" name="trash"></ion-icon>
+        <ion-text class="ml-1">Delete</ion-text>
+      </ion-button>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="light">
+  <div class="ion-padding">
+    <app-entry-form 
+      [data]="data"
+      (onRecording)="onRecordingListener($event)"
+      (onRecordStop)="onRecordStopListener($event)"
+      (onTextChange)="onTextChangeListener($event)"
+    ></app-entry-form>
+
+    <div class="ion-padding-top">
+      <div class="text-neutral-700 mb-1">Time to start the quiz.</div>
+      <app-entry-time 
+        [hourSelected]="hourSelected"
+        (onHourChanged)="onHourChangedListener($event)"
+      ></app-entry-time>
+    </div>
+
+    <ion-button 
+      expand="block" 
+      mode="ios" 
+      shape="round" 
+      class="mt-6" 
+      [disabled]="(!goalText || !hourSelected) && !currentRecordingData"
+      (click)="onSubmit()"
+    >
+      <ion-icon slot="start" name="stopwatch"></ion-icon>
+      <ion-text class="ml-2">{{ data ? 'Update' : 'Start Learning' }}</ion-text>
+    </ion-button>
+  </div>
+</ion-content>

@@ -1,0 +1,154 @@
+<ion-content [fullscreen]="true" color="light">
+  <swiper-container #splashSwiper class="h-screen" pagination="true" alllow-touch-move="false" [spaceBetween]="0">
+    <swiper-slide data-history="1">
+      <div class="h-full flex flex-col">
+        <div class="block ion-padding !pb-0 mt-auto">
+          <h2 class="!font-black !text-7xl">What...</h2>
+        </div>
+
+        <div class="block ion-padding !pt-0">
+          <h3 class="!font-semibold !text-4xl !mt-0">Write or Speak</h3>
+          <div class="block text-lg">
+            What do you want to learn today? <u class="font-semibold">Write it down or speak it out loud</u>.
+            Choose the best way you prefer.
+          </div>
+        </div>
+
+        <div class="mt-autox ion-padding relative">
+          <app-entry-form 
+            (onRecording)="onRecordingListener($event)"
+            (onRecordStop)="onRecordStopListener($event)"
+            (onTextChange)="onTextChangeListener($event)"
+          ></app-entry-form>
+        </div>
+
+        <div class="ion-padding !pt-0">
+          <ion-button 
+            expand="block"
+            class="mt-2"
+            mode="ios"
+            shape="round"
+            [disabled]="!goalText && !currentRecordingData"
+            (click)="onNext()"
+          >
+            Set the Time
+          </ion-button>
+        </div>
+      </div>
+    </swiper-slide>
+
+    <swiper-slide data-history="2">
+      <div class="h-full flex flex-col">
+        <div class="block ion-padding !pb-0 mt-auto">
+          <h2 class="!font-black !text-7xl">...did YOU</h2>
+        </div>
+
+        <div class="block ion-padding !pt-0">
+          <h3 class="!font-semibold !text-4xl">Test Yourself!</h3>
+          <div class="block text-lg">
+            Complete the <u class="font-semibold">quiz every last day.</u>
+            Set a reminder when you are ready to complete the quiz.
+          </div>
+        </div>
+
+        <div class="ion-padding">
+          <app-entry-time 
+            (onHourChanged)="onHourChangedListener($event)"
+          ></app-entry-time>
+        </div>
+
+        <div class="ion-padding !pt-0 mt-autox flex mt-2">
+          <ion-button 
+            (click)="onNext()" 
+            expand="block" 
+            shape="round"
+            class="w-full"
+            mode="ios"
+            [disabled]="!hourSelected"
+          >
+            <ion-text>Continue</ion-text>
+          </ion-button>
+        </div>
+      </div>
+    </swiper-slide>
+
+    <swiper-slide data-history="3">
+      <div class="h-full flex flex-col">
+       <div class="block ion-padding !pb-0 mt-auto">
+          <h2 class="!font-black !text-7xl">Learn Today?</h2>
+        </div>
+
+        <div class="block ion-padding !pt-0">
+          <h3 class="!font-semibold !text-4xl">Become Smarter</h3>
+          <div class="block text-lg">
+            Every day <u class="font-semibold">counted with new knowledge</u>. 
+            Track your progress and see how much you have learned.
+          </div>
+        </div>
+
+        <div class="ion-padding mt-autox">
+          <ion-button expand="block" class="mt-2" mode="ios" shape="round" id="createAccount">
+            Create Account (FREE)
+          </ion-button>
+
+          <ion-button expand="block" class="mt-3" color="light" mode="ios" shape="round" (click)="onSignIn()">
+            Have an account? Sign in
+          </ion-button>
+        </div>
+      </div>
+    </swiper-slide>
+  </swiper-container>
+</ion-content>
+
+<ion-modal 
+  [keepContentsMounted]="true" 
+  trigger="createAccount"
+  [initialBreakpoint]="0.415"
+  [breakpoints]="[0.415]"
+  mode="ios"
+  #createAccountModal
+>
+  <ng-template>
+    <ion-content color="light" class="ion-padding">
+      <div class="flex flex-col">
+        <h2 class="text-xl font-semibold mb-4 text-center">Create Account (FREE)</h2>
+
+        <div class="px-4 mt-4">
+          <button class="
+            flex items-center
+            justify-center
+            gap-2 bg-white
+            text-gray-700
+            px-6 py-3
+            !rounded-full
+            border border-gray-300
+            hover:bg-gray-50 shadow-sm
+            h-14
+            w-full"
+            (click)="onContinueWithGoogle()"
+          >
+            <ion-icon name="logo-google" slot="start"></ion-icon>
+            <span class="font-medium">Continue with Google</span>
+          </button>
+
+          <button class="
+            flex items-center
+            justify-center
+            gap-2 bg-white
+            text-gray-700
+            px-6 py-3
+            !rounded-full
+            border border-gray-300
+            hover:bg-gray-50 shadow-sm
+            h-14
+            w-full
+            mt-4"
+          >
+            <ion-icon name="mail" slot="start"></ion-icon>
+            <span class="font-medium">Use Email</span>
+          </button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

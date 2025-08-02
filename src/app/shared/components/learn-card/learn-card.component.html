@@ -1,0 +1,77 @@
+<div class="block">
+  <app-progress-card 
+    [data]="item"
+    [startDatetime]="item.start_datetime | uctToLocalTime" 
+    [targetCompletionDatetime]="item.target_completion_datetime | uctToLocalTime"
+    (onTimerComplete)="onTimerCompleteListener($event)"
+  ></app-progress-card>
+
+  <div class="ion-padding mt-1">
+    <div class="bg-white rounded-xl shadow-md p-4 relative">
+      <div (click)="openActionSheet(item)" class="block">
+        <div 
+          class="text-xl font-semibold" 
+          [innerHTML]="item.lessons.description"
+        ></div>
+
+        <div class="mt-2 mb-4 border-t border-neutral-200 pt-2">
+          <table>
+            <tr>
+              <td class="w-36">Created</td>
+              <td>: {{ item.start_datetime | date: 'short' }}</td>
+            </tr>
+
+            <tr>
+              <td class="w-36">Quiz start on</td>
+              <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
+            </tr>
+
+            <tr>
+              <td class="w-36">Duration</td>
+              <td>: {{ item.start_datetime | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <div>
+          <ion-button (click)="openActionSheet(item)" mode="ios" color="light">
+            <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="w-full grid grid-cols-2 gap-2">
+          <ion-button 
+            mode="ios" 
+            color="secondary" 
+            shape="round" 
+            expand="block" 
+            (click)="onStartQuiz(item, 'mcq')"
+            size="small"
+            [ngStyle]="{
+              '--padding-top': '12px',
+              '--padding-bottom': '12px',
+            }"
+          >
+            {{ 'MCQ (10)' }}
+          </ion-button>
+
+          <ion-button 
+            mode="ios" 
+            color="secondary" 
+            shape="round" 
+            expand="block" 
+            (click)="onStartQuiz(item, 'essay')"
+            size="small"
+            [ngStyle]="{
+              '--padding-top': '12px',
+              '--padding-bottom': '12px',
+            }"
+          >
+            {{ 'Essay (5)' }}
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

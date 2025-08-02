@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">What Did You Learn Today?</string>
+    <string name="title_activity_main">What Did You Learn Today?</string>
+    <string name="package_name">com.wdylt.app</string>
+    <string name="custom_url_scheme">com.wdylt.app</string>
+</resources>

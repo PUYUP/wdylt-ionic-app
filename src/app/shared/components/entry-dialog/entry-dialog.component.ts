@@ -1,0 +1,172 @@
+import { CommonModule } from '@angular/common';
+import { Component, Input, OnInit } from '@angular/core';
+import { IonicModule, ModalController } from '@ionic/angular';
+import { EntryFormComponent } from '../entry-form/entry-form.component';
+import { EntryTimeComponent } from '../entry-time/entry-time.component';
+import { Base64String } from 'capacitor-voice-recorder';
+import { format, setHours, setMinutes, setSeconds } from 'date-fns';
+import { ActionsSubject, Store } from '@ngrx/store';
+import { GlobalState } from '../../state/reducers/app.reducer';
+import { AppActions } from '../../state/actions/app.actions';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
+import { SupabaseService } from '../../services/supabase.service';
+
+@Component({
+  selector: 'app-entry-dialog',
+  templateUrl: './entry-dialog.component.html',
+  styleUrls: ['./entry-dialog.component.scss'],
+  imports: [
+    CommonModule,
+    IonicModule,
+    EntryFormComponent,
+    EntryTimeComponent,
+  ]
+})
+export class EntryDialogComponent  implements OnInit {
+
+  @Input('data') data: any | null = null;
+
+  isRecording: boolean = false;
+  goalText: string | null = null;
+  currentRecordingData: {
+    mimeType: string;
+    msDuration: number;
+    path?: string;
+    recordDataBase64?: Base64String;
+  } | null = null;
+  hourSelected: string | null = null;
+  updateLesson: Observable<{ data: any, isLoading: boolean, error: any }> | null = null;
+  updateEnrollment: Observable<{ data: any, isLoading: boolean, error: any }> | null = null;
+
+  constructor(
+    private modalCtrl: ModalController,
+    private store: Store<GlobalState>,
+    private actionsSubject$: ActionsSubject,
+    private supabaseService: SupabaseService,
+  ) { 
+    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.updateLessonSuccess.type:
+          const goalHours = this.hourSelected?.split(':');
+          const currDate = new Date(this.data?.target_completion_datetime);
+          const withNewHour = setHours(currDate, goalHours ? parseInt(goalHours[0], 10) : 0);
+          const withNewMinutes = setMinutes(withNewHour, goalHours ? parseInt(goalHours[1], 10) : 0);
+          const withNewSeconds = setSeconds(withNewMinutes, 0);
+
+          this.store.dispatch(AppActions.updateEnrolledLesson({
+            id: this.data?.id,
+            data: {
+              target_completion_datetime: withNewSeconds.toISOString(),
+            }
+          }))
+          break;
+        
+        case AppActions.updateEnrolledLessonSuccess.type:
+          this.modalCtrl.dismiss({
+            data: action.data[0],
+          });
+          break;
+      
+        case AppActions.enrollLessonSuccess.type:
+          this.modalCtrl.dismiss({
+            data: action.data[0],
+          });
+          break;
+
+        case AppActions.deleteEnrolledLessonSuccess.type:
+          this.modalCtrl.dismiss({
+            data: null,
+          });
+          break;
+      }
+    });
+  }
+
+  ngOnInit() {
+    if (this.data) {
+      this.goalText = this.data.lessons.description || null;
+      this.hourSelected = format(this.data.target_completion_datetime, 'HH:mm');
+    }
+  }
+
+  /**
+   * Close modal.
+   */
+  closeModal() {
+    this.modalCtrl.dismiss({
+      data: null,
+    });
+  }
+
+  /**
+   * On hour changed event.
+   * @param event - The hour changed event.
+   */
+  onHourChangedListener(event: any) {
+    this.hourSelected = event.data.value;
+  }
+
+  /**
+   * Recording listeners.
+   */
+  onRecordingListener(event: any) {
+    this.isRecording = event.detail.value;
+  }
+
+  /**
+   * Listen for text change event.
+   */
+  onTextChangeListener(event: any) {
+    this.goalText = event.detail.value;
+  }
+
+  /**
+   * Record stop listener.
+   */
+  onRecordStopListener(event: any) {
+    this.currentRecordingData = event.detail.value;
+    this.isRecording = !this.isRecording;
+  }
+
+  /**
+   * Submit!
+   */
+  async onSubmit() {
+    if (this.data) {
+      // Dispatch update action
+      this.store.dispatch(AppActions.updateLesson({
+        id: this.data.lessons.id,
+        data: {
+          description: this.goalText,
+        }
+      }));
+    } else {
+      // create new lesson
+      const session = await this.supabaseService.session();
+      
+      this.store.dispatch(AppActions.createLesson({
+        data: {
+          user: session?.user?.id,
+          content_type: 'text',
+          description: this.goalText,
+        },
+        metadata: {
+          enrollment: {
+            goalHour: this.hourSelected,
+          }
+        }
+      }));
+    }
+  }
+
+  /**
+   * On delete
+   */
+  onDelete() {
+    this.store.dispatch(AppActions.deleteEnrolledLesson({
+      id: this.data.id,
+    }));
+  }
+
+}
