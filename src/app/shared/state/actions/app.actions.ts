@@ -61,5 +61,9 @@ export const AppActions = createActionGroup({
     } }>(),
     'Get Latest Enrolled Lessons Success': props<{ data: any }>(),
     'Get Latest Enrolled Lessons Failure': props<{ error: any }>(),
+
+    'Update Profile': props<{ id: string, data: any }>(),
+    'Update Profile Success': props<{ id: string, data: any }>(),
+    'Update Profile Failure': props<{ id: string, error: any }>(),
   }
 });

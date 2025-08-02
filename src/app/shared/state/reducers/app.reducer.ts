@@ -13,6 +13,13 @@ export interface GlobalState {
     error: any;
     isLoading: boolean;
   },
+  profile: {
+    update: {
+      data: any;
+      error: any | null;
+      isLoading: boolean;
+    }
+  },
   enrollment: {
     create: {
       data: any;
@@ -75,6 +82,13 @@ export const initialState: GlobalState = {
     data: null,
     error: null,
     isLoading: false,
+  },
+  profile: {
+    update: {
+      data: null,
+      error: null,
+      isLoading: false,
+    }
   },
   enrollment: {
     create: {
@@ -303,6 +317,28 @@ export const appReducer = createReducer(
 
   on(AppActions.updateEnrolledLessonSuccess, (state, { data }) => {
     const index = state.enrollment.latest.data.findIndex(item => item.id === data[0].id);
+    const status = data[0].status;
+    let latest = {
+      ...state.enrollment.latest,
+      data: [
+        ...state.enrollment.latest.data.slice(0, index),
+        {
+          ...state.enrollment.latest.data[index],
+          ...data[0],
+        },
+        ...state.enrollment.latest.data.slice(index + 1)
+      ],
+      isLoading: false,
+      error: null,
+    }
+
+    if (status === 'completed') {
+      // remove from list if status is completed
+      latest = {
+        ...latest,
+        data: latest.data.filter(item => item.status !== status),
+      }
+    }
 
     return {
       ...state,
@@ -313,19 +349,7 @@ export const appReducer = createReducer(
           error: null,
           isLoading: false,
         },
-        latest: {
-          ...state.enrollment.latest,
-          data: [
-            ...state.enrollment.latest.data.slice(0, index),
-            {
-              ...state.enrollment.latest.data[index],
-              ...data[0],
-            },
-            ...state.enrollment.latest.data.slice(index + 1)
-          ],
-          isLoading: false,
-          error: null,
-        }
+        latest: latest,
       }
     }
   }),
@@ -518,4 +542,45 @@ export const appReducer = createReducer(
       }
     }
   })),
+
+
+  // ...
+  // Update Profile
+  // ...
+  on(AppActions.updateProfile, (state) => ({
+    ...state,
+    profile: {
+      ...state.profile,
+      update: {
+        ...state.profile.update,
+        error: null,
+        isLoading: true,
+      }
+    }
+  })),
+
+  on(AppActions.updateProfileSuccess, (state, { data }) => ({
+    ...state,
+    profile: {
+      ...state.profile,
+      update: {
+        ...state.profile.update,
+        data: data,
+        error: null,
+        isLoading: false,
+      }
+    }
+  })),
+
+  on(AppActions.updateProfileFailure, (state, { error }) => ({
+    ...state,
+    profile: {
+      ...state.profile,
+      update: {
+        ...state.profile.update,
+        error: error,
+        isLoading: false,
+      }
+    }
+  }))
 )

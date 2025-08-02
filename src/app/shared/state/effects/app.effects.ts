@@ -369,7 +369,7 @@ export class AppEffects {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .select(`*, lessons(id, content_type, description, content_data)`)
-          .containedBy('status', ['in_progress', 'waiting_answer'])
+          .in('status', ['in_progress', 'waiting_answer'])
           .eq('user', filter.user_id)
           .is('deleted_at', null)
           .gte('start_datetime', filter.start_datetime)
@@ -399,6 +399,45 @@ export class AppEffects {
     ofType(AppActions.getLatestEnrolledLessonsFailure),
     tap(({ error }) => {
       console.error('Error getting latest enrolled lessons:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Update profile Effect
+  // ...
+  updateProfile$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateProfile),
+    switchMap(async ({ id, data }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('profiles')
+          .update(data)
+          .eq('id', id)
+          .select();
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.updateProfileSuccess({ id: id, data: result });
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        return AppActions.updateProfileFailure({ id: id, error });
+      }
+    })
+  ));
+
+  updateProfileSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateProfileSuccess),
+    tap(({ data }) => {
+      console.log('Profile updated successfully:', data);
+    })
+  ), { dispatch: false });
+
+  updateProfileFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateProfileFailure),
+    tap(({ error }) => {
+      console.error('Error updating profile:', error);
     })
   ), { dispatch: false });
 

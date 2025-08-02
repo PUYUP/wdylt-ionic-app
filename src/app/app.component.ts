@@ -7,6 +7,11 @@ import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { Router } from '@angular/router';
 import { SupabaseService } from './shared/services/supabase.service';
 import { EntryDialogComponent } from './shared/components/entry-dialog/entry-dialog.component';
+import OneSignal from 'onesignal-cordova-plugin';
+import { Capacitor } from '@capacitor/core';
+import { Store } from '@ngrx/store';
+import { GlobalState } from './shared/state/reducers/app.reducer';
+import { AppActions } from './shared/state/actions/app.actions';
 
 // Register Swiper elements globally
 register();
@@ -31,7 +36,8 @@ export class AppComponent {
     private router: Router,
     private zone: NgZone,
     private supabaseService: SupabaseService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private store: Store<GlobalState>,
   ) {
     // wait for the platform to be ready
     this.platform.ready().then(async () => {
@@ -39,6 +45,10 @@ export class AppComponent {
       console.log('Platform ready');
       await this.initializeGoogleOAuth();
       this.initializeApp();
+
+      if (Capacitor.isNativePlatform()) {
+        this.initializeOneSignal();
+      }
     });
   }
 
@@ -54,6 +64,7 @@ export class AppComponent {
   }
 
   initializeApp() {
+    // Deeplinks
     App.addListener('appUrlOpen', (event: URLOpenListenerEvent) => {
       this.zone.run(() => {
         // Example url: https://beerswift.app/tabs/tab2
@@ -111,6 +122,37 @@ export class AppComponent {
     const { data } = await modal.onDidDismiss();
     if (data) {
       console.log('Modal data:', data);
+    }
+  }
+
+  /**
+   * OneSignal initialization
+   */
+  async initializeOneSignal() {
+    const isAuthenticated = await this.supabaseService.isAuthenticated();
+    if (!isAuthenticated) {
+      console.warn('User is not authenticated, skipping OneSignal initialization');
+      return;
+    }
+
+    const session = await this.supabaseService.session();
+    if (!session || !session.user) {
+      console.warn('No user session found, skipping OneSignal initialization');
+      return;
+    }
+
+    console.log('Initializing OneSignal');
+    OneSignal.initialize(environment.oneSignalAppId);
+    const oneSignalId = await OneSignal.User.getOnesignalId();
+    if (oneSignalId) {
+      console.log('OneSignal ID:', oneSignalId);
+      // Here you can send the OneSignal ID to your server or use it as needed
+      this.store.dispatch(AppActions.updateProfile({
+        id: session?.user?.id as string,
+        data: { 
+          one_signal_id: oneSignalId,
+        }
+      }));
     }
   }
 

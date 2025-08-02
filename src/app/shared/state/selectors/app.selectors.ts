@@ -43,3 +43,8 @@ export const selectEnrolledLesson = (props: { id: string | number }) => createSe
     return state.enrollment.single;
   }
 );
+
+export const selectUpdateProfile = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.profile.update
+);
