@@ -3,7 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { SupabaseService } from '../../services/supabase.service';
 import { switchMap, tap } from 'rxjs';
 import { AppActions } from '../actions/app.actions';
-import { setHours, setMinutes, setSeconds } from 'date-fns';
+import { getISODay, setHours, setMinutes, setSeconds } from 'date-fns';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '../reducers/app.reducer';
 import { format, formatInTimeZone } from 'date-fns-tz';
@@ -57,7 +57,7 @@ export class AppEffects {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('lessons')
           .insert(data)
-          .select();
+          .select('*');
         
         if (error) {
           throw error;
@@ -176,17 +176,20 @@ export class AppEffects {
       console.log('Lesson enrolled successfully:', data);
 
       // create reminder for the enrolled lesson
+      const instance = data[0];
+      const dayOfWeek = getISODay(new Date(instance.target_completion_datetime));
       const payload = {
-        enrollment: data[0].id,
-        user: data[0].user,
-        lesson: data[0].lessons.id,
-        scheduled_time: data[0].start_datetime,
+        enrollment: instance.id,
+        user: instance.user,
+        lesson: instance.lessons.id,
+        scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
         is_active: true,
         buffer_minutes: 15,
+        days_of_week: [dayOfWeek],
         message: 'Reminder: You have a lesson in progress!',
       }
 
-      this.store.dispatch(AppActions.updateOrCreateReminder({
+      this.store.dispatch(AppActions.createReminder({
         data: payload,
         source: 'enroll-lesson',
       }));
@@ -241,6 +244,22 @@ export class AppEffects {
           },
         });
       }
+
+      // create reminder for the enrolled lesson
+      const instance = data[0];
+      const dayOfWeek = getISODay(new Date(instance.target_completion_datetime));
+      const payload = {
+        enrollment: instance.id,
+        user: instance.user,
+        lesson: instance.lessons.id,
+        scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
+        days_of_week: [dayOfWeek],
+      }
+
+      this.store.dispatch(AppActions.updateReminder({
+        data: payload,
+        source: 'update-enrolled-lesson',
+      }));
     })
   ), { dispatch: false });
 
@@ -458,13 +477,51 @@ export class AppEffects {
   // ...
   // Update or Create Reminders Effect
   // ...
-  updateOrCreateReminders$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateOrCreateReminder),
+  createReminders$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createReminder),
     switchMap(async ({ data }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('reminders')
-          .upsert(data)
+          .insert(data)
+          .select(`*`)
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.createReminderSuccess({ data: result });
+      } catch (error) {
+        console.error('Error updating/creating reminders:', error);
+        return AppActions.createReminderFailure({ error });
+      }
+    })
+  ));
+
+  createRemindersSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createReminderSuccess),
+    tap(({ data }) => {
+      console.log('Reminders created successfully:', data);
+    })
+  ), { dispatch: false });
+
+  createRemindersFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createReminderFailure),
+    tap(({ error }) => {
+      console.error('Error updating reminders:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Update Reminders Effect
+  // ...
+  updateReminders$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateReminder),
+    switchMap(async ({ data }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('reminders')
+          .update(data)
           .eq('lesson', data.lesson)
           .eq('enrollment', data.enrollment)
           .eq('user', data.user)
@@ -474,25 +531,25 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.updateOrCreateReminderSuccess({ data: result });
+        return AppActions.createReminderSuccess({ data: result });
       } catch (error) {
         console.error('Error updating/creating reminders:', error);
-        return AppActions.updateOrCreateReminderFailure({ error });
+        return AppActions.createReminderFailure({ error });
       }
     })
   ));
 
-  updateOrCreateRemindersSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateOrCreateReminderSuccess),
+  updateReminderSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateReminderSuccess),
     tap(({ data }) => {
-      console.log('Reminders updated/created successfully:', data);
+      console.log('Reminders updated successfully:', data);
     })
   ), { dispatch: false });
 
-  updateOrCreateRemindersFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateOrCreateReminderFailure),
+  updateReminderFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateReminderFailure),
     tap(({ error }) => {
-      console.error('Error updating/creating reminders:', error);
+      console.error('Error updating reminders:', error);
     })
   ), { dispatch: false });
 

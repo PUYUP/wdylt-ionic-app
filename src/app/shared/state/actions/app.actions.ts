@@ -66,8 +66,12 @@ export const AppActions = createActionGroup({
     'Update Profile Success': props<{ id: string, data: any }>(),
     'Update Profile Failure': props<{ id: string, error: any }>(),
 
-    'Update Or Create Reminder': props<{ data: any, source?: string, metadata?: any }>(),
-    'Update Or Create Reminder Success': props<{ data: any, source?: string, metadata?: any }>(),
-    'Update Or Create Reminder Failure': props<{ error: any, source?: string, metadata?: any }>(),
+    'Create Reminder': props<{ data: any, source?: string, metadata?: any }>(),
+    'Create Reminder Success': props<{ data: any, source?: string, metadata?: any }>(),
+    'Create Reminder Failure': props<{ error: any, source?: string, metadata?: any }>(),
+
+    'Update Reminder': props<{ data: any, source?: string, metadata?: any }>(),
+    'Update Reminder Success': props<{ data: any, source?: string, metadata?: any }>(),
+    'Update Reminder Failure': props<{ error: any, source?: string, metadata?: any }>(),
   }
 });
