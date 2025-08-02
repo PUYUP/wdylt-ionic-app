@@ -39,7 +39,7 @@ export class LearnCardComponent  implements OnInit {
   /**
    * Answer now alert
    */
-  async startQuizNow(enrolled: any) {
+  async startQuizNow(enrolled: any, type: 'mcq' | 'essay') {
     const alert = await this.alertCtrl.create({
       header: 'Answer Quizs',
       message: 'You still have much time, so you can start the quiz now or later.',
@@ -58,7 +58,10 @@ export class LearnCardComponent  implements OnInit {
                 status: 'waiting_answer',
                 updated_at: new Date().toISOString(),
               },
-              source: 'answer-now-alert'
+              metadata: {
+                quizType: type,
+              },
+              source: 'answer-now-alert',
             }));
           }
         }
@@ -151,7 +154,7 @@ export class LearnCardComponent  implements OnInit {
     console.log('Enrolled lesson status:', status);
 
     if (status === 'in_progress') {
-      this.startQuizNow(enrolled);
+      this.startQuizNow(enrolled, type);
     } else if (status === 'waiting_answer' || status === 'completed') {
       this.router.navigate(['/quiz'], {
         queryParams: {

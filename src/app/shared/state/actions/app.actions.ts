@@ -23,9 +23,9 @@ export const AppActions = createActionGroup({
     'Enroll Lesson Success': props<{ data: any }>(),
     'Enroll Lesson Failure': props<{ error: any }>(),
 
-    'Update Enrolled Lesson': props<{ id: string | number, data: any, source?: string }>(),
-    'Update Enrolled Lesson Success': props<{ id: string | number, data: any, source?: string }>(),
-    'Update Enrolled Lesson Failure': props<{ id: string | number, error: any, source?: string }>(),
+    'Update Enrolled Lesson': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
+    'Update Enrolled Lesson Success': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
+    'Update Enrolled Lesson Failure': props<{ id: string | number, error: any, source?: string, metadata?: any }>(),
 
     'Delete Enrolled Lesson': props<{ id: string | number }>(),
     'Delete Enrolled Lesson Success': props<{ id: string | number }>(),

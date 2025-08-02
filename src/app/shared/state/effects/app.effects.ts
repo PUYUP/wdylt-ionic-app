@@ -193,7 +193,7 @@ export class AppEffects {
   // ...
   updateEnrolledLesson$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateEnrolledLesson),
-    switchMap(async ({ id, data, source }) => {
+    switchMap(async ({ id, data, source, metadata }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -204,18 +204,19 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.updateEnrolledLessonSuccess({ id, data: result, source });
+        return AppActions.updateEnrolledLessonSuccess({ id, data: result, source, metadata });
       } catch (error) {
         console.error('Error updating enrolled lesson:', error);
-        return AppActions.updateEnrolledLessonFailure({ id, error, source });
+        return AppActions.updateEnrolledLessonFailure({ id, error, source, metadata });
       }
     })
   ));
 
   updateEnrolledLessonSuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateEnrolledLessonSuccess),
-    tap(({ id, data, source }) => {
-      console.log('Enrolled lesson updated successfully:', id, data, source);
+    tap(({ id, data, source, metadata }) => {
+      console.log('Enrolled lesson updated successfully:', id, data, source, metadata);
+      const quizType = metadata?.quizType || 'mcq';
 
       if (source === 'answer-now-alert') {
         // go to the quiz list page
@@ -223,6 +224,7 @@ export class AppEffects {
           queryParams: {
             lessonId: data[0].lessons.id,
             enrolledId: id,
+            type: quizType,
           },
         });
       }
@@ -367,6 +369,7 @@ export class AppEffects {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .select(`*, lessons(id, content_type, description, content_data)`)
+          .containedBy('status', ['in_progress', 'waiting_answer'])
           .eq('user', filter.user_id)
           .is('deleted_at', null)
           .gte('start_datetime', filter.start_datetime)

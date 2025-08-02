@@ -1,3 +1,65 @@
-<p>
-  quiz-essay works!
-</p>
+<div class="grid grid-cols-7 gap-2 items-center">
+  <div class="block flex justify-center">
+    <ion-button mode="ios" shape="round" size="small" color="light" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
+      <ion-icon name="chevron-back" slot="start"></ion-icon>
+    </ion-button>
+  </div>
+
+  @for (page of pageNumbers(); track page) {
+    <div class="block flex justify-center">
+      <div 
+        class="w-6 h-6 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer"
+        [ngClass]="{
+          'bg-neutral-500': currentQuestionIndex() + 1 === page,
+          'bg-lime-500': userAnswers()[page - 1] && userAnswers()[page - 1] !== '',
+          'text-white': currentQuestionIndex() + 1 === page,
+        }"
+        (click)="goToQuestion(page - 1)"
+      >
+        {{ page }}
+      </div>
+    </div>
+  }
+
+  <div class="block flex justify-center">
+    <ion-button mode="ios" shape="round" size="small" color="light" (click)="nextQuestion()" [disabled]="!canProceed()">
+      <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+    </ion-button>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+@if (totalAnswered() == questions().length) {
+  <div class="ion-padding-top ion-padding-bottom">
+    <ion-button mode="ios" shape="round" expand="block" (click)="submitQuiz()">
+      <ion-text>Submit</ion-text>
+    </ion-button>
+  </div>
+}
+
+<!-- Quiz Card -->
+<div class="ion-padding-top">
+  <ion-card mode="ios">
+    <ion-card-content>
+      <!-- Question Section -->
+      <div class="text-lg text-gray-800">
+        {{ currentQuestion().text }}
+      </div>
+
+      <!-- Options Section -->
+      <div class="p-0 space-y-4 ion-padding-top">
+        <div class="space-y-3">
+          <ion-textarea 
+            placeholder="Type your answer here..." 
+            [(ngModel)]="answerValue"
+            [autoGrow]="true"
+            [counter]="true"
+            [maxlength]="500"
+            (ionInput)="onAnswerChange($event)"
+            rows="3"
+          ></ion-textarea>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</div>
