@@ -157,10 +157,7 @@ export class AppEffects {
         const { data: res, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .insert(data)
-          .select(`
-            *,
-            lessons(id, content_type, description, content_data)
-          `)
+          .select(`*, lessons(id, content_type, description, content_data)`)
         
         if (error) {
           throw error;
@@ -177,6 +174,22 @@ export class AppEffects {
     ofType(AppActions.enrollLessonSuccess),
     tap(({ data }) => {
       console.log('Lesson enrolled successfully:', data);
+
+      // create reminder for the enrolled lesson
+      const payload = {
+        enrollment: data[0].id,
+        user: data[0].user,
+        lesson: data[0].lessons.id,
+        scheduled_time: data[0].start_datetime,
+        is_active: true,
+        buffer_minutes: 15,
+        message: 'Reminder: You have a lesson in progress!',
+      }
+
+      this.store.dispatch(AppActions.updateOrCreateReminder({
+        data: payload,
+        source: 'enroll-lesson',
+      }));
     })
   ), { dispatch: false });
 
@@ -438,6 +451,48 @@ export class AppEffects {
     ofType(AppActions.updateProfileFailure),
     tap(({ error }) => {
       console.error('Error updating profile:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Update or Create Reminders Effect
+  // ...
+  updateOrCreateReminders$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateOrCreateReminder),
+    switchMap(async ({ data }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('reminders')
+          .upsert(data)
+          .eq('lesson', data.lesson)
+          .eq('enrollment', data.enrollment)
+          .eq('user', data.user)
+          .select(`*`)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.updateOrCreateReminderSuccess({ data: result });
+      } catch (error) {
+        console.error('Error updating/creating reminders:', error);
+        return AppActions.updateOrCreateReminderFailure({ error });
+      }
+    })
+  ));
+
+  updateOrCreateRemindersSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateOrCreateReminderSuccess),
+    tap(({ data }) => {
+      console.log('Reminders updated/created successfully:', data);
+    })
+  ), { dispatch: false });
+
+  updateOrCreateRemindersFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateOrCreateReminderFailure),
+    tap(({ error }) => {
+      console.error('Error updating/creating reminders:', error);
     })
   ), { dispatch: false });
 

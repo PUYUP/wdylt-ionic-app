@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { IonicModule, IonModal } from '@ionic/angular';
 import { DateService } from '../../services/date.service';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 @Component({
   selector: 'app-entry-time',
@@ -81,7 +81,13 @@ export class EntryTimeComponent  implements OnInit {
    */
   onHourSelectConfirm() {
     if (this.customHourSelected) {
-      this.hourSelected = this.customHourSelected;
+      const validDate = isValid(new Date(this.customHourSelected));
+      if (validDate) {
+        this.hourSelected = format(this.customHourSelected, 'HH:mm');
+      } else {
+        this.hourSelected = this.customHourSelected;
+      }
+
       this.onHourChanged.emit({
         data: { value: this.hourSelected },
       });
