@@ -48,3 +48,33 @@ export const selectUpdateProfile = createSelector(
   selectAppState,
   (state: GlobalState) => state.profile.update
 );
+
+export const selectGenerateMCQ = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.AI.generateMCQ
+);
+
+export const selectGenerateEssay = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.AI.generateEssay
+);
+
+export const selectMCQQuestions = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.questions.mcq
+);
+
+export const selectEssayQuestions = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.questions.essay
+);
+
+export const selectSaveAnsweredEssay = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.questions.saveAnsweredEssay
+);
+
+export const selectSaveAnsweredMCQ = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.questions.saveAnsweredMCQ
+);

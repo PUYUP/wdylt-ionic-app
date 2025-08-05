@@ -73,5 +73,29 @@ export const AppActions = createActionGroup({
     'Update Reminder': props<{ data: any, source?: string, metadata?: any }>(),
     'Update Reminder Success': props<{ data: any, source?: string, metadata?: any }>(),
     'Update Reminder Failure': props<{ error: any, source?: string, metadata?: any }>(),
+
+    'AI Generate MCQ': props<{ topic: string, source?: string }>(),
+    'AI Generate MCQ Success': props<{ data: any, source?: string }>(),
+    'AI Generate MCQ Failure': props<{ error: any, source?: string }>(),
+
+    'AI Generate Essay': props<{ topic: string, source?: string }>(),
+    'AI Generate Essay Success': props<{ data: any, source?: string }>(),
+    'AI Generate Essay Failure': props<{ error: any, source?: string }>(),
+
+    'Get MCQ Questions': props<{ lessonId: string | number }>(),
+    'Get MCQ Questions Success': props<{ data: any }>(),
+    'Get MCQ Questions Failure': props<{ error: any }>(),
+
+    'Get Essay Questions': props<{ lessonId: string | number }>(),
+    'Get Essay Questions Success': props<{ data: any }>(),
+    'Get Essay Questions Failure': props<{ error: any }>(),
+
+    'Save Answered Essay': props<{ data: any[], source?: string }>(),
+    'Save Answered Essay Success': props<{ data: any[], source?: string }>(),
+    'Save Answered Essay Failure': props<{ error: any, source?: string }>(),
+
+    'Save Answered MCQ': props<{ data: any[], source?: string }>(),
+    'Save Answered MCQ Success': props<{ data: any[], source?: string }>(),
+    'Save Answered MCQ Failure': props<{ error: any, source?: string }>(),
   }
 });

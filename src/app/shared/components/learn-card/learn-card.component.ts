@@ -158,7 +158,7 @@ export class LearnCardComponent  implements OnInit {
     } else if (status === 'waiting_answer' || status === 'completed') {
       this.router.navigate(['/quiz'], {
         queryParams: {
-          lessonId: enrolled.lessons.id,
+          lessonId: enrolled.lesson.id,
           enrolledId: enrolled.id,
           type: type,
         },

@@ -19,12 +19,12 @@
     } @else {
       <div class="ion-padding">
         @if (enrolled.data) {
-          <!-- <div [innerHTML]="enrolled.data.lessons.description" class="use-playfair text-xl block text-neutral-800 ion-margin-bottom"></div> -->
+          <!-- <div [innerHTML]="enrolled.data.lesson.description" class="use-playfair text-xl block text-neutral-800 ion-margin-bottom"></div> -->
 
           @if (quizType === 'mcq') {
-            <app-quiz-mcq [data]="enrolled.data"></app-quiz-mcq>
+            <app-quiz-mcq [data]="enrolled.data" [lessonId]="lessonId" [enrolledId]="enrolledId"></app-quiz-mcq>
           } @else if (quizType === 'essay') {
-            <app-quiz-essay [data]="enrolled.data"></app-quiz-essay>
+            <app-quiz-essay [data]="enrolled.data" [lessonId]="lessonId" [enrolledId]="enrolledId"></app-quiz-essay>
           }
         }
       </div>

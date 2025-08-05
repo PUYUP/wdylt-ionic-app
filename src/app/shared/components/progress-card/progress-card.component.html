@@ -48,7 +48,19 @@
   
   <div class="absolute inset-0 flex flex-col items-center justify-center">
     @if (isTimerComplete) {
-      <ion-text class="text-2xl text-red-500">Time Out!</ion-text>
+      <div [ngStyle]="{'width': (size - (strokeWidth * 2)) + 'px'}" class="text-center">
+        @if (data.status === 'waiting_answer') {
+          @if (data?.mcq_answers?.length > 0 && data?.essay_answers?.length > 0) {
+            <ion-text class="text-2xl text-yellow-600">Waiting Points</ion-text>
+          } @else {
+            <ion-text class="text-2xl text-yellow-600">Waiting Quiz Completion!</ion-text>
+          }
+        } @else if (data.status === 'completed') {
+          <ion-text class="text-2xl text-green-600">Quiz Completed!</ion-text>
+        } @else if (data.status === 'failed') {
+          <ion-text class="text-2xl text-red-600">Quiz Failed!</ion-text>
+        }
+      </div>
     } @else {
       <span 
         class="text-3xl font-black bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent"

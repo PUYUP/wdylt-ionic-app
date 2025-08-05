@@ -64,7 +64,7 @@ export class EntryFormComponent  implements OnInit {
   ngOnInit() { 
     if (this.data) {
       // fill the form with data
-      this.goalText = this.data.lessons.description || null;
+      this.goalText = this.data.lesson.description || null;
     }
   }
 

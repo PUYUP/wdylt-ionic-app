@@ -85,7 +85,7 @@ export class EntryDialogComponent  implements OnInit {
 
   ngOnInit() {
     if (this.data) {
-      this.goalText = this.data.lessons.description || null;
+      this.goalText = this.data.lesson.description || null;
       this.hourSelected = format(this.data.target_completion_datetime, 'HH:mm');
     }
   }
@@ -136,7 +136,7 @@ export class EntryDialogComponent  implements OnInit {
     if (this.data) {
       // Dispatch update action
       this.store.dispatch(AppActions.updateLesson({
-        id: this.data.lessons.id,
+        id: this.data.lesson.id,
         data: {
           description: this.goalText,
         }

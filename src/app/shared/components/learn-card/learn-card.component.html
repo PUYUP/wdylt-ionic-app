@@ -11,7 +11,7 @@
       <div (click)="openActionSheet(item)" class="block">
         <div 
           class="text-xl font-semibold" 
-          [innerHTML]="item.lessons.description"
+          [innerHTML]="item.lesson.description"
         ></div>
 
         <div class="mt-2 mb-4 border-t border-neutral-200 pt-2">
@@ -34,43 +34,64 @@
         </div>
       </div>
 
-      <div class="flex gap-3">
+      <div class="flex gap-3 items-center">
         <div>
           <ion-button (click)="openActionSheet(item)" mode="ios" color="light">
             <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
-        <div class="w-full grid grid-cols-2 gap-2">
-          <ion-button 
-            mode="ios" 
-            color="secondary" 
-            shape="round" 
-            expand="block" 
-            (click)="onStartQuiz(item, 'mcq')"
-            size="small"
-            [ngStyle]="{
-              '--padding-top': '12px',
-              '--padding-bottom': '12px',
-            }"
-          >
-            {{ 'MCQ (10)' }}
-          </ion-button>
 
-          <ion-button 
-            mode="ios" 
-            color="secondary" 
-            shape="round" 
-            expand="block" 
-            (click)="onStartQuiz(item, 'essay')"
-            size="small"
-            [ngStyle]="{
-              '--padding-top': '12px',
-              '--padding-bottom': '12px',
-            }"
-          >
-            {{ 'Essay (5)' }}
-          </ion-button>
-        </div>
+        @if (item?.mcq_answers?.length > 0 && item?.essay_answers?.length > 0) {
+          <div class="w-full">
+            <ion-button fill="clear" mode="ios" round="shape" expand="block" color="success">
+              <ion-text>Start Points Calculation</ion-text>
+              <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+            </ion-button>
+          </div>
+        } @else {
+          <div class="w-full grid grid-cols-2 gap-2">
+            <ion-button 
+              mode="ios" 
+              [color]="item.mcq_answers && item.mcq_answers.length > 0 ? 'success' : 'secondary'" 
+              shape="round" 
+              expand="block" 
+              (click)="onStartQuiz(item, 'mcq')"
+              size="small"
+              class="relative"
+              [ngStyle]="{
+                '--padding-top': '12px',
+                '--padding-bottom': '12px',
+                '--padding-start': '12px',
+                '--padding-end': '12px',
+              }"
+            >
+              @if (item.mcq_answers && item.mcq_answers.length > 0) {
+                <ion-icon name="checkmark-done-circle" slot="start" class="mr-1"></ion-icon>
+              }
+              <ion-text>{{ 'MCQ (10)' }}</ion-text>
+            </ion-button>
+
+            <ion-button 
+              mode="ios" 
+              [color]="item.essay_answers && item.essay_answers.length > 0 ? 'success' : 'secondary'" 
+              shape="round" 
+              expand="block" 
+              (click)="onStartQuiz(item, 'essay')"
+              size="small"
+              [ngStyle]="{
+                '--padding-top': '12px',
+                '--padding-bottom': '12px',
+                '--padding-start': '12px',
+                '--padding-end': '12px',
+              }"
+            >
+              @if (item.essay_answers && item.essay_answers.length > 0) {
+                <ion-icon name="checkmark-done-circle" slot="start" class="mr-1"></ion-icon>
+              }
+              <ion-text>{{ 'Essay (5)' }}</ion-text>
+            </ion-button>
+          </div>
+        }
       </div>
     </div>
   </div>

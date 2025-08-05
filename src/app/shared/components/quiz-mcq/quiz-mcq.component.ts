@@ -1,19 +1,27 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, computed, Input, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { GlobalState } from '../../state/reducers/app.reducer';
+import { ActionsSubject, select, Store } from '@ngrx/store';
+import { AppActions } from '../../state/actions/app.actions';
+import { Observable } from 'rxjs';
+import { selectEnrolledLesson, selectGenerateMCQ, selectMCQQuestions } from '../../state/selectors/app.selectors';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SupabaseService } from '../../services/supabase.service';
 
 interface QuizOption {
-  id: string;
-  label: string;
-  value: string;
+  id: number;
+  content_text: string;
+  order: string;
+  points?: number;
 }
 
 interface Question {
   id: number;
-  text: string;
+  content_text: string;
   description: string;
-  options: QuizOption[];
+  question_options: QuizOption[];
   correctAnswer: string;
 }
 
@@ -26,11 +34,18 @@ interface Question {
     ReactiveFormsModule,
     CommonModule,
     IonicModule,
+    AsyncPipe,
   ],
 })
 export class QuizMcqComponent  implements OnInit {
 
   @Input('data') data: any | null = null;
+  @Input('lessonId') lessonId: string | null = null;
+  @Input('enrolledId') enrolledId: string | null = null;
+
+  enrolled$: Observable<any>;
+  mcq$: Observable<any> | null = null;
+  questions$: Observable<any> | null = null;
 
   // Signals for reactive state management
   currentQuestionIndex = signal(0);
@@ -42,128 +57,7 @@ export class QuizMcqComponent  implements OnInit {
   answerValue = '';
 
   // Sample questions data
-  questions = signal<Question[]>([
-    {
-      id: 1,
-      text: 'What is the primary programming language used for web development?',
-      description: 'Select the best answer from the options below',
-      options: [
-        { id: 'a', label: 'Python', value: 'python' },
-        { id: 'b', label: 'JavaScript', value: 'javascript' },
-        { id: 'c', label: 'Java', value: 'java' },
-        { id: 'd', label: 'C++', value: 'cpp' }
-      ],
-      correctAnswer: 'javascript'
-    },
-    {
-      id: 2,
-      text: 'Which CSS framework is known for utility-first approach?',
-      description: 'Choose the framework that uses utility classes',
-      options: [
-        { id: 'a', label: 'Bootstrap', value: 'bootstrap' },
-        { id: 'b', label: 'Tailwind CSS', value: 'tailwind' },
-        { id: 'c', label: 'Bulma', value: 'bulma' },
-        { id: 'd', label: 'Foundation', value: 'foundation' }
-      ],
-      correctAnswer: 'tailwind'
-    },
-    {
-      id: 3,
-      text: 'What does SPA stand for in web development?',
-      description: 'Select the correct full form',
-      options: [
-        { id: 'a', label: 'Single Page Application', value: 'spa' },
-        { id: 'b', label: 'Simple Page Architecture', value: 'architecture' },
-        { id: 'c', label: 'Structured Page Assembly', value: 'assembly' },
-        { id: 'd', label: 'Static Page Application', value: 'static' }
-      ],
-      correctAnswer: 'spa'
-    },
-    {
-      id: 4,
-      text: 'Which HTTP method is used to request data from a server?',
-      description: 'Select the HTTP method used for retrieving data',
-      options: [
-        { id: 'a', label: 'GET', value: 'get' },
-        { id: 'b', label: 'POST', value: 'post' },
-        { id: 'c', label: 'PUT', value: 'put' },
-        { id: 'd', label: 'DELETE', value: 'delete' }
-      ],
-      correctAnswer: 'get'
-    },
-    {
-      id: 5,
-      text: 'What is TypeScript?',
-      description: 'Choose the best description of TypeScript',
-      options: [
-        { id: 'a', label: 'A JavaScript runtime', value: 'runtime' },
-        { id: 'b', label: 'A superset of JavaScript', value: 'superset' },
-        { id: 'c', label: 'A JavaScript framework', value: 'framework' },
-        { id: 'd', label: 'A database language', value: 'database' }
-      ],
-      correctAnswer: 'superset'
-    },
-    {
-      id: 6,
-      text: 'Which tool is used for state management in Angular?',
-      description: 'Select the popular state management solution',
-      options: [
-        { id: 'a', label: 'NgRx', value: 'ngrx' },
-        { id: 'b', label: 'Redux', value: 'redux' },
-        { id: 'c', label: 'Vuex', value: 'vuex' },
-        { id: 'd', label: 'MobX', value: 'mobx' }
-      ],
-      correctAnswer: 'ngrx'
-    },
-    {
-      id: 7,
-      text: 'What is the purpose of dependency injection in Angular?',
-      description: 'Choose the main benefit of DI',
-      options: [
-        { id: 'a', label: 'Code reusability', value: 'reuse' },
-        { id: 'b', label: 'Better testing', value: 'testing' },
-        { id: 'c', label: 'Loose coupling', value: 'coupling' },
-        { id: 'd', label: 'All of the above', value: 'all' }
-      ],
-      correctAnswer: 'all'
-    },
-    {
-      id: 8,
-      text: 'What is the Angular CLI command to create a new component?',
-      description: 'Select the correct command',
-      options: [
-        { id: 'a', label: 'ng new component', value: 'new' },
-        { id: 'b', label: 'ng generate component', value: 'generate' },
-        { id: 'c', label: 'ng create component', value: 'create' },
-        { id: 'd', label: 'ng add component', value: 'add' }
-      ],
-      correctAnswer: 'generate'
-    },
-    {
-      id: 9,
-      text: 'Which decorator is used to define an Angular component?',
-      description: 'Select the correct decorator',
-      options: [
-        { id: 'a', label: '@Component', value: 'component' },
-        { id: 'b', label: '@NgModule', value: 'module' },
-        { id: 'c', label: '@Injectable', value: 'injectable' },
-        { id: 'd', label: '@Directive', value: 'directive' }
-      ],
-      correctAnswer: 'component'
-    },
-    {
-      id: 10,
-      text: 'What is the purpose of Angular pipes?',
-      description: 'Choose the main function of pipes',
-      options: [
-        { id: 'a', label: 'Data transformation', value: 'transform' },
-        { id: 'b', label: 'Routing', value: 'routing' },
-        { id: 'c', label: 'State management', value: 'state' },
-        { id: 'd', label: 'Form validation', value: 'validation' }
-      ],
-      correctAnswer: 'transform'
-    }
-  ]);
+  questions = signal<Question[]>([]);
 
   // Computed values
   currentQuestion = computed(() => this.questions()[this.currentQuestionIndex()]);
@@ -178,14 +72,81 @@ export class QuizMcqComponent  implements OnInit {
   isLastQuestion = computed(() => this.currentQuestionIndex() === this.questions().length - 1);
   isQuizComplete = computed(() => this.quizComplete());
   pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => i + 1));
-  
-  constructor() {
-    // Load saved answer when question changes
-    this.currentQuestionIndex.set(0);
-    this.loadCurrentAnswer();
+
+  // Question prerendering
+  refreshInterval: any = null;
+  isAnswered = computed(() => {
+    return this.questions().filter((question, index) => {
+      const options = question.question_options;
+      return options.find((option: any) => option.chosen_answers && option.chosen_answers.length > 0);
+    }).length > 0;
+  });
+
+  constructor(
+    private store: Store<GlobalState>,
+    private actionsSubject$: ActionsSubject,
+    private supabaseService: SupabaseService,
+  ) {
+    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.mcq$ = this.store.pipe(select(selectMCQQuestions));
+    this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
+      if (!mcq.isLoading) {
+        if (mcq.data && mcq.data.length >= 10) {
+          this.resetQuiz();
+
+          this.questions.set(mcq.data);
+          clearInterval(this.refreshInterval); // Clear any existing interval
+          this.refreshInterval = null; // Reset refresh interval
+
+          // set answer array to match the number of questions
+          for (let [index, value] of mcq.data.entries()) {
+            const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+
+            if (chosenAnswer) {
+              this.userAnswers.update(answers => {
+                const newAnswers = [...answers];
+                newAnswers[index] = `${chosenAnswer.question}:${chosenAnswer.order}`;
+                return newAnswers;
+              });
+            }
+            else {
+              this.userAnswers.set([]);
+            }
+          }
+
+          // Load saved answer when question changes
+          this.currentQuestionIndex.set(0);
+          this.loadCurrentAnswer();
+        }
+      }
+    });
+
+    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.getMCQQuestionsSuccess.type:
+          break;
+      }
+    });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    if (this.data) {
+      console.log('Data received:', this.data);
+      const status = this.data.status;
+      if (status === 'waiting_answer') {
+        // const description = this.data.lesson.description;
+        // generate quiz based on the lesson description
+        // this.store.dispatch(AppActions.aIGenerateMCQ({ topic: description }));
+
+        // get mcq questions
+        this.store.dispatch(AppActions.getMCQQuestions({ lessonId: this.lessonId as string }));
+
+        this.refreshInterval = setInterval(() => {
+          this.store.dispatch(AppActions.getMCQQuestions({ lessonId: this.lessonId as string }));
+        }, 5000); // Refresh every 5 seconds
+      }
+    }
+  }
 
   // Navigation methods
   nextQuestion(): void {
@@ -278,9 +239,38 @@ export class QuizMcqComponent  implements OnInit {
     this.loadCurrentAnswer(); // Load the answer for the selected question
   }
 
-  submitQuiz(): void {
+  async submitQuiz() {
     console.log('Quiz submitted!');
     console.log('User Answers:', this.userAnswers());
+
+    const session = await this.supabaseService.session();
+    if (!session) {
+      console.error('User is not authenticated');
+      return;
+    }
+
+    const answers = this.userAnswers().map((answer, index) => {
+      const instances = answer.split(':');
+      const questionId = instances[0]; 
+      const value = instances[1];
+      const question = this.questions().find(q => q.id === parseInt(questionId));
+      const option = question?.question_options.find(opt => opt.order == value);
+
+      return {
+        user: session?.user?.id,
+        lesson: this.lessonId,
+        enrollment: this.enrolledId,
+        question: questionId,
+        selected_option: option?.id,
+        points_earned: option?.points || 1,
+      };
+    });
+
+    console.log('Answers to be submitted:', answers);
+    this.store.dispatch(AppActions.saveAnsweredMCQ({
+      data: answers,
+      source: 'quiz-mcq'
+    }));
   }
 
 }

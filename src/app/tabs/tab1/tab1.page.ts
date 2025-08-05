@@ -204,7 +204,7 @@ export class Tab1Page implements OnInit {
     } else if (status === 'waiting_answer') {
       this.router.navigate(['/quiz'], {
         queryParams: {
-          lessonId: enrolled.lessons.id,
+          lessonId: enrolled.lesson.id,
           enrolledId: enrolled.id,
         },
       });

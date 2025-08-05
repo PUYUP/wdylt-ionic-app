@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { SupabaseService } from '../../services/supabase.service';
-import { switchMap, tap } from 'rxjs';
+import { catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
 import { AppActions } from '../actions/app.actions';
 import { getISODay, setHours, setMinutes, setSeconds } from 'date-fns';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '../reducers/app.reducer';
 import { format, formatInTimeZone } from 'date-fns-tz';
 import { Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { HttpService } from '../../services/http.service';
 
 @Injectable()
 export class AppEffects {
@@ -17,6 +20,7 @@ export class AppEffects {
     private supabaseService: SupabaseService,
     private store: Store<GlobalState>,
     private router: Router,
+    private httpService: HttpService,
   ) {}
 
   signInWithGoogle$ = createEffect(() => this.actions$.pipe(
@@ -157,7 +161,7 @@ export class AppEffects {
         const { data: res, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .insert(data)
-          .select(`*, lessons(id, content_type, description, content_data)`)
+          .select(`*, lesson(id, content_type, description, content_data)`)
         
         if (error) {
           throw error;
@@ -181,7 +185,7 @@ export class AppEffects {
       const payload = {
         enrollment: instance.id,
         user: instance.user,
-        lesson: instance.lessons.id,
+        lesson: instance.lesson.id,
         scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
         is_active: true,
         buffer_minutes: 15,
@@ -215,7 +219,7 @@ export class AppEffects {
           .from('enrollments')
           .update(data)
           .eq('id', id)
-          .select('*, lessons(id, content_type, description, content_data)');
+          .select('*, lesson(id, content_type, description, content_data)');
 
         if (error) {
           throw error;
@@ -238,7 +242,7 @@ export class AppEffects {
         // go to the quiz list page
         this.router.navigate(['/quiz'], {
           queryParams: {
-            lessonId: data[0].lessons.id,
+            lessonId: data[0].lesson.id,
             enrolledId: id,
             type: quizType,
           },
@@ -251,7 +255,7 @@ export class AppEffects {
       const payload = {
         enrollment: instance.id,
         user: instance.user,
-        lesson: instance.lessons.id,
+        lesson: instance.lesson.id,
         scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
         days_of_week: [dayOfWeek],
       }
@@ -282,7 +286,7 @@ export class AppEffects {
           .from('enrollments')
           .update({ deleted_at: new Date().toISOString() })
           .eq('id', id)
-          .select('*, lessons(id, content_type, description, content_data)');
+          .select('*, lesson(id, content_type, description, content_data)');
 
         if (error) {
           throw error;
@@ -319,12 +323,17 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
-          .select('*, lessons(id, content_type, description, content_data)')
+          .select(`
+            *, 
+            lesson(id, content_type, description, content_data),
+            mcq_answers: chosen_answers!enrollment(*),
+            essay_answers: answers!enrollment(*, question(id, question_type))
+          `)
           .eq('user', filter.user_id)
           .is('deleted_at', null)
           .range(filter.from_page, filter.to_page)
           .order('created_at', { ascending: false })
-          .limit(25);
+          .limit(environment.queryPerPage);
 
         if (error) {
           throw error;
@@ -361,7 +370,7 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
-          .select('*, lessons(id, content_type, description, content_data)')
+          .select('*, lesson(id, content_type, description, content_data)')
           .eq('id', id)
           .single();
 
@@ -400,7 +409,12 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
-          .select(`*, lessons(id, content_type, description, content_data)`)
+          .select(`
+            *, 
+            lesson(id, content_type, description, content_data),
+            mcq_answers: chosen_answers!enrollment(*),
+            essay_answers: answers!enrollment(*, question(id, question_type))
+          `)
           .in('status', ['in_progress', 'waiting_answer'])
           .eq('user', filter.user_id)
           .is('deleted_at', null)
@@ -550,6 +564,219 @@ export class AppEffects {
     ofType(AppActions.updateReminderFailure),
     tap(({ error }) => {
       console.error('Error updating reminders:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ..
+  // AI Generate MCQ
+  // ...
+  aIGenerateMCQ$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateMCQ),
+    switchMap(({ topic }) => 
+      this.httpService.generateMCQ(topic).pipe(
+        map((response: any) => AppActions.aIGenerateMCQSuccess({ data: response })),
+        catchError((error: any) => of(AppActions.aIGenerateMCQFailure({ error })))
+      )
+    )
+  ));
+
+  aIGenerateMCQSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateMCQSuccess),
+    tap(({ data }) => {
+      console.log('MCQ generated successfully:', data);
+    })
+  ), { dispatch: false });
+
+  aIGenerateMCQFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateMCQFailure),
+    tap(({ error }) => {
+      console.error('Error generating MCQ:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ..
+  // AI Generate Essay
+  // ...
+  aIGenerateEssay$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateEssay),
+    switchMap(({ topic }) => 
+      this.httpService.generateMCQ(topic).pipe(
+        map((response: any) => AppActions.aIGenerateMCQSuccess({ data: response })),
+        catchError((error: any) => of(AppActions.aIGenerateMCQFailure({ error })))
+      )
+    )
+  ));
+
+  aIGenerateEssaySuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateEssaySuccess),
+    tap(({ data }) => {
+      console.log('Essay generated successfully:', data);
+    })
+  ), { dispatch: false });
+
+  aIGenerateEssayFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.aIGenerateEssayFailure),
+    tap(({ error }) => {
+      console.error('Error generating Essay:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Get MCQ Questions Effect
+  // ...
+  getMCQuestions$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getMCQQuestions),
+    switchMap(async ({ lessonId }) => {
+      try {
+      const { data, error } = await this.supabaseService.getSupabase()
+        .from('questions')
+        .select('*, question_options(id, content_text, order, points, question, chosen_answers(*))')
+        .eq('lesson', lessonId)
+        .eq('question_type', 'mcq')
+        .order('created_at', { ascending: true })
+        .order('order', { referencedTable: "question_options", ascending: true }); // ensure options are ordered correctly (A, B, C, D)
+
+      if (error) {
+        throw error;
+      }
+      return AppActions.getMCQQuestionsSuccess({ data });
+      } catch (error) {
+      console.error('Error getting MC questions:', error);
+      return AppActions.getMCQQuestionsFailure({ error });
+      }
+    })
+  ));
+
+  getMCQuestionsSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getMCQQuestionsSuccess),
+    tap(({ data }) => {
+      console.log('MC questions retrieved successfully:', data);
+    })
+  ), { dispatch: false });
+
+  getMCQuestionsFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getMCQQuestionsFailure),
+    tap(({ error }) => {
+      console.error('Error getting MC questions:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Get Essay Questions Effect
+  // ...
+  getEssayQuestions$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEssayQuestions),
+    switchMap(async ({ lessonId }) => {
+      try {
+        const { data, error } = await this.supabaseService.getSupabase()
+          .from('questions')
+          .select('*, answers(id, content)', { count: 'exact' })
+          .eq('lesson', lessonId)
+          .eq('question_type', 'essay')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.getEssayQuestionsSuccess({ data });
+      } catch (error) {
+        console.error('Error getting essay questions:', error);
+        return AppActions.getEssayQuestionsFailure({ error });
+      }
+    })
+  ));
+
+  getEssayQuestionsSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEssayQuestionsSuccess),
+    tap(({ data }) => {
+      console.log('Essay questions retrieved successfully:', data);
+    })
+  ), { dispatch: false });
+
+  getEssayQuestionsFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEssayQuestionsFailure),
+    tap(({ error }) => {
+      console.error('Error getting essay questions:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Save Answered Essay Effect
+  // ...
+  saveAnsweredEssay$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredEssay),
+    switchMap(async ({ data }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('answers')
+          .insert(data)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.saveAnsweredEssaySuccess({ data: result });
+      } catch (error) {
+        console.error('Error saving answered essay:', error);
+        return AppActions.saveAnsweredEssayFailure({ error });
+      }
+    })
+  ));
+
+  saveAnsweredEssaySuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredEssaySuccess),
+    tap(({ data }) => {
+      console.log('Answered essay saved successfully:', data);
+    })
+  ), { dispatch: false });
+
+  saveAnsweredEssayFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredEssayFailure),
+    tap(({ error }) => {
+      console.error('Error saving answered essay:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Save Answered MCQ
+  // ...
+  saveAnsweredMCQ$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredMCQ),
+    switchMap(async ({ data }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('chosen_answers')
+          .insert(data)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.saveAnsweredMCQSuccess({ data: result });
+      } catch (error) {
+        console.error('Error saving answered MCQ:', error);
+        return AppActions.saveAnsweredMCQFailure({ error });
+      }
+    })
+  ));
+
+  saveAnsweredMCQSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredMCQSuccess),
+    tap(({ data }) => {
+      console.log('Answered MCQ saved successfully:', data);
+    })
+  ), { dispatch: false });
+
+  saveAnsweredMCQFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.saveAnsweredMCQFailure),
+    tap(({ error }) => {
+      console.error('Error saving answered MCQ:', error);
     })
   ), { dispatch: false });
 

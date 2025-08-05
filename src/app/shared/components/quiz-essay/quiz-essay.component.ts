@@ -2,16 +2,18 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, Input, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-
-interface QuizOption {
-  id: string;
-  label: string;
-  value: string;
-}
+import { ActionsSubject, select, Store } from '@ngrx/store';
+import { map, Observable } from 'rxjs';
+import { GlobalState } from '../../state/reducers/app.reducer';
+import { selectEnrolledLesson, selectEssayQuestions } from '../../state/selectors/app.selectors';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AppActions } from '../../state/actions/app.actions';
+import { SupabaseService } from '../../services/supabase.service';
 
 interface Question {
   id: number;
-  text: string;
+  content_text: string;
+  answers?: any[];
 }
 
 @Component({
@@ -28,6 +30,12 @@ interface Question {
 export class QuizEssayComponent  implements OnInit {
 
   @Input('data') data: any | null = null;
+  @Input('lessonId') lessonId: string | null = null;
+  @Input('enrolledId') enrolledId: string | null = null;
+
+  enrolled$: Observable<any> | null = null;
+  essay$: Observable<any> | null = null;
+  questions$: Observable<any> | null = null;
 
   // Signals for reactive state management
   currentQuestionIndex = signal(0);
@@ -39,29 +47,7 @@ export class QuizEssayComponent  implements OnInit {
   answerValue = '';
 
   // Sample questions data
-  questions = signal<Question[]>([
-    {
-      id: 1,
-      text: 'What is the primary programming language used for web development?',
-      
-    },
-    {
-      id: 2,
-      text: 'Which CSS framework is known for utility-first approach?',
-    },
-    {
-      id: 7,
-      text: 'What is the purpose of dependency injection in Angular?',
-    },
-    {
-      id: 8,
-      text: 'What is the Angular CLI command to create a new component?',
-    },
-    {
-      id: 9,
-      text: 'Which decorator is used to define an Angular component?',
-    },
-  ]);
+  questions = signal<Question[]>([]);
 
   // Computed values
   currentQuestion = computed(() => this.questions()[this.currentQuestionIndex()]);
@@ -77,13 +63,77 @@ export class QuizEssayComponent  implements OnInit {
   isQuizComplete = computed(() => this.quizComplete());
   pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => i + 1));
   
-  constructor() {
-    // Load saved answer when question changes
-    this.currentQuestionIndex.set(0);
-    this.loadCurrentAnswer();
+  // Question prerendering
+  refreshInterval: any = null;
+  isAnswered = computed(() => {
+    return this.questions().filter((question, index) => {
+      return question.answers && question.answers?.length > 0;
+    }).length > 0;
+  });
+
+  constructor(
+    private store: Store<GlobalState>,
+    private actionsSubject$: ActionsSubject,
+    private supabaseService: SupabaseService,
+  ) {
+    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.essay$ = this.store.pipe(select(selectEssayQuestions));
+    this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
+      if (!essay.isLoading) {
+        if (essay.data && essay.data.length >= 5) {
+          this.resetQuiz();
+
+          this.questions.set(essay.data);
+          clearInterval(this.refreshInterval); // Clear any existing interval
+          this.refreshInterval = null; // Reset refresh interval
+
+          // set answer array to match the number of questions
+          for (let [index, value] of essay.data.entries()) {
+            if (value.answers && value.answers.length > 0) {
+              this.userAnswers.update(answers => {
+                const newAnswers = [...answers];
+                newAnswers[index] = value?.answers?.[0]?.content;
+                return newAnswers;
+              });
+            }
+            else {
+              this.userAnswers.set([]);
+            }
+          }
+
+          // Load saved answer when question changes
+          this.currentQuestionIndex.set(0);
+          this.loadCurrentAnswer();
+        }
+      }
+    });
+
+    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.getEssayQuestionsSuccess.type:
+          break;
+        }
+      });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    if (this.data) {
+      console.log('Data received:', this.data);
+      const status = this.data.status;
+      if (status === 'waiting_answer') {
+        // const description = this.data.lesson.description;
+        // generate quiz based on the lesson description
+        // this.store.dispatch(AppActions.aIGenerateEssay({ topic: description }));
+
+        // get essay questions
+        this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
+
+        this.refreshInterval = setInterval(() => {
+          this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
+        }, 5000); // Refresh every 5 seconds
+      }
+    }
+  }
 
   // Navigation methods
   nextQuestion(): void {
@@ -153,6 +203,7 @@ export class QuizEssayComponent  implements OnInit {
   resetQuiz(): void {
     this.currentQuestionIndex.set(0);
     this.userAnswers.set([]);
+    this.questions.set([]);
     this.quizComplete.set(false);
     this.answerValue = '';
     this.textInputFilled.set('');
@@ -168,9 +219,32 @@ export class QuizEssayComponent  implements OnInit {
     this.loadCurrentAnswer(); // Load the answer for the selected question
   }
 
-  submitQuiz(): void {
+  async submitQuiz() {
     console.log('Quiz submitted!');
-    console.log('User Answers:', this.userAnswers());
+    const session = await this.supabaseService.session();
+    if (!session) {
+      console.error('User is not authenticated');
+      return;
+    }
+
+    const answers = this.userAnswers().map((answer, index) => ({
+      content: answer,
+      user: session?.user?.id,
+      question: this.questions()[index].id,
+      question_content: this.questions()[index].content_text,
+      lesson: this.lessonId,
+      enrollment: this.enrolledId,
+    }));
+
+    this.store.dispatch(AppActions.saveAnsweredEssay({
+      data: answers,
+      source: 'quiz-essay'
+    }));
+  }
+
+  ngOnDestroy() {
+    console.log('QuizEssayComponent destroyed');
+    this.resetQuiz();
   }
 
 }

@@ -1,65 +1,92 @@
-<div class="grid grid-cols-7 gap-2 items-center">
-  <div class="block flex justify-center">
-    <ion-button mode="ios" shape="round" size="small" color="light" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
-      <ion-icon name="chevron-back" slot="start"></ion-icon>
-    </ion-button>
-  </div>
-
-  @for (page of pageNumbers(); track page) {
-    <div class="block flex justify-center">
-      <div 
-        class="w-6 h-6 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer"
-        [ngClass]="{
-          'bg-neutral-500': currentQuestionIndex() + 1 === page,
-          'bg-lime-500': userAnswers()[page - 1] && userAnswers()[page - 1] !== '',
-          'text-white': currentQuestionIndex() + 1 === page,
-        }"
-        (click)="goToQuestion(page - 1)"
-      >
-        {{ page }}
+@if (essay$ | async; as essay) {
+  @if (essay.isLoading) {
+    <div class="h-full flex flex-col items-center justify-center">
+      <ion-spinner name="dots" class="w-24"></ion-spinner>
+      <div class="block text-center mt-4">
+        <span class="text-gray-500">Waiting for quiz data...</span>
       </div>
     </div>
-  }
-
-  <div class="block flex justify-center">
-    <ion-button mode="ios" shape="round" size="small" color="light" (click)="nextQuestion()" [disabled]="!canProceed()">
-      <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
-    </ion-button>
-  </div>
-</div>
-
-<!-- Action Buttons -->
-@if (totalAnswered() == questions().length) {
-  <div class="ion-padding-top ion-padding-bottom">
-    <ion-button mode="ios" shape="round" expand="block" (click)="submitQuiz()">
-      <ion-text>Submit</ion-text>
-    </ion-button>
-  </div>
-}
-
-<!-- Quiz Card -->
-<div class="ion-padding-top">
-  <ion-card mode="ios">
-    <ion-card-content>
-      <!-- Question Section -->
-      <div class="text-lg text-gray-800">
-        {{ currentQuestion().text }}
-      </div>
-
-      <!-- Options Section -->
-      <div class="p-0 space-y-4 ion-padding-top">
-        <div class="space-y-3">
-          <ion-textarea 
-            placeholder="Type your answer here..." 
-            [(ngModel)]="answerValue"
-            [autoGrow]="true"
-            [counter]="true"
-            [maxlength]="500"
-            (ionInput)="onAnswerChange($event)"
-            rows="3"
-          ></ion-textarea>
+  } @else {
+    @if (essay.data.length <= 0) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Generating quiz... Please wait</span>
         </div>
       </div>
-    </ion-card-content>
-  </ion-card>
-</div>
+    } @else {
+      <div class="grid grid-cols-7 gap-2 items-center">
+        <div class="block flex justify-center">
+          <ion-button mode="ios" shape="round" size="small" color="light" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
+            <ion-icon name="chevron-back" slot="start"></ion-icon>
+          </ion-button>
+        </div>
+
+        @for (page of pageNumbers(); track page) {
+          <div class="block flex justify-center">
+            <div 
+              class="w-6 h-6 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer"
+              [ngClass]="{
+                'bg-neutral-500': currentQuestionIndex() + 1 === page,
+                'bg-lime-500': userAnswers()[page - 1] && userAnswers()[page - 1] !== '',
+                'text-white': currentQuestionIndex() + 1 === page,
+              }"
+              (click)="goToQuestion(page - 1)"
+            >
+              {{ page }}
+            </div>
+          </div>
+        }
+
+        <div class="block flex justify-center">
+          <ion-button mode="ios" shape="round" size="small" color="light" (click)="nextQuestion()" [disabled]="!canProceed()">
+            <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      @if (totalAnswered() == questions().length && !isAnswered()) {
+        <div class="ion-padding-top ion-padding-bottom">
+          <ion-button mode="ios" shape="round" expand="block" (click)="submitQuiz()">
+            <ion-text>Submit</ion-text>
+          </ion-button>
+        </div>
+      }
+
+      <!-- Quiz Card -->
+      <div class="ion-padding-top">
+        <ion-card mode="ios">
+          <ion-card-content>
+            <!-- Question Section -->
+            <div class="text-lg text-gray-800">
+              {{ currentQuestion().content_text }}
+            </div>
+
+            <!-- Options Section -->
+            <div class="p-0 space-y-4 ion-padding-top">
+              <div class="space-y-3">
+                <div class="block text-sm text-neutral-600">Your answer:</div>
+                @if (currentQuestion().answers?.length) {
+                  <div class="text-lg text-neutral-800">
+                    {{ currentQuestion().answers?.[0]?.content }}
+                  </div>
+                } @else {
+                  <ion-textarea 
+                    placeholder="Type your answer here..." 
+                    [(ngModel)]="answerValue"
+                    [autoGrow]="true"
+                    [counter]="true"
+                    [maxlength]="500"
+                    (ionInput)="onAnswerChange($event)"
+                    rows="3"
+                  ></ion-textarea>
+                }
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    }
+  }
+}

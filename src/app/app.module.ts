@@ -10,11 +10,13 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { appReducer } from './shared/state/reducers/app.reducer';
 import { AppEffects } from './shared/state/effects/app.effects';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
     BrowserModule,
+    HttpClientModule,
     IonicModule.forRoot({
       mode: 'md',
     }),

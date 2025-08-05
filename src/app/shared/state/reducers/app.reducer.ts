@@ -70,6 +70,40 @@ export interface GlobalState {
       isLoading: boolean;
       metadata?: any;
     }
+  },
+  AI: {
+    generateMCQ: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    },
+    generateEssay: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    }
+  },
+  questions: {
+    mcq: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    },
+    essay: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    },
+    saveAnsweredEssay: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    },
+    saveAnsweredMCQ: {
+      data: any | null;
+      error: any | null;
+      isLoading: boolean;
+    },
   }
 }
 
@@ -139,6 +173,40 @@ export const initialState: GlobalState = {
       error: null,
       isLoading: false,
       metadata: null,
+    }
+  },
+  AI: {
+    generateMCQ: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    generateEssay: {
+      data: null,
+      error: null,
+      isLoading: false,
+    }
+  },
+  questions: {
+    mcq: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    essay: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    saveAnsweredEssay: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    saveAnsweredMCQ: {
+      data: null,
+      error: null,
+      isLoading: false,
     }
   }
 };
@@ -582,5 +650,373 @@ export const appReducer = createReducer(
         isLoading: false,
       }
     }
+  })),
+
+
+  // ...
+  // Generate MCQ
+  // ...
+  on(AppActions.aIGenerateMCQ, (state) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateMCQ: {
+        ...state.AI.generateMCQ,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.aIGenerateMCQSuccess, (state, { data }) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateMCQ: {
+        ...state.AI.generateMCQ,
+        error: null,
+        isLoading: false,
+        data: data,
+      }
+    }
+  })),
+  on(AppActions.aIGenerateMCQFailure, (state, { error }) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateMCQ: {
+        ...state.AI.generateMCQ,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Generate Essay
+  // ...
+  on(AppActions.aIGenerateEssay, (state) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateEssay: {
+        ...state.AI.generateEssay,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.aIGenerateEssaySuccess, (state, { data }) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateEssay: {
+        ...state.AI.generateEssay,
+        isLoading: false,
+        data: data,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.aIGenerateEssayFailure, (state, { error }) => ({
+    ...state,
+    AI: {
+      ...state.AI,
+      generateEssay: {
+        ...state.AI.generateEssay,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Get MCQ Questions
+  // ...
+  on(AppActions.getMCQQuestions, (state) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      mcq: {
+        ...state.questions.mcq,
+        data: null,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.getMCQQuestionsSuccess, (state, { data }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      mcq: {
+        ...state.questions.mcq,
+        data: data,
+        isLoading: false,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.getMCQQuestionsFailure, (state, { error }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      mcq: {
+        ...state.questions.mcq,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Get Essay Questions
+  // ...
+  on(AppActions.getEssayQuestions, (state) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      essay: {
+        ...state.questions.essay,
+        data: null,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.getEssayQuestionsSuccess, (state, { data }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      essay: {
+        ...state.questions.essay,
+        data: data,
+        isLoading: false,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.getEssayQuestionsFailure, (state, { error }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      essay: {
+        ...state.questions.essay,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Save Answered Essay
+  // ...
+  on(AppActions.saveAnsweredEssay, (state) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      saveAnsweredEssay: {
+        ...state.questions.saveAnsweredEssay,
+        data: null,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.saveAnsweredEssaySuccess, (state, { data }) => {
+    const questions = state.questions.essay.data || [];
+    const questionsWithAnswers = questions.map((question: any) => {
+      const answered = data.find((answer: any) => answer.question === question.id);
+      return {
+        ...question,
+        answers: [
+          { 
+            id: answered?.id || null,
+            content: answered?.content || '',
+          }
+        ]
+      };
+    });
+
+   // insert answers to enrollment
+    const enrollmentId = data[0]?.enrollment;
+    const latestEnrollment = state.enrollment.latest;
+    const latestEnrollmentIndex = latestEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
+    const listEnrollment = state.enrollment.list;
+    const listEnrollmentIndex = listEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
+
+    // latest enrollment
+    let enrollmentLatest = state.enrollment.latest;
+    if (latestEnrollmentIndex !== -1) {
+      enrollmentLatest = {
+        ...state.enrollment.latest,
+        data: [
+          ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+          {
+            ...state.enrollment.latest.data[latestEnrollmentIndex],
+            essay_answers: data,
+          },
+          ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+        ],
+      }
+    }
+
+    // list enrollment
+    let enrollmentList = state.enrollment.list;
+    if (listEnrollmentIndex !== -1) {
+      enrollmentList = {
+        ...state.enrollment.list,
+        data: [
+          ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+          {
+            ...state.enrollment.list.data[listEnrollmentIndex],
+            essay_answers: data,
+          },
+          ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+        ],
+      }
+    }
+
+    return {
+      ...state,
+      questions: {
+        ...state.questions,
+        saveAnsweredEssay: {
+          ...state.questions.saveAnsweredEssay,
+          data: data,
+          isLoading: false,
+          error: null,
+        },
+        essay: {
+          ...state.questions.essay,
+          data: questionsWithAnswers,
+        }
+      },
+      enrollment: {
+        ...state.enrollment,
+        latest: enrollmentLatest,
+        list: enrollmentList,
+      }
+    };
+  }),
+  on(AppActions.saveAnsweredEssayFailure, (state, { error }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      saveAnsweredEssay: {
+        ...state.questions.saveAnsweredEssay,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+   // ...
+  // Save Answered MCQ
+  // ...
+  on(AppActions.saveAnsweredMCQ, (state) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      saveAnsweredMCQ: {
+        ...state.questions.saveAnsweredMCQ,
+        data: null,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.saveAnsweredMCQSuccess, (state, { data }) => {
+    const questions = state.questions.mcq.data || [];
+    const questionsWithAnswers = questions.map((question: any) => {
+      return {
+        ...question,
+        question_options: question.question_options.map((option: any) => {
+          const chosenAnswer = data.find((ans: any) => ans.selected_option === option.id);
+          
+          return {
+            ...option,
+            chosen_answers: chosenAnswer ? [chosenAnswer] : [],
+          };
+        }),
+      };
+    });
+
+    // insert answers to enrollment
+    const enrollmentId = data[0]?.enrollment;
+    const latestEnrollment = state.enrollment.latest;
+    const latestEnrollmentIndex = latestEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
+    const listEnrollment = state.enrollment.list;
+    const listEnrollmentIndex = listEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
+
+    // latest enrollment
+    let enrollmentLatest = state.enrollment.latest;
+    if (latestEnrollmentIndex !== -1) {
+      enrollmentLatest = {
+        ...state.enrollment.latest,
+        data: [
+          ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+          {
+            ...state.enrollment.latest.data[latestEnrollmentIndex],
+            mcq_answers: data,
+          },
+          ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+        ],
+      }
+    }
+
+    // list enrollment
+    let enrollmentList = state.enrollment.list;
+    if (listEnrollmentIndex !== -1) {
+      enrollmentList = {
+        ...state.enrollment.list,
+        data: [
+          ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+          {
+            ...state.enrollment.list.data[listEnrollmentIndex],
+            mcq_answers: data,
+          },
+          ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+        ],
+      }
+    }
+
+    return {
+      ...state,
+      questions: {
+        ...state.questions,
+        saveAnsweredMCQ: {
+          ...state.questions.saveAnsweredMCQ,
+          data: data,
+          isLoading: false,
+          error: null,
+        },
+        mcq: {
+          ...state.questions.mcq,
+          data: questionsWithAnswers,
+        }
+      },
+      enrollment: {
+        ...state.enrollment,
+        latest: enrollmentLatest,
+        list: enrollmentList,
+      }
+    }
+  }),
+  on(AppActions.saveAnsweredMCQFailure, (state, { error }) => ({
+    ...state,
+    questions: {
+      ...state.questions,
+      saveAnsweredMCQ: {
+        ...state.questions.saveAnsweredMCQ,
+        isLoading: false,
+        error: error,
+      }
+    }
   }))
+  
 )

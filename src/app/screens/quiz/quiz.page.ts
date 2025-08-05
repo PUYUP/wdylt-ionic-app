@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
-import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { ActionsSubject, select, Store } from '@ngrx/store';
+import { lastValueFrom, Observable } from 'rxjs';
 import { QuizEssayComponent } from 'src/app/shared/components/quiz-essay/quiz-essay.component';
 import { QuizMcqComponent } from 'src/app/shared/components/quiz-mcq/quiz-mcq.component';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
@@ -33,12 +33,12 @@ export class QuizPage implements OnInit {
   constructor(
     private store: Store<GlobalState>,
     private route: ActivatedRoute,
+    private actionsSubject$: ActionsSubject,
   ) { 
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       this.enrolledId = params.get('enrolledId');
       this.lessonId = params.get('lessonId');
       this.quizType = params.get('type') as 'mcq' | 'essay' | null;
-      this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
     });
 
     this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
@@ -49,9 +49,39 @@ export class QuizPage implements OnInit {
         }));
       }
     });
+
+    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.getEnrolledLessonSuccess.type:
+          const status = action?.data?.status;
+          if (status === 'waiting_answer') {
+            const description = action?.data?.lessons?.description;
+          }
+          break;
+      }
+    });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    const { enrolledId, lessonId, quizType } = await this.getQueryParams();
+    this.enrolledId = enrolledId;
+    this.lessonId = lessonId;
+    this.quizType = quizType;
+
+
+  }
+
+  async getQueryParams() {
+    const params = await lastValueFrom(this.route.queryParamMap);
+    const enrolledId = params.get('enrolledId');
+    const lessonId = params.get('lessonId');
+    const quizType = params.get('type') as 'mcq' | 'essay' | null;
+
+    return {
+      enrolledId: enrolledId,
+      lessonId: lessonId,
+      quizType: quizType,
+    };
   }
 
 }

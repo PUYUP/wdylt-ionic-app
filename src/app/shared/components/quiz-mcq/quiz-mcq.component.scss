@@ -15,3 +15,9 @@
 .animate-slide-up {
     animation: slideUp 0.3s ease-out;
 }
+
+ion-radio {
+    &::part(label) {
+        white-space: normal;
+    }
+}
