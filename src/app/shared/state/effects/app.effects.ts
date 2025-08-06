@@ -240,11 +240,10 @@ export class AppEffects {
 
       if (source === 'answer-now-alert') {
         // go to the quiz list page
-        this.router.navigate(['/quiz'], {
+        this.router.navigate(['/quiz-' + quizType], {
           queryParams: {
             lessonId: data[0].lesson.id,
             enrolledId: id,
-            type: quizType,
           },
         });
       }

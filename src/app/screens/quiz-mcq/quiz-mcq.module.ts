@@ -1,15 +1,16 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import { IonicModule } from '@ionic/angular';
-import { QuizListPageRoutingModule } from './quiz-list-routing.module';
+import { QuizMcqPageRoutingModule } from './quiz-mcq-routing.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    QuizListPageRoutingModule
+    QuizMcqPageRoutingModule
   ],
 })
-export class QuizListPageModule {}
+export class QuizMcqPageModule {}

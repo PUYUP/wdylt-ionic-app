@@ -10,6 +10,7 @@ export const environment = {
   oneSignalAppId: '1615a20c-4d91-4a10-8d8e-d242c108d9b6',
   mcqGenerationUrl: 'https://cloudflare-worker.pointilis-noktah-teknologi.workers.dev/api/gemini/mcq-generator',
   queryPerPage: 25,
+  deepLinkRedirectUrl: 'https://deeplink.wdylt.com',
 };
 
 /*

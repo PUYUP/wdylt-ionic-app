@@ -194,9 +194,9 @@ export class Tab1Page implements OnInit {
   }
 
   /**
-   * On see quizs button click, navigate to the quizs page.
+   * On start quiz button click, navigate to the quiz page.
    */
-  onSeeQuizs(enrolled: any) {
+  onStartQuiz(enrolled: any) {
     const status = enrolled.status;
 
     if (status === 'in_progress') {

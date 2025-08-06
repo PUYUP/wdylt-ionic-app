@@ -1,14 +1,15 @@
 import { CommonModule, NgStyle } from '@angular/common';
-import { Component, computed, Input, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
-import { BehaviorSubject, map, Observable } from 'rxjs';
-import { GlobalState } from '../../state/reducers/app.reducer';
-import { selectEnrolledLesson, selectEssayQuestions } from '../../state/selectors/app.selectors';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AppActions } from '../../state/actions/app.actions';
-import { SupabaseService } from '../../services/supabase.service';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { SupabaseService } from 'src/app/shared/services/supabase.service';
+import { AppActions } from 'src/app/shared/state/actions/app.actions';
+import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
+import { selectEnrolledLesson, selectEssayQuestions } from 'src/app/shared/state/selectors/app.selectors';
 
 interface Question {
   id: number;
@@ -18,23 +19,22 @@ interface Question {
 
 @Component({
   selector: 'app-quiz-essay',
-  templateUrl: './quiz-essay.component.html',
-  styleUrls: ['./quiz-essay.component.scss'],
+  templateUrl: './quiz-essay.page.html',
+  styleUrls: ['./quiz-essay.page.scss'],
   imports: [
-    FormsModule,
-    ReactiveFormsModule,
     CommonModule,
     IonicModule,
+    FormsModule,
+    ReactiveFormsModule,
     NgStyle,
-  ],
+  ]
 })
-export class QuizEssayComponent  implements OnInit {
+export class QuizEssayPage implements OnInit {
 
-  @Input('data') data: any | null = null;
-  @Input('lessonId') lessonId: string | null = null;
-  @Input('enrolledId') enrolledId: string | null = null;
+  enrollment$!: Observable<any>;
+  enrolledId: string | null = this.route.snapshot.queryParamMap.get('enrolledId');
+  lessonId: string | null = this.route.snapshot.queryParamMap.get('lessonId');
 
-  enrolled$: Observable<any> | null = null;
   essay$: Observable<any> | null = null;
   questions$: Observable<any> | null = null;
   generatingQuiz$: BehaviorSubject<{ status: string }> = new BehaviorSubject<{ status: string }>({ status: 'generating' });
@@ -76,10 +76,11 @@ export class QuizEssayComponent  implements OnInit {
 
   constructor(
     private store: Store<GlobalState>,
+     private route: ActivatedRoute,
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
   ) {
-    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrollment$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
     this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
       if (!essay.isLoading && essay.data && essay.data.length >= 5) {
@@ -111,33 +112,21 @@ export class QuizEssayComponent  implements OnInit {
         this.generatingQuiz$.next({ status: 'generated' });
       }
     });
-
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
-      switch (action.type) {
-        case AppActions.getEssayQuestionsSuccess.type:
-          break;
-        }
-      });
   }
 
   ngOnInit() {
-    this.generatingQuiz$.next({ status: 'generating' });
-    if (this.data) {
-      console.log('Data received:', this.data);
-      const status = this.data.status;
-      if (status === 'waiting_answer') {
-        // const description = this.data.lesson.description;
-        // generate quiz based on the lesson description
-        // this.store.dispatch(AppActions.aIGenerateEssay({ topic: description }));
-
-        // get essay questions
-        this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
-
-        this.refreshInterval = setInterval(() => {
-          this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
-        }, 5000); // Refresh every 5 seconds
-      }
+    if (!this.lessonId && !this.enrolledId) {
+      console.error('Lesson ID or Enrolled ID is missing');
+      return;
     }
+
+    // get essay questions
+    this.generatingQuiz$.next({ status: 'generating' });
+    this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
+
+    this.refreshInterval = setInterval(() => {
+      this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
+    }, 5000); // Refresh every 5 seconds
   }
 
   // Navigation methods

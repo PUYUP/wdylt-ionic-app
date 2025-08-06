@@ -1,0 +1,5 @@
+ion-radio {
+    &::part(label) {
+        white-space: normal;
+    }
+}

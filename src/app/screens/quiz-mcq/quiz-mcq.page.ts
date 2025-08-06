@@ -1,41 +1,50 @@
 import { CommonModule, NgStyle } from '@angular/common';
-import { Component, computed, Input, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
-import { BehaviorSubject, map, Observable } from 'rxjs';
-import { GlobalState } from '../../state/reducers/app.reducer';
-import { selectEnrolledLesson, selectEssayQuestions } from '../../state/selectors/app.selectors';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AppActions } from '../../state/actions/app.actions';
-import { SupabaseService } from '../../services/supabase.service';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { SupabaseService } from 'src/app/shared/services/supabase.service';
+import { AppActions } from 'src/app/shared/state/actions/app.actions';
+import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
+import { selectEnrolledLesson, selectMCQQuestions } from 'src/app/shared/state/selectors/app.selectors';
+
+interface QuizOption {
+  id: number;
+  content_text: string;
+  order: string;
+  points?: number;
+}
 
 interface Question {
   id: number;
   content_text: string;
-  answers?: any[];
+  description: string;
+  question_options: QuizOption[];
+  correctAnswer: string;
 }
 
 @Component({
-  selector: 'app-quiz-essay',
-  templateUrl: './quiz-essay.component.html',
-  styleUrls: ['./quiz-essay.component.scss'],
+  selector: 'app-quiz-mcq',
+  templateUrl: './quiz-mcq.page.html',
+  styleUrls: ['./quiz-mcq.page.scss'],
   imports: [
-    FormsModule,
-    ReactiveFormsModule,
     CommonModule,
     IonicModule,
+    FormsModule,
+    ReactiveFormsModule,
     NgStyle,
-  ],
+  ]
 })
-export class QuizEssayComponent  implements OnInit {
+export class QuizMcqPage implements OnInit {
 
-  @Input('data') data: any | null = null;
-  @Input('lessonId') lessonId: string | null = null;
-  @Input('enrolledId') enrolledId: string | null = null;
+  enrollment$!: Observable<any>;
+  enrolledId: string | null = this.route.snapshot.queryParamMap.get('enrolledId');
+  lessonId: string | null = this.route.snapshot.queryParamMap.get('lessonId');
 
-  enrolled$: Observable<any> | null = null;
-  essay$: Observable<any> | null = null;
+  mcq$: Observable<any> | null = null;
   questions$: Observable<any> | null = null;
   generatingQuiz$: BehaviorSubject<{ status: string }> = new BehaviorSubject<{ status: string }>({ status: 'generating' });
   isQuizGenerating$: Observable<{ status: string }> = this.generatingQuiz$.asObservable();
@@ -44,7 +53,7 @@ export class QuizEssayComponent  implements OnInit {
   currentQuestionIndex = signal(0);
   userAnswers = signal<string[]>([]);
   quizComplete = signal(false);
-  textInputFilled = signal<string>('');
+  optionChosen = signal<string>('');
 
   // Form control for current answer
   answerValue = '';
@@ -54,7 +63,7 @@ export class QuizEssayComponent  implements OnInit {
 
   // Computed values
   currentQuestion = computed(() => this.questions()[this.currentQuestionIndex()]);
-  selectedOption = computed(() => this.textInputFilled() || '');
+  selectedOption = computed(() => this.optionChosen() || '');
   
   // Helper computed properties
   canGoPrevious = computed(() => this.currentQuestionIndex() > 0);
@@ -65,36 +74,55 @@ export class QuizEssayComponent  implements OnInit {
   isLastQuestion = computed(() => this.currentQuestionIndex() === this.questions().length - 1);
   isQuizComplete = computed(() => this.quizComplete());
   pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => i + 1));
-  
+
   // Question prerendering
   refreshInterval: any = null;
   isAnswered = computed(() => {
     return this.questions().filter((question, index) => {
-      return question.answers && question.answers?.length > 0;
+      const options = question.question_options;
+      return options.find((option: any) => option.chosen_answers && option.chosen_answers.length > 0);
     }).length > 0;
   });
 
   constructor(
     private store: Store<GlobalState>,
+    private route: ActivatedRoute,
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
-  ) {
-    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
-    this.essay$ = this.store.pipe(select(selectEssayQuestions));
-    this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
-      if (!essay.isLoading && essay.data && essay.data.length >= 5) {
+  ) { 
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+      this.enrolledId = params.get('enrolledId');
+      this.lessonId = params.get('lessonId');
+    });
+
+    this.enrollment$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrollment$.pipe(takeUntilDestroyed()).subscribe((state: any) => {
+      if (!state.isLoading) {
+        if (!state.error && !state.data) {
+          this.store.dispatch(AppActions.getEnrolledLesson({
+            id: this.enrolledId as string,
+          }));
+        }
+      }
+    });
+
+    this.mcq$ = this.store.pipe(select(selectMCQQuestions));
+    this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
+      if (!mcq.isLoading && mcq.data && mcq.data.length >= 10) {
         this.resetQuiz();
 
-        this.questions.set(essay.data);
+        this.questions.set(mcq.data);
         clearInterval(this.refreshInterval); // Clear any existing interval
         this.refreshInterval = null; // Reset refresh interval
 
         // set answer array to match the number of questions
-        for (let [index, value] of essay.data.entries()) {
-          if (value.answers && value.answers.length > 0) {
+        for (let [index, value] of mcq.data.entries()) {
+          const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+
+          if (chosenAnswer) {
             this.userAnswers.update(answers => {
               const newAnswers = [...answers];
-              newAnswers[index] = value?.answers?.[0]?.content;
+              newAnswers[index] = `${chosenAnswer.question}:${chosenAnswer.order}`;
               return newAnswers;
             });
           }
@@ -111,40 +139,30 @@ export class QuizEssayComponent  implements OnInit {
         this.generatingQuiz$.next({ status: 'generated' });
       }
     });
-
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
-      switch (action.type) {
-        case AppActions.getEssayQuestionsSuccess.type:
-          break;
-        }
-      });
   }
 
   ngOnInit() {
-    this.generatingQuiz$.next({ status: 'generating' });
-    if (this.data) {
-      console.log('Data received:', this.data);
-      const status = this.data.status;
-      if (status === 'waiting_answer') {
-        // const description = this.data.lesson.description;
-        // generate quiz based on the lesson description
-        // this.store.dispatch(AppActions.aIGenerateEssay({ topic: description }));
-
-        // get essay questions
-        this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
-
-        this.refreshInterval = setInterval(() => {
-          this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
-        }, 5000); // Refresh every 5 seconds
-      }
+    if (!this.lessonId && !this.enrolledId) {
+      console.error('Lesson ID or Enrolled ID is missing');
+      return;
     }
+
+    // get MCQ questions
+    this.generatingQuiz$.next({ status: 'generating' });
+    this.store.dispatch(AppActions.getMCQQuestions({
+      lessonId: this.lessonId as string,
+    }));
+
+    this.refreshInterval = setInterval(() => {
+      this.store.dispatch(AppActions.getMCQQuestions({ lessonId: this.lessonId as string }));
+    }, 5000); // Refresh every 5 seconds
   }
 
   // Navigation methods
   nextQuestion(): void {
     if (!this.canProceed()) return;
 
-    // this.textInputFilled.set(null); // Reset selected option after proceeding
+    // this.optionChosen.set(null); // Reset selected option after proceeding
     this.saveCurrentAnswer(); // Save the selected option before index change
 
     if (this.isLastQuestion()) {
@@ -194,9 +212,9 @@ export class QuizEssayComponent  implements OnInit {
     this.answerValue = savedAnswer; // Update the input value
 
     if (savedAnswer && savedAnswer !== '') {
-      this.textInputFilled.set(savedAnswer); // Set the selected option if available
+      this.optionChosen.set(savedAnswer); // Set the selected option if available
     } else {
-      this.textInputFilled.set(''); // Reset if no saved answer
+      this.optionChosen.set(''); // Reset if no saved answer
     }
   }
 
@@ -208,15 +226,22 @@ export class QuizEssayComponent  implements OnInit {
   resetQuiz(): void {
     this.currentQuestionIndex.set(0);
     this.userAnswers.set([]);
-    this.questions.set([]);
     this.quizComplete.set(false);
     this.answerValue = '';
-    this.textInputFilled.set('');
+    this.optionChosen.set('');
   }
 
-  onAnswerChange(event: any): void {
-    this.textInputFilled.set(event.detail.value);
+  onOptionSelected(event: any): void {
+    this.optionChosen.set(event.detail.value);
     this.saveCurrentAnswer(); // Save the selected option immediately
+
+    // check have next answer
+    const nextIndex = this.currentQuestionIndex() + 1;
+    if (this.userAnswers()[nextIndex] == undefined && this.userAnswers()[nextIndex] !== '') {
+      setTimeout(() => {
+        this.nextQuestion(); // Automatically proceed to the next question
+      }, 150);
+    }
   }
   
   goToQuestion(index: number): void {
@@ -226,29 +251,40 @@ export class QuizEssayComponent  implements OnInit {
 
   async submitQuiz() {
     console.log('Quiz submitted!');
+    console.log('User Answers:', this.userAnswers());
+
     const session = await this.supabaseService.session();
     if (!session) {
       console.error('User is not authenticated');
       return;
     }
 
-    const answers = this.userAnswers().map((answer, index) => ({
-      content: answer,
-      user: session?.user?.id,
-      question: this.questions()[index].id,
-      question_content: this.questions()[index].content_text,
-      lesson: this.lessonId,
-      enrollment: this.enrolledId,
-    }));
+    const answers = this.userAnswers().map((answer, index) => {
+      const instances = answer.split(':');
+      const questionId = instances[0]; 
+      const value = instances[1];
+      const question = this.questions().find(q => q.id === parseInt(questionId));
+      const option = question?.question_options.find(opt => opt.order == value);
 
-    this.store.dispatch(AppActions.saveAnsweredEssay({
+      return {
+        user: session?.user?.id,
+        lesson: this.lessonId,
+        enrollment: this.enrolledId,
+        question: questionId,
+        selected_option: option?.id,
+        points_earned: option?.points || 1,
+      };
+    });
+
+    console.log('Answers to be submitted:', answers);
+    this.store.dispatch(AppActions.saveAnsweredMCQ({
       data: answers,
-      source: 'quiz-essay'
+      source: 'quiz-mcq'
     }));
   }
 
   ngOnDestroy() {
-    console.log('QuizEssayComponent destroyed');
+    console.log('QuizMCQComponent destroyed');
     this.resetQuiz();
     this.generatingQuiz$.complete();
   }

@@ -5,8 +5,8 @@ import { IonicModule } from '@ionic/angular';
 import { GlobalState } from '../../state/reducers/app.reducer';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { AppActions } from '../../state/actions/app.actions';
-import { Observable } from 'rxjs';
-import { selectEnrolledLesson, selectGenerateMCQ, selectMCQQuestions } from '../../state/selectors/app.selectors';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { selectEnrolledLesson, selectMCQQuestions } from '../../state/selectors/app.selectors';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SupabaseService } from '../../services/supabase.service';
 
@@ -46,6 +46,8 @@ export class QuizMcqComponent  implements OnInit {
   enrolled$: Observable<any>;
   mcq$: Observable<any> | null = null;
   questions$: Observable<any> | null = null;
+  generatingQuiz$: BehaviorSubject<{ status: string }> = new BehaviorSubject<{ status: string }>({ status: 'generating' });
+  isQuizGenerating$: Observable<{ status: string }> = this.generatingQuiz$.asObservable();
 
   // Signals for reactive state management
   currentQuestionIndex = signal(0);
@@ -90,34 +92,35 @@ export class QuizMcqComponent  implements OnInit {
     this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
     this.mcq$ = this.store.pipe(select(selectMCQQuestions));
     this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
-      if (!mcq.isLoading) {
-        if (mcq.data && mcq.data.length >= 10) {
-          this.resetQuiz();
+      if (!mcq.isLoading && mcq.data && mcq.data.length >= 10) {
+        this.resetQuiz();
 
-          this.questions.set(mcq.data);
-          clearInterval(this.refreshInterval); // Clear any existing interval
-          this.refreshInterval = null; // Reset refresh interval
+        this.questions.set(mcq.data);
+        clearInterval(this.refreshInterval); // Clear any existing interval
+        this.refreshInterval = null; // Reset refresh interval
 
-          // set answer array to match the number of questions
-          for (let [index, value] of mcq.data.entries()) {
-            const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+        // set answer array to match the number of questions
+        for (let [index, value] of mcq.data.entries()) {
+          const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
 
-            if (chosenAnswer) {
-              this.userAnswers.update(answers => {
-                const newAnswers = [...answers];
-                newAnswers[index] = `${chosenAnswer.question}:${chosenAnswer.order}`;
-                return newAnswers;
-              });
-            }
-            else {
-              this.userAnswers.set([]);
-            }
+          if (chosenAnswer) {
+            this.userAnswers.update(answers => {
+              const newAnswers = [...answers];
+              newAnswers[index] = `${chosenAnswer.question}:${chosenAnswer.order}`;
+              return newAnswers;
+            });
           }
-
-          // Load saved answer when question changes
-          this.currentQuestionIndex.set(0);
-          this.loadCurrentAnswer();
+          else {
+            this.userAnswers.set([]);
+          }
         }
+
+        // Load saved answer when question changes
+        this.currentQuestionIndex.set(0);
+        this.loadCurrentAnswer();
+
+        // Set generatingQuiz to false after loading questions
+        this.generatingQuiz$.next({ status: 'generated' });
       }
     });
 
@@ -130,6 +133,7 @@ export class QuizMcqComponent  implements OnInit {
   }
 
   ngOnInit() {
+    this.generatingQuiz$.next({ status: 'generating' });
     if (this.data) {
       console.log('Data received:', this.data);
       const status = this.data.status;
@@ -271,6 +275,12 @@ export class QuizMcqComponent  implements OnInit {
       data: answers,
       source: 'quiz-mcq'
     }));
+  }
+
+  ngOnDestroy() {
+    console.log('QuizMCQComponent destroyed');
+    this.resetQuiz();
+    this.generatingQuiz$.complete();
   }
 
 }

@@ -84,11 +84,10 @@ export class ArchivePage implements OnInit {
     if (status === 'in_progress') {
       this.startQuizNow(enrolled, type);
     } else if (status === 'waiting_answer' || status === 'completed') {
-      this.router.navigate(['/quiz'], {
+      this.router.navigate(['/quiz-' + type], {
         queryParams: {
           lessonId: enrolled.lesson.id,
           enrolledId: enrolled.id,
-          type: type,
         },
       });
     }

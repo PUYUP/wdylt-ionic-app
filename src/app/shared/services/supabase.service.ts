@@ -57,11 +57,17 @@ export class SupabaseService {
   }
 
   signInWithGoogle(source: string = 'signup') {
+    let deeplinkRedirectUrl = environment.deepLinkRedirectUrl;
+    if (Capacitor.isNativePlatform()) {
+      // For native platforms, use the deeplink redirect URL
+      deeplinkRedirectUrl = document.URL;
+    }
+
     // Use the redirect method for Google sign-in
-    let redirectUrl = 'https://deeplink.wdylt.com/identify'; // OR com.wydlt.app://identify
+    let redirectUrl = `${deeplinkRedirectUrl}/identify`; // OR com.wydlt.app://identify
     if (source === 'signin') {
       // redirect directly to home page
-      redirectUrl = 'https://deeplink.wdylt.com/';
+      redirectUrl = deeplinkRedirectUrl;
     }
 
     // if pwa

@@ -34,6 +34,14 @@ const routes: Routes = [
     redirectTo: '/onboarding',
     pathMatch: 'full'
   },
+  {
+    path: 'quiz-essay',
+    loadChildren: () => import('./screens/quiz-essay/quiz-essay.module').then( m => m.QuizEssayPageModule)
+  },
+  {
+    path: 'quiz-mcq',
+    loadChildren: () => import('./screens/quiz-mcq/quiz-mcq.module').then( m => m.QuizMcqPageModule)
+  },
 ];
 @NgModule({
   imports: [
