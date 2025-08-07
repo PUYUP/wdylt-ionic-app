@@ -82,8 +82,6 @@ export class AppEffects {
 
       if (enrollmentData) {
         const goalHours = enrollmentData.goalHour?.split(':');
-        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        
         const today = new Date();
         const withNewHour = setHours(today, goalHours ? parseInt(goalHours[0], 10) : 0);
         const withNewMinutes = setMinutes(withNewHour, goalHours ? parseInt(goalHours[1], 10) : 0);
@@ -324,11 +322,17 @@ export class AppEffects {
           .from('enrollments')
           .select(`
             *, 
-            lesson(id, content_type, description, content_data),
+            lesson(
+              id, content_type, description, content_data,
+              mcq_questions: questions(*),
+              essay_questions: questions(*)
+            ),
             mcq_answers: chosen_answers!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
           `)
           .eq('user', filter.user_id)
+          .eq('lesson.mcq_questions.question_type', 'mcq')
+          .eq('lesson.essay_questions.question_type', 'essay')
           .is('deleted_at', null)
           .range(filter.from_page, filter.to_page)
           .order('created_at', { ascending: false })
@@ -410,7 +414,7 @@ export class AppEffects {
           .from('enrollments')
           .select(`
             *, 
-            lesson(id, content_type, description, content_data),
+            lesson(id, content_type, description, content_data, questions(*)),
             mcq_answers: chosen_answers!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
           `)
@@ -677,7 +681,7 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('questions')
-          .select('*, answers(id, content)', { count: 'exact' })
+          .select('*, answers(id, content, points)', { count: 'exact' })
           .eq('lesson', lessonId)
           .eq('question_type', 'essay')
           .order('created_at', { ascending: true });

@@ -27,6 +27,11 @@
             </tr>
 
             <tr>
+              <td class="w-36">Actual quiz start at</td>
+              <td>: {{ item.start_datetime | date: 'short' }}</td>
+            </tr>
+
+            <tr>
               <td class="w-36">Duration</td>
               <td>: {{ item.start_datetime | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
             </tr>
