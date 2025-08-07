@@ -134,6 +134,7 @@ export class ArchivePage implements OnInit {
               data: {
                 status: 'waiting_answer',
                 updated_at: new Date().toISOString(),
+                start_datetime: new Date().toISOString(),
               },
               metadata: {
                 quizType: type,

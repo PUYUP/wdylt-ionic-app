@@ -1,5 +1,5 @@
 import { CommonModule, NgStyle } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -41,6 +41,7 @@ export class QuizEssayPage implements OnInit {
   isQuizGenerating$: Observable<{ status: string }> = this.generatingQuiz$.asObservable();
 
   // Signals for reactive state management
+  generatingAttempt = signal(1);
   currentQuestionIndex = signal(0);
   userAnswers = signal<string[]>([]);
   quizComplete = signal(false);
@@ -57,6 +58,7 @@ export class QuizEssayPage implements OnInit {
   selectedOption = computed(() => this.textInputFilled() || '');
   
   // Helper computed properties
+  totalGeneratingAttempts = computed(() => this.generatingAttempt());
   canGoPrevious = computed(() => this.currentQuestionIndex() > 0);
   canProceed = computed(() => this.selectedOption() !== '');
   canSkip = computed(() => this.selectedOption() === null || this.selectedOption() === '');
@@ -80,6 +82,29 @@ export class QuizEssayPage implements OnInit {
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
   ) {
+    effect(() => {
+      if (this.totalGeneratingAttempts() > 10) {
+        console.error('Failed to load Essay questions after multiple attempts');
+        clearInterval(this.refreshInterval); // Clear the refresh interval
+        // force update enrollment again to get new questions
+        this.store.dispatch(AppActions.updateEnrolledLesson({
+          id: this.enrolledId as string,
+          data: {
+            status: 'waiting_answer',
+          }
+        }));
+
+        // try to get questions again
+        this.store.dispatch(AppActions.getEssayQuestions({
+          lessonId: this.lessonId as string,
+        }));
+
+        this.refreshInterval = setInterval(() => {
+          this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
+        }, 5000); // Refresh every 5 seconds
+      }
+    });
+    
     this.enrollment$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
     this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
@@ -125,6 +150,7 @@ export class QuizEssayPage implements OnInit {
     this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
 
     this.refreshInterval = setInterval(() => {
+      this.generatingAttempt.update(attempt => attempt + 1);
       this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
     }, 5000); // Refresh every 5 seconds
   }
@@ -240,6 +266,7 @@ export class QuizEssayPage implements OnInit {
     console.log('QuizEssayComponent destroyed');
     this.resetQuiz();
     this.generatingQuiz$.complete();
+    clearInterval(this.refreshInterval); // Clear the refresh interval
   }
 
 }

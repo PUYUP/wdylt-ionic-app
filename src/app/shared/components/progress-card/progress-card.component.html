@@ -51,7 +51,7 @@
       <div [ngStyle]="{'width': (size - (strokeWidth * 2)) + 'px'}" class="text-center">
         @if (data.status === 'waiting_answer') {
           @if (data?.mcq_answers?.length > 0 && data?.essay_answers?.length > 0) {
-            <ion-text class="text-2xl text-yellow-600">Waiting Points</ion-text>
+            <ion-text class="text-2xl text-lime-600">Good Job! Already Done</ion-text>
           } @else {
             <ion-text class="text-2xl text-yellow-600">Waiting Quiz Completion!</ion-text>
           }

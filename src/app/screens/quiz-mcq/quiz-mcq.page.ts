@@ -1,5 +1,5 @@
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -53,6 +53,7 @@ export class QuizMcqPage implements OnInit {
   isQuizGenerating$: Observable<{ status: string }> = this.generatingQuiz$.asObservable();
 
   // Signals for reactive state management
+  generatingAttempt = signal(1);
   currentQuestionIndex = signal(0);
   userAnswers = signal<string[]>([]);
   quizComplete = signal(false);
@@ -69,6 +70,7 @@ export class QuizMcqPage implements OnInit {
   selectedOption = computed(() => this.optionChosen() || '');
   
   // Helper computed properties
+  totalGeneratingAttempts = computed(() => this.generatingAttempt());
   canGoPrevious = computed(() => this.currentQuestionIndex() > 0);
   canProceed = computed(() => this.selectedOption() !== '');
   canSkip = computed(() => this.selectedOption() === null || this.selectedOption() === '');
@@ -112,6 +114,29 @@ export class QuizMcqPage implements OnInit {
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
   ) { 
+    effect(() => {
+      if (this.totalGeneratingAttempts() > 10) {
+        console.error('Failed to load MCQ questions after multiple attempts');
+        clearInterval(this.refreshInterval); // Clear the refresh interval
+        // force update enrollment again to get new questions
+        this.store.dispatch(AppActions.updateEnrolledLesson({
+          id: this.enrolledId as string,
+          data: {
+            status: 'waiting_answer',
+          }
+        }));
+
+        // try to get questions again
+        this.store.dispatch(AppActions.getMCQQuestions({
+          lessonId: this.lessonId as string,
+        }));
+
+        this.refreshInterval = setInterval(() => {
+          this.store.dispatch(AppActions.getMCQQuestions({ lessonId: this.lessonId as string }));
+        }, 5000); // Refresh every 5 seconds
+      }
+    });
+
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       this.enrolledId = params.get('enrolledId');
       this.lessonId = params.get('lessonId');
@@ -177,6 +202,7 @@ export class QuizMcqPage implements OnInit {
     }));
 
     this.refreshInterval = setInterval(() => {
+      this.generatingAttempt.update(attempt => attempt + 1);
       this.store.dispatch(AppActions.getMCQQuestions({ lessonId: this.lessonId as string }));
     }, 5000); // Refresh every 5 seconds
   }
@@ -265,8 +291,6 @@ export class QuizMcqPage implements OnInit {
         this.nextQuestion(); // Automatically proceed to the next question
       }, 150);
     }
-
-    console.log(this.questions());
   }
   
   goToQuestion(index: number): void {
@@ -312,6 +336,7 @@ export class QuizMcqPage implements OnInit {
     console.log('QuizMCQComponent destroyed');
     this.resetQuiz();
     this.generatingQuiz$.complete();
+    clearInterval(this.refreshInterval); // Clear the refresh interval
   }
 
 }
