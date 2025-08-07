@@ -46,28 +46,44 @@
       </div>
     } @else if (state.status == 'generated') {
       <!-- Action Buttons -->
-      @if (!isAnswered()) {
-        @if ((totalAnswered() == questions().length)) {
+      @if ((totalAnswered() == questions().length)) {
+        @if (haveQuestionsWithNoAnswer()) {
           <div class="ion-padding-bottom">
             <ion-button mode="ios" shape="round" expand="block" (click)="submitQuiz()">
               <ion-text>Submit</ion-text>
             </ion-button>
           </div>
         } @else {
-          <div class="grid grid-cols-3 gap-2 ion-padding-bottom">
-            <ion-button mode="ios" shape="round" color="light" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
-              <ion-icon name="chevron-back" slot="start"></ion-icon>
-            </ion-button>
+          <div class="ion-padding-bottom grid grid-cols-2 gap-3">
+            <div class="block">
+              <div class="text-center">Your Scores:</div>
+              <div class="text-3xl font-black text-center">
+                {{ correctPoints() }} / {{ totalPoints() }}
+              </div>
+            </div>
 
-            <ion-button mode="ios" shape="round" color="secondary" (click)="skipQuestion()" [disabled]="!canSkip()">
-              <ion-text>Skip</ion-text>
-            </ion-button>
-
-            <ion-button mode="ios" shape="round" color="light" (click)="nextQuestion()" [disabled]="!canProceed()">
-              <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
-            </ion-button>
+            <div class="block">
+              <div class="text-center">Correct Answers:</div>
+              <div class="text-3xl font-black text-center">
+                {{ correctAnswers() }} / {{ questions().length }}
+              </div>
+            </div>
           </div>
         }
+      } @else {
+        <div class="grid grid-cols-3 gap-2 ion-padding-bottom">
+          <ion-button mode="ios" shape="round" color="light" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
+            <ion-icon name="chevron-back" slot="start"></ion-icon>
+          </ion-button>
+
+          <ion-button mode="ios" shape="round" color="secondary" (click)="skipQuestion()" [disabled]="!canSkip()">
+            <ion-text>Skip</ion-text>
+          </ion-button>
+
+          <ion-button mode="ios" shape="round" color="light" (click)="nextQuestion()" [disabled]="!canProceed()">
+            <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
       }
 
       <!-- Quiz Card -->
@@ -80,28 +96,41 @@
             </div>
 
             <!-- Options Section -->
-            <div class="p-0 space-y-4 ion-padding-top">
-              <div class="space-y-3">
-                <ion-list>
-                  <ion-radio-group [value]="answerValue" (ionChange)="onOptionSelected($event)">
-                    @for (option of currentQuestion().question_options; track option.order; let last = $last) {
-                      <ion-item [lines]="last ? 'none' : 'full'">
-                        <ion-radio 
-                          [value]="currentQuestion().id + ':' + option.order" 
-                          [disabled]="isAnswered()"
-                          mode="md" 
-                          labelPlacement="end" 
-                          justify="start" 
-                          class="ion-text-wrap"
-                        >
-                          {{ option.content_text }}
-                        </ion-radio>
-                      </ion-item>
-                    }
-                  </ion-radio-group>
-                </ion-list>
+            @if (currentQuestion()) {
+              <div class="p-0 space-y-4 ion-padding-top">
+                <div class="space-y-3">
+                  <ion-list>
+                    <ion-radio-group [value]="answerValue" (ionChange)="onOptionSelected($event)">
+                      @for (option of currentQuestion().question_options; track option.order; let last = $last) {
+                        <ion-item [lines]="last ? 'none' : 'full'" class="ion-no-padding">
+                          <ion-radio 
+                            [value]="currentQuestion().id + ':' + option.order" 
+                            [disabled]="currentQuestion().chosen_answers.length > 0"
+                            mode="md" 
+                            labelPlacement="end" 
+                            justify="start" 
+                            class="ion-text-wrap"
+                            [ngClass]="{
+                              'correct-option': currentQuestion().chosen_answers[0]?.correct_option?.id == option.id,
+                            }"
+                          >
+                            {{ option.content_text }}
+                          </ion-radio>
+
+                          @if (currentQuestion().chosen_answers.length > 0) {
+                            @if (currentQuestion().chosen_answers[0]?.correct_option?.id == option.id) {
+                              <ion-icon slot="end" name="checkmark" color="success"></ion-icon>
+                            } @else {
+                              <ion-icon slot="end" name="close" color="danger"></ion-icon>
+                            }
+                          }
+                        </ion-item>
+                      }
+                    </ion-radio-group>
+                  </ion-list>
+                </div>
               </div>
-            </div>
+            }
           </ion-card-content>
         </ion-card>
       </div>

@@ -933,16 +933,10 @@ export const appReducer = createReducer(
   on(AppActions.saveAnsweredMCQSuccess, (state, { data }) => {
     const questions = state.questions.mcq.data || [];
     const questionsWithAnswers = questions.map((question: any) => {
+      const chosenAnswers = data.filter((ans: any) => ans.question === question.id);
       return {
         ...question,
-        question_options: question.question_options.map((option: any) => {
-          const chosenAnswer = data.find((ans: any) => ans.selected_option === option.id);
-          
-          return {
-            ...option,
-            chosen_answers: chosenAnswer ? [chosenAnswer] : [],
-          };
-        }),
+        chosen_answers: chosenAnswers,
       };
     });
 

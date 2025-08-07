@@ -1,4 +1,4 @@
-import { CommonModule, NgStyle } from '@angular/common';
+import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -23,7 +23,9 @@ interface Question {
   content_text: string;
   description: string;
   question_options: QuizOption[];
+  chosen_answers: any[];
   correctAnswer: string;
+  points: number;
 }
 
 @Component({
@@ -36,6 +38,7 @@ interface Question {
     FormsModule,
     ReactiveFormsModule,
     NgStyle,
+    NgClass,
   ]
 })
 export class QuizMcqPage implements OnInit {
@@ -74,13 +77,32 @@ export class QuizMcqPage implements OnInit {
   isLastQuestion = computed(() => this.currentQuestionIndex() === this.questions().length - 1);
   isQuizComplete = computed(() => this.quizComplete());
   pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => i + 1));
+  totalPoints = computed(() => {
+    return this.questions().reduce((acc, curr: any) => {
+      return acc + parseInt(curr.points, 10);
+    }, 0);
+  });
+  correctPoints = computed(() => {
+    return this.questions().reduce((acc, curr: any) => {  
+      const chosenAnswer = curr.chosen_answers?.[0];
+      if (!chosenAnswer) return acc;
+      if (!chosenAnswer.is_correct) return acc;
+
+      return acc + parseInt(chosenAnswer.selected_option.points, 10);
+    }, 0);
+  });
+  correctAnswers = computed(() => {
+    return this.questions().filter((question: any) => {
+      const chosenAnswer = question.chosen_answers?.[0];
+      return chosenAnswer && chosenAnswer.is_correct;
+    }).length;
+  });
 
   // Question prerendering
   refreshInterval: any = null;
-  isAnswered = computed(() => {
+  haveQuestionsWithNoAnswer = computed(() => {
     return this.questions().filter((question, index) => {
-      const options = question.question_options;
-      return options.find((option: any) => option.chosen_answers && option.chosen_answers.length > 0);
+      return question?.chosen_answers?.length == 0;
     }).length > 0;
   });
 
@@ -117,7 +139,8 @@ export class QuizMcqPage implements OnInit {
 
         // set answer array to match the number of questions
         for (let [index, value] of mcq.data.entries()) {
-          const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+          //const chosenAnswerx = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+          const chosenAnswer = value.chosen_answers?.[0]?.selected_option;
 
           if (chosenAnswer) {
             this.userAnswers.update(answers => {
@@ -242,6 +265,8 @@ export class QuizMcqPage implements OnInit {
         this.nextQuestion(); // Automatically proceed to the next question
       }, 150);
     }
+
+    console.log(this.questions());
   }
   
   goToQuestion(index: number): void {

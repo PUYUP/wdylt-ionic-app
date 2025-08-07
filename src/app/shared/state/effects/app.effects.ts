@@ -632,7 +632,11 @@ export class AppEffects {
       try {
       const { data, error } = await this.supabaseService.getSupabase()
         .from('questions')
-        .select('*, question_options(id, content_text, order, points, question, chosen_answers(*))')
+        .select(`
+          *, 
+          question_options(id, content_text, order, points),
+          chosen_answers(id, is_correct, question, correct_option(*), selected_option(*))
+        `)
         .eq('lesson', lessonId)
         .eq('question_type', 'mcq')
         .order('created_at', { ascending: true })
@@ -752,7 +756,7 @@ export class AppEffects {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('chosen_answers')
           .insert(data)
-          .select('*');
+          .select('*, correct_option(*), selected_option(*)');
 
         if (error) {
           throw error;
