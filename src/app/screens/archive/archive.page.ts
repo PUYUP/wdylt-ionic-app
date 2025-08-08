@@ -1,4 +1,4 @@
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule, JsonPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AlertController, InfiniteScrollCustomEvent, IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
@@ -20,6 +20,7 @@ import { environment } from 'src/environments/environment';
     IonicModule,
     CommonModule,
     AsyncPipe,
+    JsonPipe,
     TimeDifferenceInMinutesPipe
 ]
 })

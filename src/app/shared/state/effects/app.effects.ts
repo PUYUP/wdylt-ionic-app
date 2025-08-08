@@ -341,7 +341,55 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.getEnrolledLessonsSuccess({ data, filter, metadata });
+
+        // do some post-processing on the data
+        const modifiedData = data.map((item: any) => {
+          // sum points from each lesson questions
+          const correctAnsweredMCQPoints = item.mcq_answers.reduce((sum: number, answer: any) => {
+            if (answer.is_correct) {
+              return sum + (answer.points_earned || 0);
+            }
+            return sum;
+          }, 0);
+
+          // total points from all questions
+          const totalMCQPoints = item.lesson.mcq_questions.reduce((sum: number, question: any) => {
+            return sum + (question.points || 0);
+          }, 0);
+
+          // total correct answer
+          const totalCorrectAnsweredMCQ = item.mcq_answers.filter((answer: any) => answer.is_correct).length;
+          
+          // total questions
+          const totalMCQQuestions = item.lesson.mcq_questions.length;
+          const totalEssayQuestions = item.essay_answers.length;
+
+          // success rate
+          const mcqSuccessRate = totalMCQQuestions > 0 ? (totalCorrectAnsweredMCQ / totalMCQQuestions) * 100 : 0;
+          
+          // total essay points
+          const totalEssayPoints = item.essay_answers.reduce((sum: number, answer: any) => {
+            return sum + (answer.points || 0);
+          }, 0);
+
+          return {
+            ...item,
+            summary: {
+              mcq: {
+                correct_answer: totalCorrectAnsweredMCQ,
+                correct_answer_points: correctAnsweredMCQPoints,
+                total_points: totalMCQPoints,
+                total_questions: totalMCQQuestions,
+                success_rate: mcqSuccessRate.toFixed(2),
+              },
+              essay: {
+                total_points: totalEssayPoints,
+                total_questions: totalEssayQuestions,
+              }
+            },
+          }
+        });
+        return AppActions.getEnrolledLessonsSuccess({ data: modifiedData, filter, metadata });
       } catch (error) {
         console.error('Error getting enrolled lessons:', error);
         return AppActions.getEnrolledLessonsFailure({ error });
@@ -373,7 +421,18 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
-          .select('*, lesson(id, content_type, description, content_data)')
+          .select(`
+            *, 
+            lesson(
+              id, content_type, description, content_data,
+              mcq_questions: questions(*),
+              essay_questions: questions(*)
+            ),
+            mcq_answers: chosen_answers!enrollment(*),
+            essay_answers: answers!enrollment(*, question(id, question_type))
+          `)
+          .eq('lesson.mcq_questions.question_type', 'mcq')
+          .eq('lesson.essay_questions.question_type', 'essay')
           .eq('id', id)
           .single();
 
