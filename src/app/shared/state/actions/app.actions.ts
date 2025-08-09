@@ -36,6 +36,8 @@ export const AppActions = createActionGroup({
         user_id: string | number,
         from_page: number,
         to_page: number,
+        lt_date?: string,
+        gt_date?: string,
       },
       metadata?: any
     }>(),
@@ -45,6 +47,8 @@ export const AppActions = createActionGroup({
         user_id: string | number,
         from_page: number,
         to_page: number,
+        lt_date?: string,
+        gt_date?: string,
       },
       metadata?: any
     }>(),

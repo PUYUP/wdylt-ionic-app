@@ -1,0 +1,25 @@
+<!-- Days Grid -->
+<div class="grid grid-cols-9 gap-1 items-center">
+  <div>
+    <ion-buttons>
+      <ion-button (click)="navigateToPreviousWeek()" mode="ios">
+        <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </div>
+
+  @for (day of weekData().dates; track day; let i = $index) {
+    <div [class]="getDayClasses(day, i)" class="shadow-sm" (click)="onDayClick(day)">
+      <div class="font-semibold text-sm">{{ weekData().shortNames[i] }}</div>
+      <div class="text-sm font-bold">{{ weekData().dayNumbers[i] }}</div>
+    </div>
+  }
+
+  <div>
+    <ion-buttons>
+      <ion-button (click)="navigateToNextWeek()" mode="ios">
+        <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </div>
+</div>

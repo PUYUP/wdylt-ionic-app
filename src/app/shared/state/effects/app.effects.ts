@@ -3,7 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { SupabaseService } from '../../services/supabase.service';
 import { catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
 import { AppActions } from '../actions/app.actions';
-import { getISODay, setHours, setMinutes, setSeconds } from 'date-fns';
+import { addDays, getISODay, setHours, setMinutes, setSeconds, subDays } from 'date-fns';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '../reducers/app.reducer';
 import { format, formatInTimeZone } from 'date-fns-tz';
@@ -326,8 +326,11 @@ export class AppEffects {
   getEnrollments$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getEnrollments),
     switchMap(async ({ filter, metadata }) => {
+      const lt = filter.lt_date;
+      const gt = filter.gt_date;
+
       try {
-        const { data, error } = await this.supabaseService.getSupabase()
+        let query = this.supabaseService.getSupabase()
           .from('enrollments')
           .select(`
             *, 
@@ -341,11 +344,22 @@ export class AppEffects {
           `)
           .eq('user', filter.user_id)
           .eq('lesson.mcq_questions.question_type', 'mcq')
-          .eq('lesson.essay_questions.question_type', 'essay')
-          .is('deleted_at', null)
+          .eq('lesson.essay_questions.question_type', 'essay');
+
+        if (lt) {
+          query = query.gte('created_at', format(lt, 'yyyy-MM-dd'));
+        }
+
+        if (gt) {
+          query = query.lte('created_at', format(gt, 'yyyy-MM-dd'));
+        }
+
+        query = query.is('deleted_at', null)
           .range(filter.from_page, filter.to_page)
           .order('created_at', { ascending: false })
           .limit(environment.queryPerPage);
+          
+        const { data, error } = await query;
 
         if (error) {
           throw error;

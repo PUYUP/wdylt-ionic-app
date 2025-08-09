@@ -1,6 +1,6 @@
-import { AsyncPipe, CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { AlertController, InfiniteScrollCustomEvent, IonicModule } from '@ionic/angular';
+import { AsyncPipe, CommonModule, NgStyle } from '@angular/common';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { AlertController, InfiniteScrollCustomEvent, IonicModule, RefresherCustomEvent } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
@@ -11,6 +11,7 @@ import { TimeDifferenceInMinutesPipe } from "../../shared/pipes/time-difference-
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from 'src/environments/environment';
+import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 
 @Component({
   selector: 'app-archive',
@@ -20,18 +21,34 @@ import { environment } from 'src/environments/environment';
     IonicModule,
     CommonModule,
     AsyncPipe,
-    TimeDifferenceInMinutesPipe
-]
+    NgStyle,
+    TimeDifferenceInMinutesPipe,
+    SimpleCalendarComponent,
+  ]
 })
 export class ArchivePage implements OnInit {
 
+  @ViewChild(SimpleCalendarComponent) simpleCalendar!: SimpleCalendarComponent;
+
   public infiniteEvent: InfiniteScrollCustomEvent | null = null;
   public enrolledLessons$: Observable<any>;
-  private filter: { user_id: string, from_page: number, to_page: number } = {
+  private filter: { 
+    user_id: string, 
+    from_page: number, 
+    to_page: number,
+    lt_date: string,
+    gt_date: string,
+  } = {
     user_id: '',
     from_page: 0,
     to_page: environment.queryPerPage,
+    lt_date: '',
+    gt_date: '',
   };
+  refreshEvent: RefresherCustomEvent | null = null;
+  weekRangeLabel: string = '';
+  ltDate: string = '';
+  gtDate: string = '';
 
   constructor(
     private store: Store<GlobalState>,
@@ -47,6 +64,11 @@ export class ArchivePage implements OnInit {
           if (this.infiniteEvent) {
             this.infiniteEvent.target.complete();
             this.infiniteEvent = null;
+          }
+
+          if (this.refreshEvent) {
+            this.refreshEvent.target.complete();
+            this.refreshEvent = null;
           }
           break;
       }
@@ -151,6 +173,52 @@ export class ArchivePage implements OnInit {
 
   /** Refresh the enrolled lessons */
   onRefresh() {
+    this.getEnrollments();
+  }
+
+  /**
+   * Handle pull to refresh
+   */
+  handleRefresh(event: RefresherCustomEvent) {
+    this.refreshEvent = event;
+    this.getEnrollments();
+  }
+
+  /**
+   * Get the week range label
+   */
+  getWeekRangeLabel(label: string) {
+    this.weekRangeLabel = label;
+    this.filter = {
+      ...this.filter,
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+  }
+
+  /**
+   * Get the current week
+   */
+  getCurrentWeek() {
+    this.simpleCalendar.navigateToCurrentWeek();
+  }
+
+  /**
+   * Get calendar result
+   */
+  getWeekDataResult(data: string) {
+    const toJson = JSON.parse(data);
+    this.ltDate = toJson.formatted[0];
+    this.gtDate = toJson.formatted[toJson.formatted.length - 1];
+
+    this.filter = {
+      ...this.filter,
+      lt_date: this.ltDate,
+      gt_date: this.gtDate,
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+
     this.getEnrollments();
   }
 
