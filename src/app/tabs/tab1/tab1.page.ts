@@ -16,7 +16,7 @@ import { UctToLocalTimePipe } from 'src/app/shared/pipes/uct-to-local-time.pipe'
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectLatestEnrolledLessons } from 'src/app/shared/state/selectors/app.selectors';
+import { selectLatestEnrollments } from 'src/app/shared/state/selectors/app.selectors';
 
 @Component({
   selector: 'app-tab1',
@@ -43,7 +43,7 @@ export class Tab1Page implements OnInit {
   public startDatetime: Date = new Date('2025-07-30T08:00:00');
   public targetCompletionDatetime: Date = new Date('2025-07-30T22:00:00');
   public learnDurationInMinutes: number = 0;
-  public latestEnrolledLessons$: Observable<{ data: any, isLoading: boolean, error: any }>;
+  public latestEnrollments$: Observable<{ data: any, isLoading: boolean, error: any }>;
   public isRecording: boolean = false;
   currentRecordingData: {
     mimeType: string;
@@ -54,7 +54,7 @@ export class Tab1Page implements OnInit {
   hourSelected: string | null = null;
   goalText: string | null = null;
   user$: Promise<any> = this.supabaseService.getUser();
-  latestEnrolledLessons: any[] = [];
+  latestEnrollments: any[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
@@ -65,14 +65,14 @@ export class Tab1Page implements OnInit {
     private alertCtrl: AlertController,
     private actionsSubject$: ActionsSubject,
   ) {
-    this.latestEnrolledLessons$ = this.store.pipe(select(selectLatestEnrolledLessons));
+    this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
     this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
       switch (action.type) {
-        case AppActions.updateEnrolledLessonSuccess.type:
+        case AppActions.updateEnrollmentSuccess.type:
           break;
         
-        case AppActions.getLatestEnrolledLessonsSuccess.type:
-          this.latestEnrolledLessons = action.data;
+        case AppActions.getLatestEnrollmentsSuccess.type:
+          this.latestEnrollments = action.data;
           break;
       }
     });
@@ -97,7 +97,7 @@ export class Tab1Page implements OnInit {
           icon: 'checkmark-done',
           handler: () => {
             if (enrolled.status !== 'completed') {
-              this.store.dispatch(AppActions.updateEnrolledLesson({
+              this.store.dispatch(AppActions.updateEnrollment({
                 id: enrolled.id,
                 data: {
                   status: 'completed',
@@ -111,7 +111,7 @@ export class Tab1Page implements OnInit {
           text: 'Delete',
           icon: 'trash',
           handler: () => {
-            this.store.dispatch(AppActions.deleteEnrolledLesson({
+            this.store.dispatch(AppActions.deleteEnrollment({
               id: enrolled.id,
             }));
           }
@@ -146,7 +146,7 @@ export class Tab1Page implements OnInit {
         {
           text: 'Start Quiz Now',
           handler: () => {
-            this.store.dispatch(AppActions.updateEnrolledLesson({
+            this.store.dispatch(AppActions.updateEnrollment({
               id: enrolled.id,
               data: {
                 status: 'waiting_answer',
@@ -164,7 +164,7 @@ export class Tab1Page implements OnInit {
 
   ngOnInit(): void {
     this.learnDurationInMinutes = differenceInMinutes(this.targetCompletionDatetime, this.startDatetime);
-    this.getLatestEnrolledLessons();
+    this.getLatestEnrollments();
   }
 
   onSignOut() {
@@ -176,14 +176,14 @@ export class Tab1Page implements OnInit {
     });
   }
 
-  async getLatestEnrolledLessons() {
+  async getLatestEnrollments() {
     const today = new Date();
     const midnight = endOfDay(today);
     const start = startOfDay(today);
     const { data } = await this.supabaseService.getUser();
 
     if (data) {
-      this.store.dispatch(AppActions.getLatestEnrolledLessons({ 
+      this.store.dispatch(AppActions.getLatestEnrollments({ 
         filter: { 
           user_id: data?.user?.id as string, 
           start_datetime: start.toISOString(),
@@ -286,10 +286,10 @@ export class Tab1Page implements OnInit {
   onTimerCompleteListener(event: any) {
     console.log('Timer complete event:', event);
 
-    if (this.latestEnrolledLessons.length > 0) {
-      const enrolled = this.latestEnrolledLessons[0];
+    if (this.latestEnrollments.length > 0) {
+      const enrolled = this.latestEnrollments[0];
       if (enrolled.status === 'in_progress') {
-        this.store.dispatch(AppActions.updateEnrolledLesson({
+        this.store.dispatch(AppActions.updateEnrollment({
           id: enrolled.id,
           data: {
             status: 'waiting_answer',

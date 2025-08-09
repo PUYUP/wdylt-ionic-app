@@ -4,19 +4,31 @@
       <ion-back-button defaultHref="/" />
     </ion-buttons>
     <ion-title>Essay Question</ion-title>
+    <ion-button 
+      slot="end"
+      mode="ios" 
+      shape="round" 
+      size="small"
+      color="secondary"
+      class="ion-margin-end"
+      (click)="submitQuiz()" 
+      [disabled]="!(totalAnswered() == questions().length && !isAnswered())"
+    >
+      <ion-text>Submit</ion-text>
+    </ion-button>
   </ion-toolbar>
 
   @if (isQuizGenerating$ | async; as state) {
     @if (state.status == 'generated') {
       <div 
-        class="flex gap-2 items-center justify-space-around px-2 ion-padding-bottom" 
+        class="flex gap-2 items-center justify-space-around px-2 ion-padding-bottom ion-padding-top" 
         [ngStyle]="{
           'justify-content': 'space-around',
           'background-color': 'var(--ion-color-light)',
         }"
       >
         <div class="flex-none" [ngStyle]="{ 'width': '70px' }">
-          <ion-button mode="ios" expand="block" shape="round" color="secondary" size="small" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
+          <ion-button mode="ios" expand="block" shape="round" color="light" size="small" (click)="previousQuestion()" [disabled]="!canGoPrevious()">
             <ion-icon name="chevron-back" slot="start"></ion-icon>
             <ion-text>Prev</ion-text>
           </ion-button>
@@ -41,7 +53,7 @@
         </div>
 
         <div class="flex-none" [ngStyle]="{ 'width': '70px' }">
-          <ion-button mode="ios" expand="block" shape="round" color="secondary" size="small" (click)="nextQuestion()" [disabled]="!canProceed()">
+          <ion-button mode="ios" expand="block" shape="round" color="light" size="small" (click)="nextQuestion()" [disabled]="!canProceed()">
             <ion-text>Next</ion-text>
             <ion-icon name="chevron-forward" slot="end"></ion-icon>
           </ion-button>
@@ -61,15 +73,6 @@
         </div>
       </div>
     } @else if (state.status == 'generated') {
-      <!-- Action Buttons -->
-      @if (totalAnswered() == questions().length && !isAnswered()) {
-        <div class="ion-padding-bottom">
-          <ion-button mode="ios" shape="round" expand="block" (click)="submitQuiz()">
-            <ion-text>Submit</ion-text>
-          </ion-button>
-        </div>
-      }
-
       <!-- Quiz Card -->
       <div class="block">
         <ion-card mode="ios">
@@ -82,7 +85,18 @@
             <!-- Options Section -->
             <div class="p-0 space-y-4 ion-padding-top">
               <div class="space-y-3">
-                <div class="block text-sm text-neutral-600">Your answer:</div>
+                <div class="flex items-center">
+                  <div class="block text-sm text-neutral-600">
+                    Your answer:
+                  </div>
+
+                  @if (currentQuestion().answers?.[0]?.points != null) {
+                    <span class="bg-lime-100 text-lime-800 px-2 py-1 rounded-full text-sm font-bold ml-2">
+                      {{ currentQuestion().answers?.[0]?.points }} points
+                    </span>
+                  }
+                </div>
+
                 @if (currentQuestion().answers?.length) {
                   <div class="text-lg text-neutral-800">
                     {{ currentQuestion().answers?.[0]?.content }}

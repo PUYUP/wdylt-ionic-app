@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../../services/http.service';
+import { calculatePoints } from '../../helpers';
 
 @Injectable()
 export class AppEffects {
@@ -90,7 +91,6 @@ export class AppEffects {
         const payload = {
           lesson: data[0].id,
           user: data[0].user,
-          start_datetime: today.toISOString(),
           target_completion_datetime: withNewSeconds.toISOString(),
           status: 'in_progress',
           progress_percentage: 0.0,
@@ -159,12 +159,21 @@ export class AppEffects {
         const { data: res, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .insert(data)
-          .select(`*, lesson(id, content_type, description, content_data)`)
+          .select(`
+            *, 
+            lesson(
+              id, content_type, description, content_data,
+              mcq_questions: questions(*),
+              essay_questions: questions(*)
+            ),
+            mcq_answers: chosen_options!enrollment(*),
+            essay_answers: answers!enrollment(*, question(id, question_type))
+          `);
         
         if (error) {
           throw error;
         }
-        return AppActions.enrollLessonSuccess({ data: res });
+        return AppActions.enrollLessonSuccess({ data: calculatePoints(res) });
       } catch (error) {
         console.error('Error enrolling lesson:', error);
         return AppActions.enrollLessonFailure({ error });
@@ -209,8 +218,8 @@ export class AppEffects {
   // ...
   // Update Enrollment Effect
   // ...
-  updateEnrolledLesson$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateEnrolledLesson),
+  updateEnrollment$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateEnrollment),
     switchMap(async ({ id, data, source, metadata }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
@@ -222,16 +231,16 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.updateEnrolledLessonSuccess({ id, data: result, source, metadata });
+        return AppActions.updateEnrollmentSuccess({ id, data: calculatePoints(result), source, metadata });
       } catch (error) {
         console.error('Error updating enrolled lesson:', error);
-        return AppActions.updateEnrolledLessonFailure({ id, error, source, metadata });
+        return AppActions.updateEnrollmentFailure({ id, error, source, metadata });
       }
     })
   ));
 
-  updateEnrolledLessonSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateEnrolledLessonSuccess),
+  updateEnrollmentSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateEnrollmentSuccess),
     tap(({ id, data, source, metadata }) => {
       console.log('Enrolled lesson updated successfully:', id, data, source, metadata);
       const quizType = metadata?.quizType || 'mcq';
@@ -264,8 +273,8 @@ export class AppEffects {
     })
   ), { dispatch: false });
 
-  updateEnrolledLessonFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.updateEnrolledLessonFailure),
+  updateEnrollmentFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error updating enrolled lesson:', id, error);
     })
@@ -275,8 +284,8 @@ export class AppEffects {
   // ...
   // Delete Enrolled Lesson Effect
   // ...
-  deleteEnrolledLesson$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.deleteEnrolledLesson),
+  deleteEnrollment$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteEnrollment),
     switchMap(async ({ id }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
@@ -288,23 +297,23 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.deleteEnrolledLessonSuccess({ id });
+        return AppActions.deleteEnrollmentSuccess({ id });
       } catch (error) {
         console.error('Error deleting enrolled lesson:', error);
-        return AppActions.deleteEnrolledLessonFailure({ id, error });
+        return AppActions.deleteEnrollmentFailure({ id, error });
       }
     })
   ));
 
-  deleteEnrolledLessonSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.deleteEnrolledLessonSuccess),
+  deleteEnrollmentSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteEnrollmentSuccess),
     tap(({ id }) => {
       console.log('Enrolled lesson deleted successfully:', id);
     })
   ), { dispatch: false })
 
-  deleteEnrolledLessonFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.deleteEnrolledLessonFailure),
+  deleteEnrollmentFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error deleting enrolled lesson:', id, error);
     })
@@ -314,8 +323,8 @@ export class AppEffects {
   // ...
   // Get Enrolled Lessons Effect
   // ...
-  getEnrolledLessons$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLessons),
+  getEnrollments$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollments),
     switchMap(async ({ filter, metadata }) => {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
@@ -327,7 +336,7 @@ export class AppEffects {
               mcq_questions: questions(*),
               essay_questions: questions(*)
             ),
-            mcq_answers: chosen_answers!enrollment(*),
+            mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
           `)
           .eq('user', filter.user_id)
@@ -343,69 +352,23 @@ export class AppEffects {
         }
 
         // do some post-processing on the data
-        const modifiedData = data.map((item: any) => {
-          // sum points from each lesson questions
-          const correctAnsweredMCQPoints = item.mcq_answers.reduce((sum: number, answer: any) => {
-            if (answer.is_correct) {
-              return sum + (answer.points_earned || 0);
-            }
-            return sum;
-          }, 0);
-
-          // total points from all questions
-          const totalMCQPoints = item.lesson.mcq_questions.reduce((sum: number, question: any) => {
-            return sum + (question.points || 0);
-          }, 0);
-
-          // total correct answer
-          const totalCorrectAnsweredMCQ = item.mcq_answers.filter((answer: any) => answer.is_correct).length;
-          
-          // total questions
-          const totalMCQQuestions = item.lesson.mcq_questions.length;
-          const totalEssayQuestions = item.essay_answers.length;
-
-          // success rate
-          const mcqSuccessRate = totalMCQQuestions > 0 ? (totalCorrectAnsweredMCQ / totalMCQQuestions) * 100 : 0;
-          
-          // total essay points
-          const totalEssayPoints = item.essay_answers.reduce((sum: number, answer: any) => {
-            return sum + (answer.points || 0);
-          }, 0);
-
-          return {
-            ...item,
-            summary: {
-              mcq: {
-                correct_answer: totalCorrectAnsweredMCQ,
-                correct_answer_points: correctAnsweredMCQPoints,
-                total_points: totalMCQPoints,
-                total_questions: totalMCQQuestions,
-                success_rate: mcqSuccessRate.toFixed(2),
-              },
-              essay: {
-                total_points: totalEssayPoints,
-                total_questions: totalEssayQuestions,
-              }
-            },
-          }
-        });
-        return AppActions.getEnrolledLessonsSuccess({ data: modifiedData, filter, metadata });
+        return AppActions.getEnrollmentsSuccess({ data: calculatePoints(data), filter, metadata });
       } catch (error) {
         console.error('Error getting enrolled lessons:', error);
-        return AppActions.getEnrolledLessonsFailure({ error });
+        return AppActions.getEnrollmentsFailure({ error });
       }
     })
   ));
 
-  getEnrolledLessonsSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLessonsSuccess),
+  getEnrollmentsSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollmentsSuccess),
     tap(({ data }) => {
       console.log('Enrolled lessons retrieved successfully:', data);
     })
   ), { dispatch: false });
 
-  getEnrolledLessonsFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLessonsFailure),
+  getEnrollmentsFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollmentsFailure),
     tap(({ error }) => {
       console.error('Error getting enrolled lessons:', error);
     })
@@ -415,8 +378,8 @@ export class AppEffects {
   // ...
   // Get single Enrolled Lesson Effect
   // ...
-  getEnrolledLesson$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLesson),
+  getEnrollment$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollment),
     switchMap(async ({ id }) => {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
@@ -428,7 +391,7 @@ export class AppEffects {
               mcq_questions: questions(*),
               essay_questions: questions(*)
             ),
-            mcq_answers: chosen_answers!enrollment(*),
+            mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
           `)
           .eq('lesson.mcq_questions.question_type', 'mcq')
@@ -439,23 +402,23 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.getEnrolledLessonSuccess({ data });
+        return AppActions.getEnrollmentSuccess({ data });
       } catch (error) {
         console.error('Error getting enrolled lesson:', error);
-        return AppActions.getEnrolledLessonFailure({ id, error });
+        return AppActions.getEnrollmentFailure({ id, error });
       }
     })
   ));
 
-  getEnrolledLessonSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLessonSuccess),
+  getEnrollmentSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollmentSuccess),
     tap(({ data }) => {
       console.log('Enrolled lesson retrieved successfully:', data);
     })
   ), { dispatch: false });
 
-  getEnrolledLessonFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getEnrolledLessonFailure),
+  getEnrollmentFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error getting enrolled lesson:', id, error);
     })
@@ -465,22 +428,28 @@ export class AppEffects {
   // ...
   // Get Latest Enrolled Lessons Effect
   // ...
-  getLatestEnrolledLessons$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getLatestEnrolledLessons),
+  getLatestEnrollments$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getLatestEnrollments),
     switchMap(async ({ filter }) => {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .select(`
             *, 
-            lesson(id, content_type, description, content_data, questions(*)),
-            mcq_answers: chosen_answers!enrollment(*),
+            lesson(
+              id, content_type, description, content_data,
+              mcq_questions: questions(*),
+              essay_questions: questions(*)
+            ),
+            mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
           `)
           .in('status', ['in_progress', 'waiting_answer'])
+          .eq('lesson.mcq_questions.question_type', 'mcq')
+          .eq('lesson.essay_questions.question_type', 'essay')
           .eq('user', filter.user_id)
           .is('deleted_at', null)
-          .gte('start_datetime', filter.start_datetime)
+          .gte('created_at', filter.created_at)
           .lte('target_completion_datetime', filter.target_completion_datetime)
           .order('created_at', { ascending: false })
           .limit(5);
@@ -488,23 +457,23 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.getLatestEnrolledLessonsSuccess({ data });
+        return AppActions.getLatestEnrollmentsSuccess({ data: calculatePoints(data) });
       } catch (error) {
         console.error('Error getting latest enrolled lessons:', error);
-        return AppActions.getLatestEnrolledLessonsFailure({ error });
+        return AppActions.getLatestEnrollmentsFailure({ error });
       }
     })
   ));
 
-  getLatestEnrolledLessonsSuccess$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getLatestEnrolledLessonsSuccess),
+  getLatestEnrollmentsSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getLatestEnrollmentsSuccess),
     tap(({ data }) => {
       console.log('Latest enrolled lessons retrieved successfully:', data);
     })
   ), { dispatch: false });
 
-  getLatestEnrolledLessonsFailure$ = createEffect(() => this.actions$.pipe(
-    ofType(AppActions.getLatestEnrolledLessonsFailure),
+  getLatestEnrollmentsFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getLatestEnrollmentsFailure),
     tap(({ error }) => {
       console.error('Error getting latest enrolled lessons:', error);
     })
@@ -698,7 +667,7 @@ export class AppEffects {
         .select(`
           *, 
           question_options(id, content_text, order, points),
-          chosen_answers(id, is_correct, question, correct_option(*), selected_option(*))
+          chosen_options(id, is_correct, question, correct_option(*), selected_option(*))
         `)
         .eq('lesson', lessonId)
         .eq('question_type', 'mcq')
@@ -776,7 +745,7 @@ export class AppEffects {
   // ...
   saveAnsweredEssay$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredEssay),
-    switchMap(async ({ data }) => {
+    switchMap(async ({ data, enrollmentId }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('answers')
@@ -786,18 +755,26 @@ export class AppEffects {
         if (error) {
           throw error;
         }
-        return AppActions.saveAnsweredEssaySuccess({ data: result });
+        return AppActions.saveAnsweredEssaySuccess({ data: result, enrollmentId });
       } catch (error) {
         console.error('Error saving answered essay:', error);
-        return AppActions.saveAnsweredEssayFailure({ error });
+        return AppActions.saveAnsweredEssayFailure({ error, enrollmentId });
       }
     })
   ));
 
   saveAnsweredEssaySuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredEssaySuccess),
-    tap(({ data }) => {
+    tap(({ data, enrollmentId }) => {
       console.log('Answered essay saved successfully:', data);
+      // update enrollment to trigger function in supabase
+      this.store.dispatch(AppActions.updateEnrollment({
+        id: enrollmentId as string,
+        source: 'save-answered-essay',
+        data: {
+          updated_at: new Date().toISOString(),
+        }
+      }));
     })
   ), { dispatch: false });
 
@@ -814,28 +791,36 @@ export class AppEffects {
   // ...
   saveAnsweredMCQ$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredMCQ),
-    switchMap(async ({ data }) => {
+    switchMap(async ({ data, enrollmentId }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
-          .from('chosen_answers')
+          .from('chosen_options')
           .insert(data)
           .select('*, correct_option(*), selected_option(*)');
 
         if (error) {
           throw error;
         }
-        return AppActions.saveAnsweredMCQSuccess({ data: result });
+        return AppActions.saveAnsweredMCQSuccess({ data: result, enrollmentId });
       } catch (error) {
         console.error('Error saving answered MCQ:', error);
-        return AppActions.saveAnsweredMCQFailure({ error });
+        return AppActions.saveAnsweredMCQFailure({ error, enrollmentId });
       }
     })
   ));
 
   saveAnsweredMCQSuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredMCQSuccess),
-    tap(({ data }) => {
+    tap(({ data, enrollmentId }) => {
       console.log('Answered MCQ saved successfully:', data);
+      // update enrollment to trigger function in supabase
+      this.store.dispatch(AppActions.updateEnrollment({
+        id: enrollmentId as string,
+        source: 'save-answered-mcq',
+        data: {
+          updated_at: new Date().toISOString(),
+        }
+      }));
     })
   ), { dispatch: false });
 

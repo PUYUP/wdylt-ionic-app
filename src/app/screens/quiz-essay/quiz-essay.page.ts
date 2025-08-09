@@ -9,7 +9,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectEnrolledLesson, selectEssayQuestions } from 'src/app/shared/state/selectors/app.selectors';
+import { selectEnrollment, selectEssayQuestions } from 'src/app/shared/state/selectors/app.selectors';
 
 interface Question {
   id: number;
@@ -87,7 +87,7 @@ export class QuizEssayPage implements OnInit {
         console.error('Failed to load Essay questions after multiple attempts');
         clearInterval(this.refreshInterval); // Clear the refresh interval
         // force update enrollment again to get new questions
-        this.store.dispatch(AppActions.updateEnrolledLesson({
+        this.store.dispatch(AppActions.updateEnrollment({
           id: this.enrolledId as string,
           data: {
             status: 'waiting_answer',
@@ -105,7 +105,7 @@ export class QuizEssayPage implements OnInit {
       }
     });
     
-    this.enrollment$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrollment$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
     this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
       if (!essay.isLoading && essay.data && essay.data.length >= 5) {
@@ -258,7 +258,8 @@ export class QuizEssayPage implements OnInit {
 
     this.store.dispatch(AppActions.saveAnsweredEssay({
       data: answers,
-      source: 'quiz-essay'
+      source: 'quiz-essay',
+      enrollmentId: this.enrolledId as string,
     }));
   }
 

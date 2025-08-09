@@ -6,7 +6,7 @@ import { GlobalState } from '../../state/reducers/app.reducer';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { AppActions } from '../../state/actions/app.actions';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { selectEnrolledLesson, selectMCQQuestions } from '../../state/selectors/app.selectors';
+import { selectEnrollment, selectMCQQuestions } from '../../state/selectors/app.selectors';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SupabaseService } from '../../services/supabase.service';
 
@@ -80,7 +80,7 @@ export class QuizMcqComponent  implements OnInit {
   isAnswered = computed(() => {
     return this.questions().filter((question, index) => {
       const options = question.question_options;
-      return options.find((option: any) => option.chosen_answers && option.chosen_answers.length > 0);
+      return options.find((option: any) => option.chosen_options && option.chosen_options.length > 0);
     }).length > 0;
   });
 
@@ -89,7 +89,7 @@ export class QuizMcqComponent  implements OnInit {
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
   ) {
-    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.mcq$ = this.store.pipe(select(selectMCQQuestions));
     this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
       if (!mcq.isLoading && mcq.data && mcq.data.length >= 10) {
@@ -101,7 +101,7 @@ export class QuizMcqComponent  implements OnInit {
 
         // set answer array to match the number of questions
         for (let [index, value] of mcq.data.entries()) {
-          const chosenAnswer = value.question_options.find((item: any) => item.chosen_answers.length > 0);
+          const chosenAnswer = value.question_options.find((item: any) => item.chosen_options.length > 0);
 
           if (chosenAnswer) {
             this.userAnswers.update(answers => {

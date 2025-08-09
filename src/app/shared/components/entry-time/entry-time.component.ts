@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { IonicModule, IonModal } from '@ionic/angular';
+import { IonicModule, IonModal, ModalController } from '@ionic/angular';
 import { DateService } from '../../services/date.service';
 import { format, isValid } from 'date-fns';
+import { EntryTimeCustomComponent } from '../entry-time-custom/entry-time-custom.component';
 
 @Component({
   selector: 'app-entry-time',
@@ -17,8 +18,7 @@ export class EntryTimeComponent  implements OnInit {
 
   @Input('hourSelected') hourSelected: string | null = null;
   @Output() onHourChanged: EventEmitter<any> = new EventEmitter<any>();
-  @ViewChild('selectHourModal', { static: true }) selectHourModal!: IonModal;
-  
+
   selectHours: string[] = [
     '16:00',
     '17:00',
@@ -42,6 +42,7 @@ export class EntryTimeComponent  implements OnInit {
 
   constructor(
     private dateService: DateService,
+    private modalCtrl: ModalController,
   ) { }
 
   ngOnInit() {
@@ -77,9 +78,32 @@ export class EntryTimeComponent  implements OnInit {
   }
 
   /**
-   * On hour select confirm.
+   * On hour change event.
+   * @param event - The ionChange event.
    */
-  onHourSelectConfirm() {
+  onHourChange(event: any) {
+    this.customHourSelected = event.detail.value;
+  }
+
+  /**
+   * Select custom hours
+   */
+  async onCustomHourSelect() {
+    const modal = await this.modalCtrl.create({
+      component: EntryTimeCustomComponent,
+      initialBreakpoint: 0.5,
+      breakpoints: [0.5],
+      componentProps: {
+        customHourSelected: this.customHourSelected,
+        hourSelected: this.hourSelected,
+        customHour: this.customHour,
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    this.customHourSelected = data?.customHourSelected || null;
     if (this.customHourSelected) {
       const validDate = isValid(new Date(this.customHourSelected));
       if (validDate) {
@@ -98,16 +122,6 @@ export class EntryTimeComponent  implements OnInit {
         this.customHour = null;
       }
     }
-
-    this.selectHourModal.dismiss();
-  }
-
-  /**
-   * On hour change event.
-   * @param event - The ionChange event.
-   */
-  onHourChange(event: any) {
-    this.customHourSelected = event.detail.value;
   }
 
 }

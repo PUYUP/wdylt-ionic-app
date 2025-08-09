@@ -23,15 +23,15 @@ export const AppActions = createActionGroup({
     'Enroll Lesson Success': props<{ data: any }>(),
     'Enroll Lesson Failure': props<{ error: any }>(),
 
-    'Update Enrolled Lesson': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
-    'Update Enrolled Lesson Success': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
-    'Update Enrolled Lesson Failure': props<{ id: string | number, error: any, source?: string, metadata?: any }>(),
+    'Update Enrollment': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
+    'Update Enrollment Success': props<{ id: string | number, data: any, source?: string, metadata?: any }>(),
+    'Update Enrollment Failure': props<{ id: string | number, error: any, source?: string, metadata?: any }>(),
 
-    'Delete Enrolled Lesson': props<{ id: string | number }>(),
-    'Delete Enrolled Lesson Success': props<{ id: string | number }>(),
-    'Delete Enrolled Lesson Failure': props<{ id: string | number, error: any }>(),
+    'Delete Enrollment': props<{ id: string | number }>(),
+    'Delete Enrollment Success': props<{ id: string | number }>(),
+    'Delete Enrollment Failure': props<{ id: string | number, error: any }>(),
 
-    'Get Enrolled Lessons': props<{ 
+    'Get Enrollments': props<{ 
       filter: { 
         user_id: string | number,
         from_page: number,
@@ -39,7 +39,7 @@ export const AppActions = createActionGroup({
       },
       metadata?: any
     }>(),
-    'Get Enrolled Lessons Success': props<{ 
+    'Get Enrollments Success': props<{ 
       data: any,
       filter: { 
         user_id: string | number,
@@ -48,19 +48,19 @@ export const AppActions = createActionGroup({
       },
       metadata?: any
     }>(),
-    'Get Enrolled Lessons Failure': props<{ error: any }>(),
+    'Get Enrollments Failure': props<{ error: any }>(),
 
-    'Get Enrolled Lesson': props<{ id: string | number }>(),
-    'Get Enrolled Lesson Success': props<{ data: any }>(),
-    'Get Enrolled Lesson Failure': props<{ id: string | number, error: any }>(),
+    'Get Enrollment': props<{ id: string | number }>(),
+    'Get Enrollment Success': props<{ data: any }>(),
+    'Get Enrollment Failure': props<{ id: string | number, error: any }>(),
 
-    'Get Latest Enrolled Lessons': props<{ filter: { 
+    'Get Latest Enrollments': props<{ filter: { 
       user_id: string | number, 
-      start_datetime: Date | string, 
+      created_at: Date | string, 
       target_completion_datetime: Date | string
     } }>(),
-    'Get Latest Enrolled Lessons Success': props<{ data: any }>(),
-    'Get Latest Enrolled Lessons Failure': props<{ error: any }>(),
+    'Get Latest Enrollments Success': props<{ data: any }>(),
+    'Get Latest Enrollments Failure': props<{ error: any }>(),
 
     'Update Profile': props<{ id: string, data: any }>(),
     'Update Profile Success': props<{ id: string, data: any }>(),
@@ -90,12 +90,12 @@ export const AppActions = createActionGroup({
     'Get Essay Questions Success': props<{ data: any }>(),
     'Get Essay Questions Failure': props<{ error: any }>(),
 
-    'Save Answered Essay': props<{ data: any[], source?: string }>(),
-    'Save Answered Essay Success': props<{ data: any[], source?: string }>(),
-    'Save Answered Essay Failure': props<{ error: any, source?: string }>(),
+    'Save Answered Essay': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
+    'Save Answered Essay Success': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
+    'Save Answered Essay Failure': props<{ error: any, enrollmentId?: number | string; source?: string }>(),
 
-    'Save Answered MCQ': props<{ data: any[], source?: string }>(),
-    'Save Answered MCQ Success': props<{ data: any[], source?: string }>(),
-    'Save Answered MCQ Failure': props<{ error: any, source?: string }>(),
+    'Save Answered MCQ': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
+    'Save Answered MCQ Success': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
+    'Save Answered MCQ Failure': props<{ error: any, enrollmentId?: number | string; source?: string }>(),
   }
 });

@@ -373,7 +373,7 @@ export const appReducer = createReducer(
   // ...
   // Update enrolled lesson
   // ...
-  on(AppActions.updateEnrolledLesson, (state) => ({
+  on(AppActions.updateEnrollment, (state) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -385,9 +385,11 @@ export const appReducer = createReducer(
     }
   })),
 
-  on(AppActions.updateEnrolledLessonSuccess, (state, { data }) => {
+  on(AppActions.updateEnrollmentSuccess, (state, { data, source }) => {
     const index = state.enrollment.latest.data.findIndex(item => item.id === data[0].id);
     const status = data[0].status;
+
+    // latest enrollment
     let latest = {
       ...state.enrollment.latest,
       data: [
@@ -397,6 +399,21 @@ export const appReducer = createReducer(
           ...data[0],
         },
         ...state.enrollment.latest.data.slice(index + 1)
+      ],
+      isLoading: false,
+      error: null,
+    }
+
+    // list enrollment
+    let list = {
+      ...state.enrollment.list,
+      data: [
+        ...state.enrollment.list.data.slice(0, index),
+        {
+          ...state.enrollment.list.data[index],
+          ...data[0],
+        },
+        ...state.enrollment.list.data.slice(index + 1)
       ],
       isLoading: false,
       error: null,
@@ -419,12 +436,13 @@ export const appReducer = createReducer(
           error: null,
           isLoading: false,
         },
-        latest: latest,
+        latest: source != 'save-answered-essay' && source != 'save-answered-mcq' ? latest : state.enrollment.latest,
+        list:  source != 'save-answered-essay' && source != 'save-answered-mcq' ? list : state.enrollment.list,
       }
     }
   }),
 
-  on(AppActions.updateEnrolledLessonFailure, (state, { error }) => ({
+  on(AppActions.updateEnrollmentFailure, (state, { error }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -440,7 +458,7 @@ export const appReducer = createReducer(
   // ...
   // Get latest enrolled lessons
   // ...
-  on(AppActions.getLatestEnrolledLessons, (state) => ({
+  on(AppActions.getLatestEnrollments, (state) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -451,7 +469,7 @@ export const appReducer = createReducer(
       }
     }
   })),
-  on(AppActions.getLatestEnrolledLessonsSuccess, (state, { data }) => ({
+  on(AppActions.getLatestEnrollmentsSuccess, (state, { data }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -462,7 +480,7 @@ export const appReducer = createReducer(
       }
     }
   })),
-  on(AppActions.getLatestEnrolledLessonsFailure, (state, { error }) => ({
+  on(AppActions.getLatestEnrollmentsFailure, (state, { error }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -478,7 +496,7 @@ export const appReducer = createReducer(
   // ...
   // Delete enrolled lesson
   // ...
-  on(AppActions.deleteEnrolledLesson, (state) => ({
+  on(AppActions.deleteEnrollment, (state) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -489,7 +507,7 @@ export const appReducer = createReducer(
       }
     }
   })),
-  on(AppActions.deleteEnrolledLessonSuccess, (state, { id }) => {
+  on(AppActions.deleteEnrollmentSuccess, (state, { id }) => {
     return {
       ...state,
       enrollment: {
@@ -509,7 +527,7 @@ export const appReducer = createReducer(
     }
   }),
 
-  on(AppActions.deleteEnrolledLessonFailure, (state, { id, error }) => ({
+  on(AppActions.deleteEnrollmentFailure, (state, { id, error }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -525,7 +543,7 @@ export const appReducer = createReducer(
   // ...
   // Get enrolled lessons
   // ...
-  on(AppActions.getEnrolledLessons, (state, { metadata }) => {
+  on(AppActions.getEnrollments, (state, { metadata }) => {
     const isLoadMore = metadata?.isLoadMore;
 
     return {
@@ -542,7 +560,7 @@ export const appReducer = createReducer(
     }
   }),
 
-  on(AppActions.getEnrolledLessonsSuccess, (state, { data, metadata }) => {
+  on(AppActions.getEnrollmentsSuccess, (state, { data, metadata }) => {
     const isLoadMore = metadata?.isLoadMore;
     const combinedData = isLoadMore ? [...state.enrollment.list.data, ...data] : data;
 
@@ -560,7 +578,7 @@ export const appReducer = createReducer(
     }
   }),
 
-  on(AppActions.getEnrolledLessonsFailure, (state, { error }) => {
+  on(AppActions.getEnrollmentsFailure, (state, { error }) => {
     return {
       ...state,
       enrollment: {
@@ -579,7 +597,7 @@ export const appReducer = createReducer(
   // ...
   // Get enrolled lesson single
   // ...
-  on(AppActions.getEnrolledLesson, (state) => ({
+  on(AppActions.getEnrollment, (state) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -590,7 +608,7 @@ export const appReducer = createReducer(
       }
     }
   })),
-  on(AppActions.getEnrolledLessonSuccess, (state, { data }) => ({
+  on(AppActions.getEnrollmentSuccess, (state, { data }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -602,7 +620,7 @@ export const appReducer = createReducer(
       }
     }
   })),
-  on(AppActions.getEnrolledLessonFailure, (state, { error }) => ({
+  on(AppActions.getEnrollmentFailure, (state, { error }) => ({
     ...state,
     enrollment: {
       ...state.enrollment,
@@ -757,30 +775,30 @@ export const appReducer = createReducer(
     let listEnrollmentData = state.enrollment.list.data;
     if (listEnrollmentIndex !== -1) {
       listEnrollmentData = [
-        ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+        ...listEnrollmentData.slice(0, listEnrollmentIndex),
         {
-          ...state.enrollment.list.data[listEnrollmentIndex],
+          ...listEnrollmentData[listEnrollmentIndex],
           lesson: {
-            ...state.enrollment.list.data[listEnrollmentIndex].lesson,
+            ...listEnrollmentData[listEnrollmentIndex].lesson,
             mcq_questions: data,
           }
         },
-        ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+        ...listEnrollmentData.slice(listEnrollmentIndex + 1),
       ];
     }
 
     let latestEnrollmentData = state.enrollment.latest.data;
     if (latestEnrollmentIndex !== -1) {
       latestEnrollmentData = [
-        ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+        ...latestEnrollmentData.slice(0, latestEnrollmentIndex),
         {
-          ...state.enrollment.latest.data[latestEnrollmentIndex],
+          ...latestEnrollmentData[latestEnrollmentIndex],
           lesson: {
-            ...state.enrollment.latest.data[latestEnrollmentIndex].lesson,
+            ...latestEnrollmentData[latestEnrollmentIndex].lesson,
             mcq_questions: data,
           }
         },
-        ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+        ...latestEnrollmentData.slice(latestEnrollmentIndex + 1),
       ];
     }
 
@@ -799,11 +817,11 @@ export const appReducer = createReducer(
         ...state.enrollment,
         list: {
           ...state.enrollment.list,
-          data: listEnrollmentData,
+          data: calculatePoints(listEnrollmentData),
         },
         latest: {
           ...state.enrollment.latest,
-          data: latestEnrollmentData,
+          data: calculatePoints(latestEnrollmentData),
         }
       }
     }
@@ -844,30 +862,30 @@ export const appReducer = createReducer(
     let listEnrollmentData = state.enrollment.list.data;
     if (listEnrollmentIndex !== -1) {
       listEnrollmentData = [
-        ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+        ...listEnrollmentData.slice(0, listEnrollmentIndex),
         {
-          ...state.enrollment.list.data[listEnrollmentIndex],
+          ...listEnrollmentData[listEnrollmentIndex],
           lesson: {
-            ...state.enrollment.list.data[listEnrollmentIndex].lesson,
+            ...listEnrollmentData[listEnrollmentIndex].lesson,
             essay_questions: data,
           }
         },
-        ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+        ...listEnrollmentData.slice(listEnrollmentIndex + 1),
       ];
     }
 
     let latestEnrollmentData = state.enrollment.latest.data;
     if (latestEnrollmentIndex !== -1) {
       latestEnrollmentData = [
-        ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+        ...latestEnrollmentData.slice(0, latestEnrollmentIndex),
         {
-          ...state.enrollment.latest.data[latestEnrollmentIndex],
+          ...latestEnrollmentData[latestEnrollmentIndex],
           lesson: {
-            ...state.enrollment.latest.data[latestEnrollmentIndex].lesson,
+            ...latestEnrollmentData[latestEnrollmentIndex].lesson,
             essay_questions: data,
           }
         },
-        ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+        ...latestEnrollmentData.slice(latestEnrollmentIndex + 1),
       ];
     }
 
@@ -886,11 +904,11 @@ export const appReducer = createReducer(
         ...state.enrollment,
         list: {
           ...state.enrollment.list,
-          data: listEnrollmentData,
+          data: calculatePoints(listEnrollmentData),
         },
         latest: {
           ...state.enrollment.latest,
-          data: latestEnrollmentData,
+          data: calculatePoints(latestEnrollmentData),
         }
       }
     };
@@ -949,14 +967,14 @@ export const appReducer = createReducer(
     let enrollmentLatest = state.enrollment.latest;
     if (latestEnrollmentIndex !== -1) {
       enrollmentLatest = {
-        ...state.enrollment.latest,
+        ...enrollmentLatest,
         data: [
-          ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+          ...enrollmentLatest.data.slice(0, latestEnrollmentIndex),
           {
-            ...state.enrollment.latest.data[latestEnrollmentIndex],
+            ...enrollmentLatest.data[latestEnrollmentIndex],
             essay_answers: data,
           },
-          ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+          ...enrollmentLatest.data.slice(latestEnrollmentIndex + 1),
         ],
       }
     }
@@ -965,14 +983,14 @@ export const appReducer = createReducer(
     let enrollmentList = state.enrollment.list;
     if (listEnrollmentIndex !== -1) {
       enrollmentList = {
-        ...state.enrollment.list,
+        ...listEnrollment,
         data: [
-          ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+          ...listEnrollment.data.slice(0, listEnrollmentIndex),
           {
-            ...state.enrollment.list.data[listEnrollmentIndex],
+            ...listEnrollment.data[listEnrollmentIndex],
             essay_answers: data,
           },
-          ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+          ...listEnrollment.data.slice(listEnrollmentIndex + 1),
         ],
       }
     }
@@ -994,8 +1012,14 @@ export const appReducer = createReducer(
       },
       enrollment: {
         ...state.enrollment,
-        latest: enrollmentLatest,
-        list: enrollmentList,
+        latest: {
+          ...enrollmentLatest,
+          data: calculatePoints(enrollmentLatest.data),
+        },
+        list: {
+          ...enrollmentList,
+          data: calculatePoints(enrollmentList.data),
+        },
       }
     };
   }),
@@ -1033,61 +1057,49 @@ export const appReducer = createReducer(
       const chosenAnswers = data.filter((ans: any) => ans.question === question.id);
       return {
         ...question,
-        chosen_answers: chosenAnswers,
+        chosen_options: chosenAnswers,
       };
     });
 
     // insert answers to enrollment
     const enrollmentId = data[0]?.enrollment;
-    const latestEnrollment = state.enrollment.latest;
+
+    let latestEnrollment = state.enrollment.latest;
     const latestEnrollmentIndex = latestEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
-    const listEnrollment = state.enrollment.list;
+    
+    let listEnrollment = state.enrollment.list;
     const listEnrollmentIndex = listEnrollment.data.findIndex((item: any) => item.id === enrollmentId);
 
     // latest enrollment
-    let enrollmentLatest = state.enrollment.latest;
     if (latestEnrollmentIndex !== -1) {
-      enrollmentLatest = {
-        ...state.enrollment.latest,
+      latestEnrollment = {
+        ...latestEnrollment,
         data: [
-          ...state.enrollment.latest.data.slice(0, latestEnrollmentIndex),
+          ...latestEnrollment.data.slice(0, latestEnrollmentIndex),
           {
-            ...state.enrollment.latest.data[latestEnrollmentIndex],
+            ...latestEnrollment.data[latestEnrollmentIndex],
             mcq_answers: data,
           },
-          ...state.enrollment.latest.data.slice(latestEnrollmentIndex + 1),
+          ...latestEnrollment.data.slice(latestEnrollmentIndex + 1),
         ],
-      }
-
-      // update with points
-      enrollmentLatest = {
-        ...enrollmentLatest,
-        data: calculatePoints(enrollmentLatest.data),
       }
     }
 
     // list enrollment
-    let enrollmentList = state.enrollment.list;
     if (listEnrollmentIndex !== -1) {
-      enrollmentList = {
-        ...state.enrollment.list,
+      listEnrollment = {
+        ...listEnrollment,
         data: [
-          ...state.enrollment.list.data.slice(0, listEnrollmentIndex),
+          ...listEnrollment.data.slice(0, listEnrollmentIndex),
           {
-            ...state.enrollment.list.data[listEnrollmentIndex],
+            ...listEnrollment.data[listEnrollmentIndex],
             mcq_answers: data,
           },
-          ...state.enrollment.list.data.slice(listEnrollmentIndex + 1),
+          ...listEnrollment.data.slice(listEnrollmentIndex + 1),
         ],
       }
-
-      // update with points
-      enrollmentList = {
-        ...enrollmentList,
-        data: calculatePoints(enrollmentList.data),
-      }
     }
-    
+
     return {
       ...state,
       questions: {
@@ -1105,8 +1117,14 @@ export const appReducer = createReducer(
       },
       enrollment: {
         ...state.enrollment,
-        latest: enrollmentLatest,
-        list: enrollmentList,
+        latest: {
+          ...latestEnrollment,
+          data: calculatePoints(latestEnrollment.data),
+        },
+        list: {
+          ...listEnrollment,
+          data: calculatePoints(listEnrollment.data),
+        },
       }
     }
   }),

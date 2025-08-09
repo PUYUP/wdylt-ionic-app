@@ -5,7 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { GlobalState } from '../../state/reducers/app.reducer';
-import { selectEnrolledLesson, selectEssayQuestions } from '../../state/selectors/app.selectors';
+import { selectEnrollment, selectEssayQuestions } from '../../state/selectors/app.selectors';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppActions } from '../../state/actions/app.actions';
 import { SupabaseService } from '../../services/supabase.service';
@@ -79,7 +79,7 @@ export class QuizEssayComponent  implements OnInit {
     private actionsSubject$: ActionsSubject,
     private supabaseService: SupabaseService,
   ) {
-    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
     this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
       if (!essay.isLoading && essay.data && essay.data.length >= 5) {

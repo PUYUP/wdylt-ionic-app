@@ -1,4 +1,4 @@
-import { AsyncPipe, CommonModule, JsonPipe } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AlertController, InfiniteScrollCustomEvent, IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectEnrolledLessons } from 'src/app/shared/state/selectors/app.selectors';
+import { selectEnrollments } from 'src/app/shared/state/selectors/app.selectors';
 import { TimeDifferenceInMinutesPipe } from "../../shared/pipes/time-difference-in-minutes.pipe";
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,7 +20,6 @@ import { environment } from 'src/environments/environment';
     IonicModule,
     CommonModule,
     AsyncPipe,
-    JsonPipe,
     TimeDifferenceInMinutesPipe
 ]
 })
@@ -41,10 +40,10 @@ export class ArchivePage implements OnInit {
     private actionsSubject$: ActionsSubject,
     private alertCtrl: AlertController,
   ) { 
-    this.enrolledLessons$ = this.store.pipe(select(selectEnrolledLessons));
+    this.enrolledLessons$ = this.store.pipe(select(selectEnrollments));
     this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
       switch (action.type) {
-        case AppActions.getEnrolledLessonsSuccess.type:
+        case AppActions.getEnrollmentsSuccess.type:
           if (this.infiniteEvent) {
             this.infiniteEvent.target.complete();
             this.infiniteEvent = null;
@@ -55,13 +54,13 @@ export class ArchivePage implements OnInit {
   }
 
   ngOnInit() {
-    this.getEnrolledLessons();
+    this.getEnrollments();
   }
 
   /**
    * Get enrolled lessons
    */
-  async getEnrolledLessons() {
+  async getEnrollments() {
     const session = await this.supabaseService.session();
     if (session) {
       this.filter = {
@@ -69,7 +68,7 @@ export class ArchivePage implements OnInit {
         user_id: session.user.id,
       }
 
-      this.store.dispatch(AppActions.getEnrolledLessons({
+      this.store.dispatch(AppActions.getEnrollments({
         filter: this.filter,
       }));
     }
@@ -106,7 +105,7 @@ export class ArchivePage implements OnInit {
     }
 
     console.log('Loading more enrolled lessons:', this.filter);
-    this.store.dispatch(AppActions.getEnrolledLessons({
+    this.store.dispatch(AppActions.getEnrollments({
       filter: this.filter,
       metadata: {
         isLoadMore: true,
@@ -130,7 +129,7 @@ export class ArchivePage implements OnInit {
         {
           text: 'Start Quiz Now',
           handler: () => {
-            this.store.dispatch(AppActions.updateEnrolledLesson({
+            this.store.dispatch(AppActions.updateEnrollment({
               id: enrolled.id,
               data: {
                 status: 'waiting_answer',
@@ -148,6 +147,11 @@ export class ArchivePage implements OnInit {
     });
 
     await alert.present();
+  }
+
+  /** Refresh the enrolled lessons */
+  onRefresh() {
+    this.getEnrollments();
   }
 
 }

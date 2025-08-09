@@ -1,7 +1,7 @@
 <div class="block">
   <app-progress-card 
     [data]="item"
-    [startDatetime]="item.start_datetime | uctToLocalTime" 
+    [startDatetime]="item.created_at | uctToLocalTime" 
     [targetCompletionDatetime]="item.target_completion_datetime | uctToLocalTime"
     (onTimerComplete)="onTimerCompleteListener($event)"
   ></app-progress-card>
@@ -18,22 +18,22 @@
           <table>
             <tr>
               <td class="w-36">Created</td>
-              <td>: {{ item.start_datetime | date: 'short' }}</td>
+              <td>: {{ item.created_at | date: 'short' }}</td>
             </tr>
 
-            <tr>
+            <!-- <tr>
               <td class="w-36">Quiz start on</td>
               <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
-            </tr>
+            </tr> -->
 
             <tr>
               <td class="w-36">Actual quiz start at</td>
-              <td>: {{ item.start_datetime | date: 'short' }}</td>
+              <td>: {{ item.start_datetime ? (item.start_datetime | date: 'short') : 'N/A' }}</td>
             </tr>
 
             <tr>
               <td class="w-36">Duration</td>
-              <td>: {{ item.start_datetime | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
+              <td>: {{ item.created_at | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
             </tr>
           </table>
         </div>
@@ -46,47 +46,52 @@
           </ion-button>
         </div>
 
-        <div class="w-full grid grid-cols-2 gap-2">
-          <ion-button 
-            mode="ios" 
-            [color]="item.mcq_answers && item.mcq_answers.length > 0 ? 'success' : 'secondary'" 
-            shape="round" 
-            expand="block" 
-            (click)="onStartQuiz(item, 'mcq')"
-            size="small"
-            class="relative"
-            [ngStyle]="{
-              '--padding-top': '12px',
-              '--padding-bottom': '12px',
-              '--padding-start': '12px',
-              '--padding-end': '12px',
-            }"
-          >
-            @if (item.mcq_answers && item.mcq_answers.length > 0) {
-              <ion-icon name="checkmark-done-circle" slot="start" class="mr-1"></ion-icon>
-            }
-            <ion-text>{{ 'MCQ (10)' }}</ion-text>
-          </ion-button>
+        <div class="w-full grid grid-cols-2 gap-2 items-center">
+          <div class="p-2 shadow-sm bg-lime-50 border border-neutral-300 rounded-lg cursor-pointer flex items-center justify-between" (click)="onStartQuiz(item, 'mcq')">
+            <div>
+              <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+                {{ item.summary.mcq.success_rate ? item.summary.mcq.success_rate + '%' : '--' }}
+              </div>
+              <div class="text-sm text-gray-700 leading-4">
+                @if (item.mcq_answers && item.mcq_answers.length <= 0) {
+                  @if (item.summary.mcq.total_questions === 0) {
+                    Start MCQ
+                  } @else {
+                    {{ item.summary.mcq.total_questions }} questions
+                  }
+                } @else {
+                  {{ item.summary.mcq.correct_answer }} of {{ item.summary.mcq.total_questions }}
+                }
+              </div>
+            </div>
 
-          <ion-button 
-            mode="ios" 
-            [color]="item.essay_answers && item.essay_answers.length > 0 ? 'success' : 'secondary'" 
-            shape="round" 
-            expand="block" 
-            (click)="onStartQuiz(item, 'essay')"
-            size="small"
-            [ngStyle]="{
-              '--padding-top': '12px',
-              '--padding-bottom': '12px',
-              '--padding-start': '12px',
-              '--padding-end': '12px',
-            }"
-          >
-            @if (item.essay_answers && item.essay_answers.length > 0) {
-              <ion-icon name="checkmark-done-circle" slot="start" class="mr-1"></ion-icon>
-            }
-            <ion-text>{{ 'Essay (5)' }}</ion-text>
-          </ion-button>
+            <div>
+              <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+            </div>
+          </div>
+
+          <div class="p-2 shadow-sm bg-lime-50 border border-neutral-300 rounded-lg cursor-pointer flex items-center justify-between" (click)="onStartQuiz(item, 'essay')">
+            <div>
+              <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+                @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
+                  <span class="text-base !leading-4">Scoring...</span>
+                } @else {
+                  {{ item.summary.essay.total_points > 0 ? item.summary.essay.total_points : '--' }}
+                }
+              </div>
+              <div class="text-sm text-gray-700 leading-4">
+                @if (item.summary.essay.total_questions === 0) {
+                  Start Essay
+                } @else {
+                  {{ item.summary.essay.total_questions }} essays
+                }
+              </div> 
+            </div>
+
+            <div>
+              <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+            </div>
+          </div>
         </div>
       </div>
     </div>

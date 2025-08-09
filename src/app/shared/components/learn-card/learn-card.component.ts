@@ -52,7 +52,7 @@ export class LearnCardComponent  implements OnInit {
         {
           text: 'Start Quiz Now',
           handler: () => {
-            this.store.dispatch(AppActions.updateEnrolledLesson({
+            this.store.dispatch(AppActions.updateEnrollment({
               id: enrolled.id,
               data: {
                 status: 'waiting_answer',
@@ -91,7 +91,7 @@ export class LearnCardComponent  implements OnInit {
           icon: 'checkmark-done',
           handler: () => {
             if (enrolled.status !== 'completed') {
-              this.store.dispatch(AppActions.updateEnrolledLesson({
+              this.store.dispatch(AppActions.updateEnrollment({
                 id: enrolled.id,
                 data: {
                   status: 'completed',
@@ -106,7 +106,7 @@ export class LearnCardComponent  implements OnInit {
           text: 'Delete',
           icon: 'trash',
           handler: () => {
-            this.store.dispatch(AppActions.deleteEnrolledLesson({
+            this.store.dispatch(AppActions.deleteEnrollment({
               id: enrolled.id,
             }));
           }
@@ -126,11 +126,25 @@ export class LearnCardComponent  implements OnInit {
   }
 
   /**
+   * Alert can't edit
+   */
+  async showAlertCantEdit() {
+    const alert = await this.alertCtrl.create({
+      header: 'Alert',
+      message: 'You can\'t edit because this is on waiting for answer',
+      buttons: ['OK']
+    });
+
+    await alert.present();
+  }
+
+  /**
    * On edit
    */
   async onEdit(enrolled: any) {
     if (enrolled.status !== 'in_progress') {
       console.warn('Cannot edit lesson that is not in progress');
+      this.showAlertCantEdit();
       return;
     }
 
@@ -175,7 +189,7 @@ export class LearnCardComponent  implements OnInit {
 
     if (this.item) {
       if (this.item.status === 'in_progress') {
-        this.store.dispatch(AppActions.updateEnrolledLesson({
+        this.store.dispatch(AppActions.updateEnrollment({
           id: this.item.id,
           data: {
             status: 'waiting_answer',

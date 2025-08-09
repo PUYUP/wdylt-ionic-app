@@ -9,7 +9,7 @@ import { QuizEssayComponent } from 'src/app/shared/components/quiz-essay/quiz-es
 import { QuizMcqComponent } from 'src/app/shared/components/quiz-mcq/quiz-mcq.component';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectEnrolledLesson } from 'src/app/shared/state/selectors/app.selectors';
+import { selectEnrollment } from 'src/app/shared/state/selectors/app.selectors';
 
 @Component({
   selector: 'app-quiz',
@@ -41,10 +41,10 @@ export class QuizPage implements OnInit {
       this.quizType = params.get('type') as 'mcq' | 'essay' | null;
     });
 
-    this.enrolled$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.enrolled$.pipe(takeUntilDestroyed()).subscribe((enrolled: any) => {
       if (!enrolled.isLoading && !enrolled.error && !enrolled.data) {
-        this.store.dispatch(AppActions.getEnrolledLesson({
+        this.store.dispatch(AppActions.getEnrollment({
           id: this.enrolledId as string,
         }));
       }
@@ -52,7 +52,7 @@ export class QuizPage implements OnInit {
 
     this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
       switch (action.type) {
-        case AppActions.getEnrolledLessonSuccess.type:
+        case AppActions.getEnrollmentSuccess.type:
           const status = action?.data?.status;
           if (status === 'waiting_answer') {
             const description = action?.data?.lessons?.description;

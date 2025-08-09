@@ -54,7 +54,7 @@ export class EntryDialogComponent  implements OnInit {
           const withNewMinutes = setMinutes(withNewHour, goalHours ? parseInt(goalHours[1], 10) : 0);
           const withNewSeconds = setSeconds(withNewMinutes, 0);
 
-          this.store.dispatch(AppActions.updateEnrolledLesson({
+          this.store.dispatch(AppActions.updateEnrollment({
             id: this.data?.id,
             data: {
               target_completion_datetime: withNewSeconds.toISOString(),
@@ -62,7 +62,7 @@ export class EntryDialogComponent  implements OnInit {
           }))
           break;
         
-        case AppActions.updateEnrolledLessonSuccess.type:
+        case AppActions.updateEnrollmentSuccess.type:
           this.modalCtrl.dismiss({
             data: action.data[0],
           });
@@ -74,7 +74,7 @@ export class EntryDialogComponent  implements OnInit {
           });
           break;
 
-        case AppActions.deleteEnrolledLessonSuccess.type:
+        case AppActions.deleteEnrollmentSuccess.type:
           this.modalCtrl.dismiss({
             data: null,
           });
@@ -164,7 +164,7 @@ export class EntryDialogComponent  implements OnInit {
    * On delete
    */
   onDelete() {
-    this.store.dispatch(AppActions.deleteEnrolledLesson({
+    this.store.dispatch(AppActions.deleteEnrollment({
       id: this.data.id,
     }));
   }

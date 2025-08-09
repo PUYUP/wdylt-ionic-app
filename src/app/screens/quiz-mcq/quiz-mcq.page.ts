@@ -9,7 +9,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectEnrolledLesson, selectMCQQuestions } from 'src/app/shared/state/selectors/app.selectors';
+import { selectEnrollment, selectMCQQuestions } from 'src/app/shared/state/selectors/app.selectors';
 
 interface QuizOption {
   id: number;
@@ -23,7 +23,7 @@ interface Question {
   content_text: string;
   description: string;
   question_options: QuizOption[];
-  chosen_answers: any[];
+  chosen_options: any[];
   correctAnswer: string;
   points: number;
 }
@@ -86,7 +86,7 @@ export class QuizMcqPage implements OnInit {
   });
   correctPoints = computed(() => {
     return this.questions().reduce((acc, curr: any) => {  
-      const chosenAnswer = curr.chosen_answers?.[0];
+      const chosenAnswer = curr.chosen_options?.[0];
       if (!chosenAnswer) return acc;
       if (!chosenAnswer.is_correct) return acc;
 
@@ -95,7 +95,7 @@ export class QuizMcqPage implements OnInit {
   });
   correctAnswers = computed(() => {
     return this.questions().filter((question: any) => {
-      const chosenAnswer = question.chosen_answers?.[0];
+      const chosenAnswer = question.chosen_options?.[0];
       return chosenAnswer && chosenAnswer.is_correct;
     }).length;
   });
@@ -104,7 +104,7 @@ export class QuizMcqPage implements OnInit {
   refreshInterval: any = null;
   haveQuestionsWithNoAnswer = computed(() => {
     return this.questions().filter((question, index) => {
-      return question?.chosen_answers?.length == 0;
+      return question?.chosen_options?.length == 0;
     }).length > 0;
   });
 
@@ -119,7 +119,7 @@ export class QuizMcqPage implements OnInit {
         console.error('Failed to load MCQ questions after multiple attempts');
         clearInterval(this.refreshInterval); // Clear the refresh interval
         // force update enrollment again to get new questions
-        this.store.dispatch(AppActions.updateEnrolledLesson({
+        this.store.dispatch(AppActions.updateEnrollment({
           id: this.enrolledId as string,
           data: {
             status: 'waiting_answer',
@@ -142,11 +142,11 @@ export class QuizMcqPage implements OnInit {
       this.lessonId = params.get('lessonId');
     });
 
-    this.enrollment$ = this.store.pipe(select(selectEnrolledLesson({ id: this.enrolledId as string })));
+    this.enrollment$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.enrollment$.pipe(takeUntilDestroyed()).subscribe((state: any) => {
       if (!state.isLoading) {
         if (!state.error && !state.data) {
-          this.store.dispatch(AppActions.getEnrolledLesson({
+          this.store.dispatch(AppActions.getEnrollment({
             id: this.enrolledId as string,
           }));
         }
@@ -164,8 +164,8 @@ export class QuizMcqPage implements OnInit {
 
         // set answer array to match the number of questions
         for (let [index, value] of mcq.data.entries()) {
-          //const chosenAnswerx = value.question_options.find((item: any) => item.chosen_answers.length > 0);
-          const chosenAnswer = value.chosen_answers?.[0]?.selected_option;
+          //const chosenAnswerx = value.question_options.find((item: any) => item.chosen_options.length > 0);
+          const chosenAnswer = value.chosen_options?.[0]?.selected_option;
 
           if (chosenAnswer) {
             this.userAnswers.update(answers => {
@@ -328,7 +328,8 @@ export class QuizMcqPage implements OnInit {
     console.log('Answers to be submitted:', answers);
     this.store.dispatch(AppActions.saveAnsweredMCQ({
       data: answers,
-      source: 'quiz-mcq'
+      source: 'quiz-mcq',
+      enrollmentId: this.enrolledId as string,
     }));
   }
 

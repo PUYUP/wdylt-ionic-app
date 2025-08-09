@@ -13,7 +13,7 @@ import { ProgressCardComponent } from 'src/app/shared/components/progress-card/p
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectLatestEnrolledLessons } from 'src/app/shared/state/selectors/app.selectors';
+import { selectLatestEnrollments } from 'src/app/shared/state/selectors/app.selectors';
 
 @Component({
   selector: 'app-home-screen',
@@ -38,7 +38,7 @@ export class HomeScreenPage implements OnInit {
   public startDatetime: Date = new Date('2025-07-30T08:00:00');
   public targetCompletionDatetime: Date = new Date('2025-07-30T22:00:00');
   public learnDurationInMinutes: number = 0;
-  public latestEnrolledLessons$: Observable<{ data: any, isLoading: boolean, error: any }>;
+  public latestEnrollments$: Observable<{ data: any, isLoading: boolean, error: any }>;
   public isRecording: boolean = false;
   currentRecordingData: {
     mimeType: string;
@@ -55,13 +55,13 @@ export class HomeScreenPage implements OnInit {
     private store: Store<GlobalState>,
     private actionsSubject$: ActionsSubject,
   ) {
-    this.latestEnrolledLessons$ = this.store.pipe(select(selectLatestEnrolledLessons));
+    this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
     this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
       switch (action.type) {
-        case AppActions.updateEnrolledLessonSuccess.type:
+        case AppActions.updateEnrollmentSuccess.type:
           break;
         
-        case AppActions.getLatestEnrolledLessonsSuccess.type:
+        case AppActions.getLatestEnrollmentsSuccess.type:
           break;
       }
     });
@@ -69,20 +69,20 @@ export class HomeScreenPage implements OnInit {
 
   ngOnInit(): void {
     this.learnDurationInMinutes = differenceInMinutes(this.targetCompletionDatetime, this.startDatetime);
-    this.getLatestEnrolledLessons();
+    this.getLatestEnrollments();
   }
 
-  async getLatestEnrolledLessons() {
+  async getLatestEnrollments() {
     const today = new Date();
     const midnight = endOfDay(today);
     const start = startOfDay(today);
     const session = await this.supabaseService.session();
 
     if (session) {
-      this.store.dispatch(AppActions.getLatestEnrolledLessons({
+      this.store.dispatch(AppActions.getLatestEnrollments({
         filter: {
           user_id: session.user.id as string,
-          start_datetime: start.toISOString(),
+          created_at: start.toISOString(),
           target_completion_datetime: midnight.toISOString(),
         }
       }));

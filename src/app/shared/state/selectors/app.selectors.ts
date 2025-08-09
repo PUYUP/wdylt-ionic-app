@@ -13,12 +13,12 @@ export const selectUpdateLesson = createSelector(
   (state: GlobalState) => state.lesson.update
 );
 
-export const selectLatestEnrolledLessons = createSelector(
+export const selectLatestEnrollments = createSelector(
   selectAppState,
   (state: GlobalState) => state.enrollment.latest
 );
 
-export const selectEnrolledLessons = createSelector(
+export const selectEnrollments = createSelector(
   selectAppState,
   (state: GlobalState) => state.enrollment.list
 );
@@ -28,7 +28,7 @@ export const selectUpdateEnrollment = createSelector(
   (state: GlobalState) => state.enrollment.update
 );
 
-export const selectEnrolledLesson = (props: { id: string | number }) => createSelector(
+export const selectEnrollment = (props: { id: string | number }) => createSelector(
   selectAppState,
   (state: GlobalState) => {
     const findFromList = state.enrollment.list.data.find((item: any) => item.id == props.id);
