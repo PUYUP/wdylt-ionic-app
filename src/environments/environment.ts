@@ -11,6 +11,8 @@ export const environment = {
   mcqGenerationUrl: 'https://cloudflare-worker.pointilis-noktah-teknologi.workers.dev/api/gemini/mcq-generator',
   queryPerPage: 25,
   deepLinkRedirectUrl: 'https://deeplink.wdylt.com',
+  generatedMCQ: 20,
+  generatedEssay: 5,
 };
 
 /*

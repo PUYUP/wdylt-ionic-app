@@ -10,6 +10,7 @@ import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
 import { selectEnrollment, selectMCQQuestions } from 'src/app/shared/state/selectors/app.selectors';
+import { environment } from 'src/environments/environment';
 
 interface QuizOption {
   id: number;
@@ -155,7 +156,7 @@ export class QuizMcqPage implements OnInit {
 
     this.mcq$ = this.store.pipe(select(selectMCQQuestions));
     this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
-      if (!mcq.isLoading && mcq.data && mcq.data.length >= 10) {
+      if (!mcq.isLoading && mcq.data && mcq.data.length >= environment.generatedMCQ) {
         this.resetQuiz();
 
         this.questions.set(mcq.data);

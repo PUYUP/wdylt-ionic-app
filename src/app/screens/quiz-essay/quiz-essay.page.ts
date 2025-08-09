@@ -10,6 +10,7 @@ import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
 import { selectEnrollment, selectEssayQuestions } from 'src/app/shared/state/selectors/app.selectors';
+import { environment } from 'src/environments/environment';
 
 interface Question {
   id: number;
@@ -108,7 +109,7 @@ export class QuizEssayPage implements OnInit {
     this.enrollment$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
     this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
-      if (!essay.isLoading && essay.data && essay.data.length >= 5) {
+      if (!essay.isLoading && essay.data && essay.data.length >= environment.generatedEssay) {
         this.resetQuiz();
 
         this.questions.set(essay.data);
