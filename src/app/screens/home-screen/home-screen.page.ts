@@ -1,7 +1,7 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, RefresherCustomEvent } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { Base64String } from 'capacitor-voice-recorder';
 import { differenceInMinutes, endOfDay, startOfDay } from 'date-fns';
@@ -49,6 +49,7 @@ export class HomeScreenPage implements OnInit {
   hourSelected: string | null = null;
   goalText: string | null = null;
   session$: Promise<any> = this.supabaseService.session();
+  refreshEvent: RefresherCustomEvent | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -62,6 +63,10 @@ export class HomeScreenPage implements OnInit {
           break;
         
         case AppActions.getLatestEnrollmentsSuccess.type:
+          if (this.refreshEvent) {
+            this.refreshEvent.target.complete();
+            this.refreshEvent = null;
+          }
           break;
       }
     });
@@ -136,6 +141,14 @@ export class HomeScreenPage implements OnInit {
       },
       source: 'homepage'
     }));
+  }
+
+  /**
+   * Handle pull to refresh
+   */
+  handleRefresh(event: RefresherCustomEvent) {
+    this.refreshEvent = event;
+    this.getLatestEnrollments();
   }
 
 }

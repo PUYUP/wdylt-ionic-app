@@ -4,18 +4,20 @@
       <ion-back-button defaultHref="/" />
     </ion-buttons>
     <ion-title>Essay Question</ion-title>
-    <ion-button 
-      slot="end"
-      mode="ios" 
-      shape="round" 
-      size="small"
-      color="secondary"
-      class="ion-margin-end"
-      (click)="submitQuiz()" 
-      [disabled]="!(totalAnswered() == questions().length && !isAnswered())"
-    >
-      <ion-text>Submit</ion-text>
-    </ion-button>
+    @if (!isAnswered() && currentQuestion()) {
+      <ion-button 
+        slot="end"
+        mode="ios" 
+        shape="round" 
+        size="small"
+        color="secondary"
+        class="ion-margin-end"
+        (click)="submitQuiz()" 
+        [disabled]="!(totalAnswered() == questions().length)"
+      >
+        <ion-text>Submit</ion-text>
+      </ion-button>
+    }
   </ion-toolbar>
 
   @if (isQuizGenerating$ | async; as state) {

@@ -11,6 +11,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" color="light">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  
   @if (latestEnrollments$ | async; as enrolled) {
     @if (enrolled.isLoading) {
       <div class="h-full flex flex-col items-center justify-center">
