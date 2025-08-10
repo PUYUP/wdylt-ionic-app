@@ -322,7 +322,7 @@ export class QuizMcqPage implements OnInit {
         enrollment: this.enrolledId,
         question: questionId,
         selected_option: option?.id,
-        points_earned: option?.points || 1,
+        points_earned: question?.points || 1,
       };
     });
 

@@ -347,11 +347,11 @@ export class AppEffects {
           .eq('lesson.essay_questions.question_type', 'essay');
 
         if (lt) {
-          query = query.gte('created_at', format(lt, 'yyyy-MM-dd'));
+          query = query.gte('created_at', new Date(subDays(lt, 0)).toISOString());
         }
 
         if (gt) {
-          query = query.lte('created_at', format(gt, 'yyyy-MM-dd'));
+          query = query.lte('created_at', new Date(addDays(gt, 0)).toISOString());
         }
 
         query = query.is('deleted_at', null)
