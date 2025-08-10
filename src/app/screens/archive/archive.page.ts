@@ -1,4 +1,4 @@
-import { AsyncPipe, CommonModule, NgStyle } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe, NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AlertController, InfiniteScrollCustomEvent, IonicModule, RefresherCustomEvent } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
@@ -21,6 +21,7 @@ import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calend
     IonicModule,
     CommonModule,
     AsyncPipe,
+    DatePipe,
     NgStyle,
     TimeDifferenceInMinutesPipe,
     SimpleCalendarComponent,

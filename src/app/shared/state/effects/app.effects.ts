@@ -351,7 +351,7 @@ export class AppEffects {
         }
 
         if (gt) {
-          query = query.lte('created_at', new Date(addDays(gt, 0)).toISOString());
+          query = query.lt('created_at', new Date(addDays(gt, 1)).toISOString());
         }
 
         query = query.is('deleted_at', null)
