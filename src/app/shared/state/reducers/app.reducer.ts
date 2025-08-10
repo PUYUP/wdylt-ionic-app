@@ -817,11 +817,11 @@ export const appReducer = createReducer(
         ...state.enrollment,
         list: {
           ...state.enrollment.list,
-          data: calculatePoints(listEnrollmentData),
+          data: data.length > 0 ? calculatePoints(listEnrollmentData) : listEnrollmentData,
         },
         latest: {
           ...state.enrollment.latest,
-          data: calculatePoints(latestEnrollmentData),
+          data: data.length > 0 ? calculatePoints(latestEnrollmentData) : latestEnrollmentData,
         }
       }
     }
@@ -904,11 +904,11 @@ export const appReducer = createReducer(
         ...state.enrollment,
         list: {
           ...state.enrollment.list,
-          data: calculatePoints(listEnrollmentData),
+          data: data.length > 0 ? calculatePoints(listEnrollmentData) : listEnrollmentData,
         },
         latest: {
           ...state.enrollment.latest,
-          data: calculatePoints(latestEnrollmentData),
+          data: data.length > 0 ? calculatePoints(latestEnrollmentData) : latestEnrollmentData,
         }
       }
     };
