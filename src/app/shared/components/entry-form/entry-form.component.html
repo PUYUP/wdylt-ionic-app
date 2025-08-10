@@ -1,3 +1,46 @@
+@if (currentRecordingData) {
+  <div class="relative flex items-center w-full bg-white shadow rounded-xl ion-padding">
+    <div class="flex-none w-14">
+      <ion-buttons>
+        @if (isPlaying) {
+          <ion-button type="button" (click)="stopAudio()">
+            <ion-icon slot="icon-only" name="stop"></ion-icon>
+          </ion-button>
+        } @else {
+          <ion-button type="button" (click)="playAudio()">
+            <ion-icon slot="icon-only" name="play"></ion-icon>
+          </ion-button>
+        }
+      </ion-buttons>
+    </div>
+
+    <div class="w-full relative">
+      <div 
+        class="h-2 bg-neutral-800 rounded-full absolute left-0 top-0 bottom-0"
+        [style.width.%]="progressLength"
+      ></div>
+
+      <div class="h-2 bg-neutral-200 rounded-full"></div>
+    </div>
+
+    <div class="ml-auto flex-none w-14 text-right">
+      @if (isPlaying) {
+        <cd-timer 
+          #audioTimer 
+          [autoStart]="false" 
+          [countdown]="true" 
+          [startTime]="currentRecordingData.msDuration / 1000"
+          format="ms"
+          (onTick)="onAudioTimerTick($event)"
+          (onComplete)="onAudioTimerComplete($event)"
+        ></cd-timer>
+      } @else {
+        <ion-text>{{ duration }}</ion-text>
+      }
+    </div>
+  </div>
+}
+
 <div class="block relative">
   <ion-textarea 
     mode="ios" 
@@ -6,8 +49,8 @@
     rows="2"
     [placeholder]="isRecording ? 'Listening...' : placeholder"
     [counter]="true"
-    [readonly]="isRecording"
-    [disabled]="isRecording"
+    [readonly]="isRecording || currentRecordingData != null"
+    [disabled]="isRecording || currentRecordingData != null"
     (ionInput)="onGoalInput($event)"
     [maxlength]="maxLength"
     [(ngModel)]="goalText"

@@ -48,3 +48,31 @@ export const calculatePoints = (data: any[]): any[] => {
 
     return newData;
 }
+
+export const msToAudioDuration = (milliseconds: number, format = 'mm:ss') => {
+  if (milliseconds < 0) return '0:00';
+  
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  // Pad with leading zeros
+  const pad = (num: number) => num.toString().padStart(2, '0');
+
+  switch (format) {
+    case 'h:mm:ss':
+      return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+    
+    case 'hh:mm:ss':
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    
+    case 'm:ss':
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      return `${totalMinutes}:${pad(seconds)}`;
+    
+    case 'mm:ss':
+    default:
+      return `${pad(minutes)}:${pad(seconds)}`;
+  }
+}
