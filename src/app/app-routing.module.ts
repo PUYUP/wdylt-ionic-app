@@ -25,19 +25,9 @@ const routes: Routes = [
     canActivate: [isAuthorizedGuard],
   },
   {
-    path: 'quiz',
-    loadChildren: () => import('./screens/quiz/quiz.module').then( m => m.QuizPageModule),
-    canActivate: [isAuthorizedGuard],
-  },
-  {
     path: 'profile',
     loadChildren: () => import('./screens/profile-screen/profile-screen.module').then( m => m.ProfileScreenPageModule),
     canActivate: [isAuthorizedGuard],
-  },
-  {
-    path: '',
-    redirectTo: '/onboarding',
-    pathMatch: 'full'
   },
   {
     path: 'quiz-essay',
@@ -50,6 +40,11 @@ const routes: Routes = [
   {
     path: 'profile-screen',
     loadChildren: () => import('./screens/profile-screen/profile-screen.module').then( m => m.ProfileScreenPageModule)
+  },
+  {
+    path: '',
+    redirectTo: '/onboarding',
+    pathMatch: 'full'
   },
 ];
 @NgModule({

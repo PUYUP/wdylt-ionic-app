@@ -3,8 +3,9 @@ import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Preferences } from '@capacitor/preferences';
 import { IonicModule } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
@@ -79,8 +80,7 @@ export class QuizEssayPage implements OnInit {
 
   constructor(
     private store: Store<GlobalState>,
-     private route: ActivatedRoute,
-    private actionsSubject$: ActionsSubject,
+    private route: ActivatedRoute,
     private supabaseService: SupabaseService,
   ) {
     effect(() => {
@@ -115,9 +115,25 @@ export class QuizEssayPage implements OnInit {
         this.questions.set(essay.data);
         clearInterval(this.refreshInterval); // Clear any existing interval
         this.refreshInterval = null; // Reset refresh interval
+        this.loadSavedAnswers();
 
         // set answer array to match the number of questions
         for (let [index, value] of essay.data.entries()) {
+          if (value?.answers?.length <= 0) {
+            // inject answer
+            value = {
+              ...value,
+              answers: [
+                ...value.answers.slice(0, 0),
+                {
+                  ...value.answers[0],
+                  content: this.userAnswers()[index] || '',
+                },
+                ...value.answers.slice(1),
+              ]
+            }
+          }
+
           if (value.answers && value.answers.length > 0) {
             this.userAnswers.update(answers => {
               const newAnswers = [...answers];
@@ -146,6 +162,8 @@ export class QuizEssayPage implements OnInit {
       return;
     }
 
+    this.loadSavedAnswers();
+
     // get essay questions
     this.generatingQuiz$.next({ status: 'generating' });
     this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
@@ -154,6 +172,17 @@ export class QuizEssayPage implements OnInit {
       this.generatingAttempt.update(attempt => attempt + 1);
       this.store.dispatch(AppActions.getEssayQuestions({ lessonId: this.lessonId as string }));
     }, 5000); // Refresh every 5 seconds
+  }
+
+  // load answers from local storage
+  async loadSavedAnswers() {
+    if (this.userAnswers().length > 0) return;
+
+    const savedAnswers = await Preferences.get({ key: `essay_answer_${this.enrolledId}` });
+    if (savedAnswers.value) {
+      this.userAnswers.set(JSON.parse(savedAnswers.value));
+      this.loadCurrentAnswer();
+    }
   }
 
   // Navigation methods
@@ -193,7 +222,7 @@ export class QuizEssayPage implements OnInit {
   }
 
   // Answer management
-  private saveCurrentAnswer(): void {
+  private async saveCurrentAnswer() {
     const currentIndex = this.currentQuestionIndex();
     const currentAnswer = this.selectedOption() || '';
 
@@ -201,6 +230,11 @@ export class QuizEssayPage implements OnInit {
       const newAnswers = [...answers];
       newAnswers[currentIndex] = currentAnswer;
       return newAnswers;
+    });
+
+    await Preferences.set({ 
+      key: `essay_answer_${this.enrolledId}`,
+      value: JSON.stringify(this.userAnswers()),
     });
   }
 

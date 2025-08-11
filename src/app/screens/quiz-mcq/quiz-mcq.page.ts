@@ -3,6 +3,7 @@ import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Preferences } from '@capacitor/preferences';
 import { IonicModule } from '@ionic/angular';
 import { ActionsSubject, select, Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -162,12 +163,11 @@ export class QuizMcqPage implements OnInit {
         this.questions.set(mcq.data);
         clearInterval(this.refreshInterval); // Clear any existing interval
         this.refreshInterval = null; // Reset refresh interval
+        this.loadSavedAnswers();
 
         // set answer array to match the number of questions
         for (let [index, value] of mcq.data.entries()) {
-          //const chosenAnswerx = value.question_options.find((item: any) => item.chosen_options.length > 0);
           const chosenAnswer = value.chosen_options?.[0]?.selected_option;
-
           if (chosenAnswer) {
             this.userAnswers.update(answers => {
               const newAnswers = [...answers];
@@ -208,6 +208,17 @@ export class QuizMcqPage implements OnInit {
     }, 5000); // Refresh every 5 seconds
   }
 
+  // load answers from local storage
+  async loadSavedAnswers() {
+    if (this.userAnswers().length > 0) return;
+
+    const savedAnswers = await Preferences.get({ key: `mcq_answer_${this.enrolledId}` });
+    if (savedAnswers.value) {
+      this.userAnswers.set(JSON.parse(savedAnswers.value));
+      this.loadCurrentAnswer();
+    }
+  }
+
   // Navigation methods
   nextQuestion(): void {
     if (!this.canProceed()) return;
@@ -245,7 +256,7 @@ export class QuizMcqPage implements OnInit {
   }
 
   // Answer management
-  private saveCurrentAnswer(): void {
+  private async saveCurrentAnswer(): Promise<void> {
     const currentIndex = this.currentQuestionIndex();
     const currentAnswer = this.selectedOption() || '';
 
@@ -253,6 +264,11 @@ export class QuizMcqPage implements OnInit {
       const newAnswers = [...answers];
       newAnswers[currentIndex] = currentAnswer;
       return newAnswers;
+    });
+
+    await Preferences.set({ 
+      key: `mcq_answer_${this.enrolledId}`,
+      value: JSON.stringify(this.userAnswers()),
     });
   }
 
