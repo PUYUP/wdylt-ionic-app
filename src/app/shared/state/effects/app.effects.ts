@@ -698,7 +698,7 @@ export class AppEffects {
         .select(`
           *, 
           question_options(id, content_text, order, points),
-          chosen_options(id, is_correct, question, correct_option(*), selected_option(*))
+          chosen_options(id, is_correct, question, attempt, correct_option(*), selected_option(*))
         `)
         .eq('lesson', lessonId)
         .eq('question_type', 'mcq')

@@ -88,12 +88,14 @@ export class EntryFormComponent  implements OnInit {
         
         case AppActions.transcribeAudioSuccess.type:
           this.goalText = action.data.transcript;
-          this.onTextChange.emit({
-            detail: {
-              value: this.goalText,
-            }
-          });
-
+          this.onTextChange.emit({ detail: { value: this.goalText } });
+          this.processingVoiceToText$.next(false);
+          this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
+          this.transcriptionStatus.set('DONE');
+          break;
+        
+        case AppActions.transcribeAudioFailure.type:
+          this.onTextChange.emit({ detail: { value: null } });
           this.processingVoiceToText$.next(false);
           this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
           this.transcriptionStatus.set('DONE');
