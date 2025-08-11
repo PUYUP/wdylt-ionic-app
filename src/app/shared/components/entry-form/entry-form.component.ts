@@ -95,10 +95,7 @@ export class EntryFormComponent  implements OnInit {
           break;
         
         case AppActions.transcribeAudioFailure.type:
-          this.onTextChange.emit({ detail: { value: null } });
-          this.processingVoiceToText$.next(false);
-          this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
-          this.transcriptionStatus.set('DONE');
+          this.cancelHandler();
           break;
       }
     });
@@ -114,10 +111,13 @@ export class EntryFormComponent  implements OnInit {
     });
 
     modal.onDidDismiss().then(({ data }) => {
-      if (data.timer) {
+      if (data) {
+        this.stopRecording();
         this.timerData = data.timer;
         console.log('Timer data:', this.timerData);
-        this.stopRecording();
+      } else {
+        this.stopRecording('cancel');
+        this.cancelHandler();
       }
     });
 
@@ -130,6 +130,17 @@ export class EntryFormComponent  implements OnInit {
       // fill the form with data
       this.goalText = this.data.lesson.description || null;
     }
+  }
+
+  /**
+   * Cancel handler
+   */
+  cancelHandler() {
+    this.isRecording = false;
+    this.onTextChange.emit({ detail: { value: null } });
+    this.processingVoiceToText$.next(false);
+    this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
+    this.transcriptionStatus.set('DONE');
   }
 
   /**
@@ -251,41 +262,43 @@ export class EntryFormComponent  implements OnInit {
     });
   }
 
-  stopRecording() {
+  stopRecording(source: string = '') {
     // Stop recording
     VoiceRecorder.stopRecording().then(async (result: RecordingData) => {
       console.log('Recording stopped:', result);
       // Save the recording data
-      this.currentRecordingData = result.value;
-      this.isRecording = false;
+      if (source !== 'cancel') {
+        this.currentRecordingData = result.value;
+        this.isRecording = false;
 
-      this.onRecordStop.emit({
-        detail: {
-          value: this.currentRecordingData,
-        }
-      });
+        this.onRecordStop.emit({
+          detail: {
+            value: this.currentRecordingData,
+          }
+        });
 
-      this.onRecording.emit({
-        detail: {
-          value: this.isRecording
-        }
-      });
+        this.onRecording.emit({
+          detail: {
+            value: this.isRecording
+          }
+        });
 
-      console.log('Recording stopped:', this.currentRecordingData);
-      
-      const audioUrl = await this.getBlobURL(this.currentRecordingData.path as string);
-      this.audioUrl.set(audioUrl);
+        console.log('Recording stopped:', this.currentRecordingData);
+        
+        const audioUrl = await this.getBlobURL(this.currentRecordingData.path as string);
+        this.audioUrl.set(audioUrl);
 
-      console.log('Audio URL:', this.getAudioUrl());
+        console.log('Audio URL:', this.getAudioUrl());
 
-      this.prepareAudio(this.getAudioUrl() as string);
-      this.duration = msToAudioDuration(this.currentRecordingData.msDuration);
+        this.prepareAudio(this.getAudioUrl() as string);
+        this.duration = msToAudioDuration(this.currentRecordingData.msDuration);
 
-      // Upload to firestore
-      this.store.dispatch(AppActions.uploadAudio({ fileData: result }));
-      this.processingVoiceToText$.next(true);
-      this.onTranscriptionProcessing.emit({ detail: { value: 'ON_PROGRESS' } });
-      this.transcriptionStatus.set('ON_PROGRESS');
+        // Upload to firestore
+        this.store.dispatch(AppActions.uploadAudio({ fileData: result }));
+        this.processingVoiceToText$.next(true);
+        this.onTranscriptionProcessing.emit({ detail: { value: 'ON_PROGRESS' } });
+        this.transcriptionStatus.set('ON_PROGRESS');
+      }
     }).catch((error) => {
       console.error('Error stopping recording:', error);
     });

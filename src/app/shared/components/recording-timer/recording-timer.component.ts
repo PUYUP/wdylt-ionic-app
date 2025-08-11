@@ -33,4 +33,8 @@ export class RecordingTimerComponent  implements OnInit {
     });
   }
 
+  onCancel() {
+    this.modalCtrl.dismiss();
+  }
+
 }

@@ -1,13 +1,20 @@
+
 <ion-content class="ion-padding" color="light" scrollY="false" [fullscreen]="true">
   <div class="h-full flex flex-col items-center justify-center">
     <div class="text-5xl font-semibold text-center mb-6 w-full">
       <cd-timer format="hms" (onStop)="onStop()"></cd-timer>
     </div>
 
-    <div class="text-center">
+    <div class="text-center block">
       <ion-button color="primary" shape="round" mode="ios" expand="block" (click)="onFinish()">
         <ion-icon slot="start" name="stop"></ion-icon>
         <ion-text class="ml-2">Stop</ion-text>
+      </ion-button>
+    </div>
+
+    <div class="text-center block mt-4">
+      <ion-button fill="clear" shape="round" mode="ios" expand="block" (click)="onCancel()">
+        <ion-text class="ml-2">Cancel</ion-text>
       </ion-button>
     </div>
   </div>
