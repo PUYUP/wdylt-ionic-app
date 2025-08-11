@@ -271,6 +271,9 @@ export class EntryFormComponent  implements OnInit {
       
       const audioUrl = await this.getBlobURL(this.currentRecordingData.path as string);
       this.audioUrl.set(audioUrl);
+
+      console.log('Audio URL:', this.getAudioUrl());
+
       this.prepareAudio(this.getAudioUrl() as string);
       this.duration = msToAudioDuration(this.currentRecordingData.msDuration);
 
@@ -313,7 +316,7 @@ export class EntryFormComponent  implements OnInit {
     }
 
     const { uri } = await Filesystem.getUri({ directory, path })
-    return Capacitor.convertFileSrc(uri)
+    return uri;
   }
 
   async prepareAudio(path: string) {

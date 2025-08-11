@@ -150,6 +150,7 @@ export class LearnCardComponent  implements OnInit {
 
     const modal = await this.modalCtrl.create({
       component: EntryDialogComponent,
+      backdropDismiss: false,
       componentProps: {
         data: enrolled,
       }

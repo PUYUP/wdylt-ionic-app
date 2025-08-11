@@ -222,6 +222,7 @@ export class Tab1Page implements OnInit {
 
     const modal = await this.modalCtrl.create({
       component: EntryDialogComponent,
+      backdropDismiss: false,
       componentProps: {
         data: enrolled,
       }

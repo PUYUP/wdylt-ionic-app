@@ -113,6 +113,7 @@ export class AppComponent {
   async onCreateNew(enrolled: any = null) {
     const modal = await this.modalCtrl.create({
       component: EntryDialogComponent,
+      backdropDismiss: false,
       componentProps: {
         data: enrolled,
       }
