@@ -10,6 +10,7 @@ export const environment = {
   oneSignalAppId: '1615a20c-4d91-4a10-8d8e-d242c108d9b6',
   mcqGenerationUrl: 'https://cloudflare-worker.pointilis-noktah-teknologi.workers.dev/api/gemini/mcq-generator',
   deepLinkRedirectUrl: 'https://deeplink.wdylt.com',
+  audioTranscriptionUrl: 'https://audio-transcribe-928871794567.us-central1.run.app/transcribe',
   queryPerPage: 25,
   generatedMCQ: 20,
   generatedEssay: 5,

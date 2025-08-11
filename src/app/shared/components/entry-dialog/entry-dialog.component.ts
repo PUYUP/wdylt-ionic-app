@@ -38,6 +38,8 @@ export class EntryDialogComponent  implements OnInit {
   hourSelected: string | null = null;
   updateLesson: Observable<{ data: any, isLoading: boolean, error: any }> | null = null;
   updateEnrollment: Observable<{ data: any, isLoading: boolean, error: any }> | null = null;
+  uploadedData: any | null = null;
+  transcriptionStatus: string | null = null;
 
   constructor(
     private modalCtrl: ModalController,
@@ -133,12 +135,25 @@ export class EntryDialogComponent  implements OnInit {
    * Submit!
    */
   async onSubmit() {
+    let payload: any = {
+      description: this.goalText,
+      content_type: 'text',
+    }
+
+    if (this.uploadedData) {
+      payload = {
+        ...payload,
+        content_data: this.uploadedData,
+      }
+    }
+
     if (this.data) {
       // Dispatch update action
       this.store.dispatch(AppActions.updateLesson({
         id: this.data.lesson.id,
         data: {
-          description: this.goalText,
+          ...payload,
+          content_type: 'audio/mpeg',
         }
       }));
     } else {
@@ -147,9 +162,8 @@ export class EntryDialogComponent  implements OnInit {
       
       this.store.dispatch(AppActions.createLesson({
         data: {
+          ...payload,
           user: session?.user?.id,
-          content_type: 'text',
-          description: this.goalText,
         },
         metadata: {
           enrollment: {
@@ -167,6 +181,21 @@ export class EntryDialogComponent  implements OnInit {
     this.store.dispatch(AppActions.deleteEnrollment({
       id: this.data.id,
     }));
+  }
+
+  /**
+   * On recording uploaded
+   */
+  onRecordingUploadedListener(event: any) {
+    this.uploadedData = event.detail.value;
+  }
+
+  /**
+   * On transcription processing
+   */
+  onTranscriptionProcessingListener(event: any) {
+    const status = event.detail.value;
+    this.transcriptionStatus = status;
   }
 
 }

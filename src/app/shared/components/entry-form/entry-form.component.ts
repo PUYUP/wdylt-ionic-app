@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, computed, EventEmitter, Input, OnInit, Output, signal, ViewChild, WritableSignal } from '@angular/core';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { Base64String, CurrentRecordingStatus, RecordingData, RecordingOptions, RecordingStatus, VoiceRecorder } from 'capacitor-voice-recorder';
@@ -9,8 +9,11 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core';
 import { NativeAudio } from '@capacitor-community/native-audio';
 import { msToAudioDuration } from '../../helpers';
-import { getDownloadURL, getStorage, ref, Storage, uploadBytes } from '@angular/fire/storage';
-import { Timestamp } from 'firebase/firestore';
+import { AppActions } from '../../state/actions/app.actions';
+import { ActionsSubject, Store } from '@ngrx/store';
+import { GlobalState } from '../../state/reducers/app.reducer';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-entry-form',
@@ -21,6 +24,7 @@ import { Timestamp } from 'firebase/firestore';
     IonicModule,
     FormsModule,
     CdTimerModule,
+    AsyncPipe,
   ]
 })
 export class EntryFormComponent  implements OnInit {
@@ -31,13 +35,19 @@ export class EntryFormComponent  implements OnInit {
   @Output() onTextChange: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecordStop: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecording: EventEmitter<any | null> = new EventEmitter<any | null>();
+  @Output() onRecordingUploaded: EventEmitter<any | null> = new EventEmitter<any | null>();
+  @Output() onTranscriptionProcessing: EventEmitter<any | null> = new EventEmitter<any | null>();
 
   @ViewChild('audioTimer') audioTimer!: CdTimerComponent;
+
   audioUrl: WritableSignal<string | null> = signal<string | null>(null);
+  transcriptionStatus: WritableSignal<string | null> = signal<string | null>(null);
+
   getAudioUrl = computed(() => this.audioUrl());
+  getTranscriptionStatus = computed(() => this.transcriptionStatus());
 
   isRecording: boolean = false;
-  maxLength: number = 144;
+  maxLength: number = 500;
   currentRecordingData: {
     mimeType: string;
     msDuration: number;
@@ -51,11 +61,44 @@ export class EntryFormComponent  implements OnInit {
   duration: string = '00:00';
   isPlaying: boolean = false;
   progressLength: number = 0;
+  processingVoiceToText$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   constructor(
     private modalCtrl: ModalController,
-    private fireStorage: Storage,
-  ) { }
+    private store: Store<GlobalState>,
+    private actionsSubject$: ActionsSubject,
+  ) { 
+    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.uploadAudioSuccess.type:
+          console.log('Audio uploaded successfully:', action.data);
+          this.onRecordingUploaded.emit({
+            detail: {
+              value: action.data,
+            }
+          });
+
+          // transcribe audio
+          this.store.dispatch(AppActions.transcribeAudio({
+            gcsUri: 'gs://wdylt-website.firebasestorage.app/audios/test-audio-1.mp3'
+          }));
+          break;
+        
+        case AppActions.transcribeAudioSuccess.type:
+          this.goalText = action.data.transcript;
+          this.onTextChange.emit({
+            detail: {
+              value: this.goalText,
+            }
+          });
+          
+          this.processingVoiceToText$.next(false);
+          this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
+          this.transcriptionStatus.set('DONE');
+          break;
+      }
+    });
+  }
 
   /**
    * Recording timer modal.
@@ -63,6 +106,7 @@ export class EntryFormComponent  implements OnInit {
   async openRecordingTimerModal() {
     const modal = await this.modalCtrl.create({
       component: RecordingTimerComponent,
+      backdropDismiss: false,
     });
 
     modal.onDidDismiss().then(({ data }) => {
@@ -231,7 +275,10 @@ export class EntryFormComponent  implements OnInit {
       this.duration = msToAudioDuration(this.currentRecordingData.msDuration);
 
       // Upload to firestore
-      this.uploadToFireStorage(this.currentRecordingData);
+      this.store.dispatch(AppActions.uploadAudio({ fileData: result }));
+      this.processingVoiceToText$.next(true);
+      this.onTranscriptionProcessing.emit({ detail: { value: 'ON_PROGRESS' } });
+      this.transcriptionStatus.set('ON_PROGRESS');
     }).catch((error) => {
       console.error('Error stopping recording:', error);
     });
@@ -292,15 +339,17 @@ export class EntryFormComponent  implements OnInit {
   }
 
   async stopAudio() {
-    this.isPlaying = false;
-    this.progressLength = 0;
-
-    await NativeAudio.stop({ assetId: this.audioAssetId });
+    if (this.isPlaying) {
+      this.progressLength = 0;
+      await NativeAudio.stop({ assetId: this.audioAssetId });
+    }
 
     // get timer element
     if (this.audioTimer) {
       this.audioTimer.stop();
     }
+
+    this.isPlaying = false;
   }
 
   /**
@@ -323,35 +372,17 @@ export class EntryFormComponent  implements OnInit {
     }, 1000);
   }
 
-  /**
-   * Upload to fire storage
-   */
-  async uploadToFireStorage(fileData: any) {
-    if (!fileData) return;
-    const path = fileData.path;
-
-    if (Capacitor.getPlatform() == 'web') {
-      const directory = Directory.Data;
-      const storageRef = ref(this.fireStorage, `sounds${path}`);
-      const { data } = await Filesystem.readFile({ directory, path });
-      const snapshot = await uploadBytes(storageRef, data as Blob);
-
-      if (snapshot) {
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        console.log('File uploaded successfully, download URL:', downloadURL);
-      }
-      return;
-    }
-  }
-
-  ngOnDestroy() {
+  async ngOnDestroy() {
     if (this.getAudioUrl() != '') {
       // Revoke the object URL to free up memory
       URL.revokeObjectURL(this.getAudioUrl() as string);
     }
-
+    
     this.stopAudio();
-    NativeAudio.unload({ assetId: this.audioAssetId });
+    await NativeAudio.unload({ assetId: this.audioAssetId });
+
+    this.processingVoiceToText$.complete();
+    this.goalText = null;
   }
 
 }

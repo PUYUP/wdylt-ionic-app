@@ -78,3 +78,13 @@ export const selectSaveAnsweredMCQ = createSelector(
   selectAppState,
   (state: GlobalState) => state.questions.saveAnsweredMCQ
 );
+
+export const selectUploadAudio = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.uploadAudio
+);
+
+export const selectTranscribeAudio = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.transcribeAudio
+);

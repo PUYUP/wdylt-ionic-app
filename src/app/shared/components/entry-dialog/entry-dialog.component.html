@@ -30,6 +30,8 @@
       (onRecording)="onRecordingListener($event)"
       (onRecordStop)="onRecordStopListener($event)"
       (onTextChange)="onTextChangeListener($event)"
+      (onRecordingUploaded)="onRecordingUploadedListener($event)"
+      (onTranscriptionProcessing)="onTranscriptionProcessingListener($event)"
     ></app-entry-form>
 
     <div class="ion-padding-top">
@@ -45,7 +47,7 @@
       mode="ios" 
       shape="round" 
       class="mt-6" 
-      [disabled]="(!goalText || !hourSelected) && !currentRecordingData"
+      [disabled]="!goalText || !hourSelected || transcriptionStatus === 'ON_PROGRESS'"
       (click)="onSubmit()"
     >
       <ion-icon slot="start" name="stopwatch"></ion-icon>

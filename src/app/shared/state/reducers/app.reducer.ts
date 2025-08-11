@@ -106,6 +106,16 @@ export interface GlobalState {
       error: any | null;
       isLoading: boolean;
     },
+  },
+  uploadAudio: {
+    data: null,
+    error: null,
+    isLoading: false,
+  },
+  transcribeAudio: {
+    data: null,
+    error: null,
+    isLoading: false,
   }
 }
 
@@ -210,6 +220,16 @@ export const initialState: GlobalState = {
       error: null,
       isLoading: false,
     }
+  },
+  uploadAudio: {
+    data: null,
+    error: null,
+    isLoading: false,
+  },
+  transcribeAudio: {
+    data: null,
+    error: null,
+    isLoading: false,
   }
 };
 
@@ -1138,6 +1158,61 @@ export const appReducer = createReducer(
         error: error,
       }
     }
+  })),
+
+
+  // Upload audio
+  on(AppActions.uploadAudio, (state) => ({
+    ...state,
+    uploadAudio: {
+      ...state.uploadAudio,
+      loading: true,
+      error: null,
+    }
+  })),
+  on(AppActions.uploadAudioSuccess, (state, { data }) => ({
+    ...state,
+    uploadAudio: {
+      ...state.uploadAudio,
+      data: data,
+      loading: false,
+      error: null,
+    }
+  })),
+  on(AppActions.uploadAudioFailure, (state, { error }) => ({
+    ...state,
+    uploadAudio: {
+      ...state.uploadAudio,
+      loading: false,
+      error: error,
+    }
+  })),
+
+
+  // transcribe audio
+  on(AppActions.transcribeAudio, (state) => ({
+    ...state,
+    transcribeAudio: {
+      ...state.transcribeAudio,
+      loading: true,
+      error: null,
+    }
+  })),
+  on(AppActions.transcribeAudioSuccess, (state, { data }) => ({
+    ...state,
+    transcribeAudio: {
+      ...state.transcribeAudio,
+      data: data,
+      loading: false,
+      error: null,
+    }
+  })),
+  on(AppActions.transcribeAudioFailure, (state, { error }) => ({
+    ...state,
+    transcribeAudio: {
+      ...state.transcribeAudio,
+      loading: false,
+      error: error,
+    }
   }))
-  
 )

@@ -91,7 +91,7 @@ export class QuizMcqPage implements OnInit {
       if (!chosenAnswer) return acc;
       if (!chosenAnswer.is_correct) return acc;
 
-      return acc + parseInt(chosenAnswer.selected_option.points, 10);
+      return acc + parseInt(curr.points, 10);
     }, 0);
   });
   correctAnswers = computed(() => {

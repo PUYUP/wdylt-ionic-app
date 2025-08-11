@@ -1,4 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { RecordingData } from 'capacitor-voice-recorder';
 
 export const AppActions = createActionGroup({
   source: 'App',
@@ -101,5 +102,13 @@ export const AppActions = createActionGroup({
     'Save Answered MCQ': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
     'Save Answered MCQ Success': props<{ data: any[], enrollmentId?: number | string; source?: string }>(),
     'Save Answered MCQ Failure': props<{ error: any, enrollmentId?: number | string; source?: string }>(),
+
+    'Upload Audio': props<{ fileData: RecordingData }>(),
+    'Upload Audio Success': props<{ data: any }>(),
+    'Upload Audio Failure': props<{ error: any }>(),
+
+    'Transcribe Audio': props<{ gcsUri: string }>(),
+    'Transcribe Audio Success': props<{ data: any }>(),
+    'Transcribe Audio Failure': props<{ error: any }>()
   }
 });

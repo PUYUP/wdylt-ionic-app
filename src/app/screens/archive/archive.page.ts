@@ -174,6 +174,12 @@ export class ArchivePage implements OnInit {
 
   /** Refresh the enrolled lessons */
   onRefresh() {
+    this.filter = {
+      ...this.filter,
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+    
     this.getEnrollments();
   }
 
@@ -182,6 +188,12 @@ export class ArchivePage implements OnInit {
    */
   handleRefresh(event: RefresherCustomEvent) {
     this.refreshEvent = event;
+    this.filter = {
+      ...this.filter,
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+
     this.getEnrollments();
   }
 

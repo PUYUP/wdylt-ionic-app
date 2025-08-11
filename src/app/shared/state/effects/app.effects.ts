@@ -12,6 +12,8 @@ import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../../services/http.service';
 import { calculatePoints } from '../../helpers';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { getDownloadURL, ref, Storage, uploadBytes } from '@angular/fire/storage';
 
 @Injectable()
 export class AppEffects {
@@ -22,6 +24,7 @@ export class AppEffects {
     private store: Store<GlobalState>,
     private router: Router,
     private httpService: HttpService,
+    private fireStorage: Storage,
   ) {}
 
   signInWithGoogle$ = createEffect(() => this.actions$.pipe(
@@ -842,6 +845,84 @@ export class AppEffects {
     ofType(AppActions.saveAnsweredMCQFailure),
     tap(({ error }) => {
       console.error('Error saving answered MCQ:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Upload audio
+  // ...
+  uploadAudio$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.uploadAudio),
+    switchMap(async ({ fileData }) => {
+      try {
+        const directory = Directory.Data;
+        const path = fileData.value.path as string;
+        const storageRef = ref(this.fireStorage, `sounds${path}`);
+        const { data } = await Filesystem.readFile({ directory, path });
+        const snapshot = await uploadBytes(storageRef, data as Blob);
+
+        if (snapshot) {
+          const downloadURL = await getDownloadURL(snapshot.ref);
+          const bucket = snapshot.metadata.bucket;
+          const fullPath = snapshot.metadata.fullPath;
+          const storageLocation = `gs://${bucket}/${fullPath}`;
+
+          return AppActions.uploadAudioSuccess({
+            data: { 
+              downloadUrl: downloadURL, 
+              storageLocation: storageLocation
+            }
+          });
+        } else {
+          throw new Error('Upload failed');
+        }
+      } catch (error) {
+        console.error('Error uploading audio:', error);
+        return AppActions.uploadAudioFailure({ error });
+      }
+    })
+  ));
+
+  uploadAudioSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.uploadAudioSuccess),
+    tap(({ data }) => {
+      console.log('Audio uploaded successfully:', data);
+    })
+  ), { dispatch: false });
+
+  uploadAudioFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.uploadAudioFailure),
+    tap(({ error }) => {
+      console.error('Error uploading audio:', error);
+    })
+  ), { dispatch: false });
+
+  
+  // ...
+  // Transcribe Audio
+  // ...
+  transcribeAudio$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.transcribeAudio),
+    switchMap(({ gcsUri }) => 
+      this.httpService.transcribeAudio(gcsUri).pipe(
+        map((response: any) => AppActions.transcribeAudioSuccess({ data: response })),
+        catchError((error: any) => of(AppActions.transcribeAudioFailure({ error })))
+      )
+    )
+  ));
+
+  transcribeAudioSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.transcribeAudioSuccess),
+    tap(({ data }) => {
+      console.log('Audio transcribed successfully:', data);
+    })
+  ), { dispatch: false });
+
+  transcribeAudioFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.transcribeAudioFailure),
+    tap(({ error }) => {
+      console.error('Error transcribing audio:', error);
     })
   ), { dispatch: false });
 

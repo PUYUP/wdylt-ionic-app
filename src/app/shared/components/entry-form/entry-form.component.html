@@ -1,5 +1,5 @@
 @if (currentRecordingData) {
-  <div class="relative flex items-center w-full bg-white shadow rounded-xl ion-padding">
+  <div class="relative flex items-center w-full bg-white shadow rounded-xl ion-padding ion-margin-bottom">
     <div class="flex-none w-14">
       <ion-buttons>
         @if (isPlaying) {
@@ -42,25 +42,41 @@
 }
 
 <div class="block relative">
-  <ion-textarea 
-    mode="ios" 
-    class="border-2 border-neutral-200 rounded-2xl shadow-lg bg-white px-4 py-2 goal-textarea"
-    [autoGrow]="true"
-    rows="2"
-    [placeholder]="isRecording ? 'Listening...' : placeholder"
-    [counter]="true"
-    [readonly]="isRecording || currentRecordingData != null"
-    [disabled]="isRecording || currentRecordingData != null"
-    (ionInput)="onGoalInput($event)"
-    [maxlength]="maxLength"
-    [(ngModel)]="goalText"
-  >
-  </ion-textarea>
+  <div class="relative">
+    <ion-textarea 
+      mode="ios" 
+      class="border-2 border-neutral-200 rounded-2xl shadow bg-white px-4 py-2 goal-textarea"
+      [autoGrow]="true"
+      rows="2"
+      [placeholder]="isRecording ? 'Listening...' : placeholder"
+      [counter]="true"
+      [readonly]="isRecording || (processingVoiceToText$ | async) == true"
+      [disabled]="isRecording || (processingVoiceToText$ | async) == true"
+      (ionInput)="onGoalInput($event)"
+      [maxlength]="maxLength"
+      [(ngModel)]="goalText"
+    >
+    </ion-textarea>
+
+    @if (getTranscriptionStatus() === 'ON_PROGRESS') {
+      <div class="absolute z-30 left-0 right-0 top-0 bottom-0 flex items-center justify-center p-4 text-center bg-yellow-100 rounded-2xl shadow">
+        Converting audio to text... please wait.
+      </div>
+    }
+  </div>
 
   <div class="absolute right-0 left-0 bottom-4 pr-4 z-20">
     <div class="flex items-center">
       <div class="w-22 ml-auto">
-        <ion-button (click)="onRecord()" color="light" mode="ios" shape="round" expand="block" class="relative z-30">
+        <ion-button 
+          (click)="onRecord()" 
+          color="light" 
+          mode="ios" 
+          shape="round" 
+          expand="block" 
+          class="relative z-30"
+          [disabled]="isRecording || (processingVoiceToText$ | async) == true"
+        >
           <ion-icon slot="icon-only" [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
           <ion-text class="ml-2">{{ isRecording ? 'Stop' : 'Speak' }}</ion-text>
         </ion-button>

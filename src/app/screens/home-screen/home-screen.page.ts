@@ -50,6 +50,8 @@ export class HomeScreenPage implements OnInit {
   goalText: string | null = null;
   session$: Promise<any> = this.supabaseService.session();
   refreshEvent: RefresherCustomEvent | null = null;
+  uploadedData: any | null = null;
+  transcriptionStatus: string | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -128,12 +130,21 @@ export class HomeScreenPage implements OnInit {
    * On start learning button click.
    */
   async onStartLearning(userId: string) {
+    let payload: any = {
+      description: this.goalText,
+      content_type: 'text',
+      user: userId,
+    }
+
+    if (this.uploadedData) {
+      payload = {
+        ...payload,
+        content_data: this.uploadedData,
+      }
+    }
+
     this.store.dispatch(AppActions.createLesson({
-      data: {
-        user: userId,
-        content_type: 'text',
-        description: this.goalText,
-      },
+      data: payload,
       metadata: {
         enrollment: {
           goalHour: this.hourSelected,
@@ -149,6 +160,21 @@ export class HomeScreenPage implements OnInit {
   handleRefresh(event: RefresherCustomEvent) {
     this.refreshEvent = event;
     this.getLatestEnrollments();
+  }
+
+  /**
+   * On recording uploaded
+   */
+  onRecordingUploadedListener(event: any) {
+    this.uploadedData = event.detail.value;
+  }
+
+  /**
+   * On transcription processing
+   */
+  onTranscriptionProcessingListener(event: any) {
+    const status = event.detail.value;
+    this.transcriptionStatus = status;
   }
 
 }
