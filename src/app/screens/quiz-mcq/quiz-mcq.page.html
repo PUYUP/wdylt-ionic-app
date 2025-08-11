@@ -34,13 +34,14 @@
             <div 
               class="w-6 h-6 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer"
               [ngClass]="{
-                'bg-neutral-500': currentQuestionIndex() + 1 === page,
-                'bg-lime-500': userAnswers()[page - 1] && userAnswers()[page - 1] !== '',
-                'text-white': currentQuestionIndex() + 1 === page,
+                'bg-neutral-500': currentQuestionIndex() + 1 === page.number,
+                'bg-lime-500': userAnswers()[page.number - 1] && userAnswers()[page.number - 1] !== '',
+                'text-white': currentQuestionIndex() + 1 === page.number,
+                'bg-red-400': page.isCorrect === false,
               }"
-              (click)="goToQuestion(page - 1)"
+              (click)="goToQuestion(page.number - 1)"
             >
-              {{ page }}
+              {{ page.number }}
             </div>
           </div>
         }

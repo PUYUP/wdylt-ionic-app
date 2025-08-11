@@ -48,6 +48,7 @@ export class QuizMcqPage implements OnInit {
   enrollment$!: Observable<any>;
   enrolledId: string | null = this.route.snapshot.queryParamMap.get('enrolledId');
   lessonId: string | null = this.route.snapshot.queryParamMap.get('lessonId');
+  attemptId: string | null = this.route.snapshot.queryParamMap.get('attemptId');
 
   mcq$: Observable<any> | null = null;
   questions$: Observable<any> | null = null;
@@ -80,7 +81,12 @@ export class QuizMcqPage implements OnInit {
   totalAnswered = computed(() => this.userAnswers().filter(answer => answer && answer != '').length);
   isLastQuestion = computed(() => this.currentQuestionIndex() === this.questions().length - 1);
   isQuizComplete = computed(() => this.quizComplete());
-  pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => i + 1));
+  pageNumbers = computed(() => Array.from({ length: this.questions().length }, (_, i) => {
+    return {
+      number: i + 1,
+      isCorrect: this.questions()[i]?.chosen_options?.length > 0 ? (this.questions()[i].chosen_options?.[0]?.is_correct ? true : false) : null,
+    };
+  }));
   totalPoints = computed(() => {
     return this.questions().reduce((acc, curr: any) => {
       return acc + parseInt(curr.points, 10);
@@ -339,6 +345,7 @@ export class QuizMcqPage implements OnInit {
         question: questionId,
         selected_option: option?.id,
         points_earned: question?.points || 1,
+        attempt: this.attemptId,
       };
     });
 

@@ -207,6 +207,15 @@ export class AppEffects {
         data: payload,
         source: 'enroll-lesson',
       }));
+
+      // create attempt
+      this.store.dispatch(AppActions.createAttempt({
+        data: {
+          user: instance.user,
+          enrollmentId: instance.id,
+          lessonId: instance.lesson.id,
+        }
+      }));
     })
   ), { dispatch: false });
 
@@ -254,25 +263,28 @@ export class AppEffects {
           queryParams: {
             lessonId: data[0].lesson.id,
             enrolledId: id,
+            attemptId: data[0].attempts?.length > 0 ? data[0].attempts[data[0].attempts.length - 1].id : null,
           },
         });
       }
 
       // create reminder for the enrolled lesson
-      const instance = data[0];
-      const dayOfWeek = getISODay(new Date(instance.target_completion_datetime));
-      const payload = {
-        enrollment: instance.id,
-        user: instance.user,
-        lesson: instance.lesson.id,
-        scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
-        days_of_week: [dayOfWeek],
-      }
+      if (source == 'edit') {
+        const instance = data[0];
+        const dayOfWeek = getISODay(new Date(instance.target_completion_datetime));
+        const payload = {
+          enrollment: instance.id,
+          user: instance.user,
+          lesson: instance.lesson.id,
+          scheduled_time: format(instance.target_completion_datetime, 'HH:mm'),
+          days_of_week: [dayOfWeek],
+        }
 
-      this.store.dispatch(AppActions.updateReminder({
-        data: payload,
-        source: 'update-enrolled-lesson',
-      }));
+        this.store.dispatch(AppActions.updateReminder({
+          data: payload,
+          source: 'update-enrolled-lesson',
+        }));
+      }
     })
   ), { dispatch: false });
 
@@ -337,6 +349,7 @@ export class AppEffects {
           .from('enrollments')
           .select(`
             *, 
+            attempts(*),
             lesson(
               id, content_type, description, content_data,
               mcq_questions: questions(*),
@@ -452,7 +465,8 @@ export class AppEffects {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
           .select(`
-            *, 
+            *,
+            attempts(*),
             lesson(
               id, content_type, description, content_data,
               mcq_questions: questions(*),
@@ -923,6 +937,48 @@ export class AppEffects {
     ofType(AppActions.transcribeAudioFailure),
     tap(({ error }) => {
       console.error('Error transcribing audio:', error);
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Create attempt
+  // ...
+  createAttempt$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createAttempt),
+    switchMap(async ({ data, source, metadata }) => {
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('attempts')
+          .insert({
+            user: data.user,
+            lesson: data.lessonId,
+            enrollment: data.enrollmentId
+          })
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.createAttemptSuccess({ data: result, source, metadata });
+      } catch (error) {
+        console.error('Error saving attempt:', error);
+        return AppActions.createAttemptFailure({ error, source, metadata });
+      }
+    })
+  ));
+
+  createAttemptSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createAttemptSuccess),
+    tap(({ data, source, metadata }) => {
+      console.log('Attempt created successfully:', data);
+    })
+  ), { dispatch: false });
+
+  createAttemptFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createAttemptFailure),
+    tap(({ error, source, metadata }) => {
+      console.error('Error creating attempt:', error);
     })
   ), { dispatch: false });
 

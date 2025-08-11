@@ -79,6 +79,10 @@ export const AppActions = createActionGroup({
     'Update Reminder Success': props<{ data: any, source?: string, metadata?: any }>(),
     'Update Reminder Failure': props<{ error: any, source?: string, metadata?: any }>(),
 
+    'Create Attempt': props<{ data: { user: string, lessonId: number, enrollmentId: number }, source?: string, metadata?: any }>(),
+    'Create Attempt Success': props<{ data: any, source?: string, metadata?: any }>(),
+    'Create Attempt Failure': props<{ error: any, source?: string, metadata?: any }>(),
+
     'AI Generate MCQ': props<{ topic: string, source?: string }>(),
     'AI Generate MCQ Success': props<{ data: any, source?: string }>(),
     'AI Generate MCQ Failure': props<{ error: any, source?: string }>(),

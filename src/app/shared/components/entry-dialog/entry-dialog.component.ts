@@ -61,7 +61,8 @@ export class EntryDialogComponent  implements OnInit {
             id: this.data?.id,
             data: {
               target_completion_datetime: withNewSeconds.toISOString(),
-            }
+            },
+            source: 'edit',
           }))
           break;
         
@@ -155,7 +156,7 @@ export class EntryDialogComponent  implements OnInit {
         data: {
           ...payload,
           content_type: 'audio/mpeg',
-        }
+        },
       }));
     } else {
       // create new lesson

@@ -65,9 +65,6 @@ export class HomeScreenPage implements OnInit {
     this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
     this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
-        case AppActions.updateEnrollmentSuccess.type:
-          break;
-        
         case AppActions.getLatestEnrollmentsSuccess.type:
           if (this.refreshEvent) {
             this.refreshEvent.target.complete();

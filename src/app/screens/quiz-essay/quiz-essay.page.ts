@@ -36,6 +36,7 @@ export class QuizEssayPage implements OnInit {
   enrollment$!: Observable<any>;
   enrolledId: string | null = this.route.snapshot.queryParamMap.get('enrolledId');
   lessonId: string | null = this.route.snapshot.queryParamMap.get('lessonId');
+  attemptId: string | null = this.route.snapshot.queryParamMap.get('attemptId');
 
   essay$: Observable<any> | null = null;
   questions$: Observable<any> | null = null;
@@ -289,6 +290,7 @@ export class QuizEssayPage implements OnInit {
       question_content: this.questions()[index].content_text,
       lesson: this.lessonId,
       enrollment: this.enrolledId,
+      attempt: this.attemptId,
     }));
 
     this.store.dispatch(AppActions.saveAnsweredEssay({

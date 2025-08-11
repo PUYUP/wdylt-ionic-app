@@ -112,6 +112,7 @@ export class ArchivePage implements OnInit {
         queryParams: {
           lessonId: enrolled.lesson.id,
           enrolledId: enrolled.id,
+          attemptId: enrolled.attempts?.length > 0 ? enrolled.attempts[enrolled.attempts.length - 1].id : null,
         },
       });
     }
