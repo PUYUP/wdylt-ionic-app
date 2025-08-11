@@ -81,7 +81,8 @@ export class EntryFormComponent  implements OnInit {
 
           // transcribe audio
           this.store.dispatch(AppActions.transcribeAudio({
-            gcsUri: 'gs://wdylt-website.firebasestorage.app/audios/test-audio-1.mp3'
+            // gcsUri: 'gs://wdylt-website.firebasestorage.app/audios/test-audio-1.mp3'
+            gcsUri: action.data.storageLocation,
           }));
           break;
         
@@ -93,8 +94,6 @@ export class EntryFormComponent  implements OnInit {
             }
           });
 
-          console.log('Transcription successful:', action.data);
-          
           this.processingVoiceToText$.next(false);
           this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
           this.transcriptionStatus.set('DONE');
@@ -376,6 +375,28 @@ export class EntryFormComponent  implements OnInit {
     setTimeout(() => {
       this.stopAudio();
     }, 1000);
+  }
+
+  /**
+   * Clear audio
+   */
+  clearAudio() {
+    this.currentRecordingData = null;
+    this.isPlaying = false;
+    this.progressLength = 0;
+    this.goalText = null;
+
+    this.onRecordingUploaded.emit({
+      detail: {
+        value: null,
+      }
+    });
+
+    this.onRecordStop.emit({
+      detail: {
+        value: null,
+      }
+    });
   }
 
   ngOnDestroy() {

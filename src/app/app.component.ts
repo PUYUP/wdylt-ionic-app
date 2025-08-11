@@ -27,7 +27,9 @@ export class AppComponent {
   public appPages = [
     { title: 'Home', url: '/', icon: 'home' },
     { title: 'Profile', url: '/profile', icon: 'person' },
-    { title: 'Archive', url: '/archive', icon: 'archive' },
+    { title: 'Learns', url: '/archive', icon: 'bulb' },
+    { title: 'Notes', url: '/notes', icon: 'document' },
+    { title: 'Todos', url: '/todos', icon: 'checkmark-circle' }
   ];
   public session$: Promise<any> = this.supabaseService.session();
 

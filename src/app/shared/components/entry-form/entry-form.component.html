@@ -23,20 +23,30 @@
       <div class="h-2 bg-neutral-200 rounded-full"></div>
     </div>
 
-    <div class="ml-auto flex-none w-14 text-right">
-      @if (isPlaying) {
-        <cd-timer 
-          #audioTimer 
-          [autoStart]="false" 
-          [countdown]="true" 
-          [startTime]="currentRecordingData.msDuration / 1000"
-          format="ms"
-          (onTick)="onAudioTimerTick($event)"
-          (onComplete)="onAudioTimerComplete($event)"
-        ></cd-timer>
-      } @else {
-        <ion-text>{{ duration }}</ion-text>
-      }
+    <div class="ml-auto flex-none w-auto pl-3 text-right items-center">
+      <div class="flex items-center gap-2">
+        <div>
+          @if (isPlaying) {
+            <cd-timer 
+              #audioTimer 
+              [autoStart]="false" 
+              [countdown]="true" 
+              [startTime]="currentRecordingData.msDuration / 1000"
+              format="ms"
+              (onTick)="onAudioTimerTick($event)"
+              (onComplete)="onAudioTimerComplete($event)"
+            ></cd-timer>
+          } @else {
+            <ion-text>{{ duration }}</ion-text>
+          }
+        </div>
+
+        <ion-buttons>
+          <ion-button type="button" (click)="clearAudio()">
+            <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </div>
     </div>
   </div>
 }

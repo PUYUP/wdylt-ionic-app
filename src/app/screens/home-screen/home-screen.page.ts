@@ -1,11 +1,12 @@
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule, NgStyle } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
-import { IonicModule, RefresherCustomEvent } from '@ionic/angular';
+import { IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
 import { Base64String } from 'capacitor-voice-recorder';
 import { differenceInMinutes, endOfDay, startOfDay } from 'date-fns';
 import { Observable, Subject, takeUntil } from 'rxjs';
+import { EntryDialogComponent } from 'src/app/shared/components/entry-dialog/entry-dialog.component';
 import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-form.component';
 import { EntryTimeComponent } from 'src/app/shared/components/entry-time/entry-time.component';
 import { LearnCardComponent } from 'src/app/shared/components/learn-card/learn-card.component';
@@ -26,6 +27,7 @@ import { selectLatestEnrollments } from 'src/app/shared/state/selectors/app.sele
     EntryFormComponent,
     EntryTimeComponent,
     LearnCardComponent,
+    NgStyle,
   ],
   schemas: [
     CUSTOM_ELEMENTS_SCHEMA,
@@ -57,6 +59,7 @@ export class HomeScreenPage implements OnInit {
   constructor(
     private supabaseService: SupabaseService,
     private store: Store<GlobalState>,
+    private modalCtrl: ModalController,
     private actions$: Actions,
   ) {
     this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
@@ -176,6 +179,22 @@ export class HomeScreenPage implements OnInit {
   onTranscriptionProcessingListener(event: any) {
     const status = event.detail.value;
     this.transcriptionStatus = status;
+  }
+
+  /**
+   * Add new learn
+   */
+  async onAddNewLearn() {
+    const modal = await this.modalCtrl.create({
+      component: EntryDialogComponent,
+      backdropDismiss: false,
+    });
+
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      console.log('Modal data:', data);
+    }
   }
 
   ngOnDestroy() {
