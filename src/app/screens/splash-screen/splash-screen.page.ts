@@ -2,13 +2,14 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/c
 import { IonicModule, IonModal } from '@ionic/angular';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Base64String } from 'capacitor-voice-recorder';
-import { ActionsSubject, Store } from '@ngrx/store';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Store } from '@ngrx/store';
 import { GlobalState } from '../../shared/state/reducers/app.reducer';
 import { AppActions } from '../../shared/state/actions/app.actions';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 import { EntryFormComponent } from '../../shared/components/entry-form/entry-form.component';
 import { EntryTimeComponent } from '../../shared/components/entry-time/entry-time.component';
+import { Subject, takeUntil } from 'rxjs';
+import { Actions } from '@ngrx/effects';
 
 @Component({
   selector: 'app-splash-screen',
@@ -39,12 +40,13 @@ export class SplashScreenPage implements OnInit {
     recordDataBase64?: Base64String;
   } | null = null;
   hourSelected: string | null = null;
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
   ) {
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.signInWithGoogleSuccess.type:
           console.log('Sign in with Google successful:', action.user);
@@ -142,6 +144,11 @@ export class SplashScreenPage implements OnInit {
   onHourChangedListener(event: any) {
     this.hourSelected = event.data.value;
     localStorage.setItem('goalHour', this.hourSelected as string);
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

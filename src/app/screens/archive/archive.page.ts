@@ -1,17 +1,17 @@
 import { AsyncPipe, CommonModule, DatePipe, NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AlertController, InfiniteScrollCustomEvent, IonicModule, RefresherCustomEvent } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { select, Store } from '@ngrx/store';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
 import { selectEnrollments } from 'src/app/shared/state/selectors/app.selectors';
 import { TimeDifferenceInMinutesPipe } from "../../shared/pipes/time-difference-in-minutes.pipe";
 import { Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from 'src/environments/environment';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
+import { Actions } from '@ngrx/effects';
 
 @Component({
   selector: 'app-archive',
@@ -50,16 +50,17 @@ export class ArchivePage implements OnInit {
   weekRangeLabel: string = '';
   ltDate: string = '';
   gtDate: string = '';
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private store: Store<GlobalState>,
     private supabaseService: SupabaseService,
     private router: Router,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
     private alertCtrl: AlertController,
   ) { 
     this.enrolledLessons$ = this.store.pipe(select(selectEnrollments));
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.getEnrollmentsSuccess.type:
           if (this.infiniteEvent) {
@@ -179,7 +180,7 @@ export class ArchivePage implements OnInit {
       from_page: 0,
       to_page: environment.queryPerPage,
     }
-    
+
     this.getEnrollments();
   }
 
@@ -233,6 +234,11 @@ export class ArchivePage implements OnInit {
     }
 
     this.getEnrollments();
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

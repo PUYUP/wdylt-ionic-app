@@ -10,10 +10,10 @@ import { Capacitor } from '@capacitor/core';
 import { NativeAudio } from '@capacitor-community/native-audio';
 import { msToAudioDuration } from '../../helpers';
 import { AppActions } from '../../state/actions/app.actions';
-import { ActionsSubject, Store } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { GlobalState } from '../../state/reducers/app.reducer';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
+import { Actions } from '@ngrx/effects';
 
 @Component({
   selector: 'app-entry-form',
@@ -62,13 +62,14 @@ export class EntryFormComponent  implements OnInit {
   isPlaying: boolean = false;
   progressLength: number = 0;
   processingVoiceToText$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private modalCtrl: ModalController,
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
   ) { 
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.uploadAudioSuccess.type:
           console.log('Audio uploaded successfully:', action.data);
@@ -91,6 +92,8 @@ export class EntryFormComponent  implements OnInit {
               value: this.goalText,
             }
           });
+
+          console.log('Transcription successful:', action.data);
           
           this.processingVoiceToText$.next(false);
           this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
@@ -375,17 +378,19 @@ export class EntryFormComponent  implements OnInit {
     }, 1000);
   }
 
-  async ngOnDestroy() {
+  ngOnDestroy() {
+    this.processingVoiceToText$.complete();
+    this.goalText = null;
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
+
     if (this.getAudioUrl() != '') {
       // Revoke the object URL to free up memory
       URL.revokeObjectURL(this.getAudioUrl() as string);
     }
     
     this.stopAudio();
-    await NativeAudio.unload({ assetId: this.audioAssetId });
-
-    this.processingVoiceToText$.complete();
-    this.goalText = null;
+    NativeAudio.unload({ assetId: this.audioAssetId });
   }
 
 }

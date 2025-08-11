@@ -2,13 +2,13 @@ import { CommonModule, NgStyle } from '@angular/common';
 import { Component, computed, Input, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { select, Store } from '@ngrx/store';
+import { BehaviorSubject, map, Observable, Subject, takeUntil } from 'rxjs';
 import { GlobalState } from '../../state/reducers/app.reducer';
 import { selectEnrollment, selectEssayQuestions } from '../../state/selectors/app.selectors';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppActions } from '../../state/actions/app.actions';
 import { SupabaseService } from '../../services/supabase.service';
+import { Actions } from '@ngrx/effects';
 
 interface Question {
   id: number;
@@ -74,14 +74,16 @@ export class QuizEssayComponent  implements OnInit {
     }).length > 0;
   });
 
+  onDestroy$ = new Subject<boolean>();
+
   constructor(
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
     private supabaseService: SupabaseService,
   ) {
     this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.essay$ = this.store.pipe(select(selectEssayQuestions));
-    this.essay$.pipe(takeUntilDestroyed()).subscribe((essay: any) => {
+    this.essay$.pipe(takeUntil(this.onDestroy$)).subscribe((essay: any) => {
       if (!essay.isLoading && essay.data && essay.data.length >= 5) {
         this.resetQuiz();
 
@@ -112,7 +114,7 @@ export class QuizEssayComponent  implements OnInit {
       }
     });
 
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.getEssayQuestionsSuccess.type:
           break;
@@ -251,6 +253,8 @@ export class QuizEssayComponent  implements OnInit {
     console.log('QuizEssayComponent destroyed');
     this.resetQuiz();
     this.generatingQuiz$.complete();
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

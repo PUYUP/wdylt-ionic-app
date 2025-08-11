@@ -1,10 +1,10 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
-import { lastValueFrom, Observable } from 'rxjs';
+import { Actions } from '@ngrx/effects';
+import { select, Store } from '@ngrx/store';
+import { lastValueFrom, Observable, Subject, takeUntil } from 'rxjs';
 import { QuizEssayComponent } from 'src/app/shared/components/quiz-essay/quiz-essay.component';
 import { QuizMcqComponent } from 'src/app/shared/components/quiz-mcq/quiz-mcq.component';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
@@ -29,20 +29,21 @@ export class QuizPage implements OnInit {
   enrolledId: string | null = this.route.snapshot.queryParamMap.get('enrolledId');
   lessonId: string | null = this.route.snapshot.queryParamMap.get('lessonId');
   quizType: 'mcq' | 'essay' | null = this.route.snapshot.queryParamMap.get('type') as 'mcq' | 'essay' | null;
-
+  onDestroy$ = new Subject<boolean>();
+  
   constructor(
     private store: Store<GlobalState>,
     private route: ActivatedRoute,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
   ) { 
-    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+    this.route.queryParamMap.pipe(takeUntil(this.onDestroy$)).subscribe(params => {
       this.enrolledId = params.get('enrolledId');
       this.lessonId = params.get('lessonId');
       this.quizType = params.get('type') as 'mcq' | 'essay' | null;
     });
 
     this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
-    this.enrolled$.pipe(takeUntilDestroyed()).subscribe((enrolled: any) => {
+    this.enrolled$.pipe(takeUntil(this.onDestroy$)).subscribe((enrolled: any) => {
       if (!enrolled.isLoading && !enrolled.error && !enrolled.data) {
         this.store.dispatch(AppActions.getEnrollment({
           id: this.enrolledId as string,
@@ -50,7 +51,7 @@ export class QuizPage implements OnInit {
       }
     });
 
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.getEnrollmentSuccess.type:
           const status = action?.data?.status;
@@ -82,6 +83,11 @@ export class QuizPage implements OnInit {
       lessonId: lessonId,
       quizType: quizType,
     };
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

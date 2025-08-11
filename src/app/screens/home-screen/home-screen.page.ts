@@ -1,11 +1,11 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IonicModule, RefresherCustomEvent } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
+import { Actions } from '@ngrx/effects';
+import { select, Store } from '@ngrx/store';
 import { Base64String } from 'capacitor-voice-recorder';
 import { differenceInMinutes, endOfDay, startOfDay } from 'date-fns';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-form.component';
 import { EntryTimeComponent } from 'src/app/shared/components/entry-time/entry-time.component';
 import { LearnCardComponent } from 'src/app/shared/components/learn-card/learn-card.component';
@@ -52,14 +52,15 @@ export class HomeScreenPage implements OnInit {
   refreshEvent: RefresherCustomEvent | null = null;
   uploadedData: any | null = null;
   transcriptionStatus: string | null = null;
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private supabaseService: SupabaseService,
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
   ) {
     this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.updateEnrollmentSuccess.type:
           break;
@@ -175,6 +176,11 @@ export class HomeScreenPage implements OnInit {
   onTranscriptionProcessingListener(event: any) {
     const status = event.detail.value;
     this.transcriptionStatus = status;
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

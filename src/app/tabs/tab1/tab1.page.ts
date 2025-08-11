@@ -1,12 +1,12 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { ActionSheetController, AlertController, IonicModule, ModalController } from '@ionic/angular';
-import { ActionsSubject, select, Store } from '@ngrx/store';
+import { Actions } from '@ngrx/effects';
+import { select, Store } from '@ngrx/store';
 import { Base64String } from 'capacitor-voice-recorder';
 import { differenceInMinutes, endOfDay, startOfDay } from 'date-fns';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { EntryDialogComponent } from 'src/app/shared/components/entry-dialog/entry-dialog.component';
 import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-form.component';
 import { EntryTimeComponent } from 'src/app/shared/components/entry-time/entry-time.component';
@@ -55,6 +55,7 @@ export class Tab1Page implements OnInit {
   goalText: string | null = null;
   user$: Promise<any> = this.supabaseService.getUser();
   latestEnrollments: any[] = [];
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private supabaseService: SupabaseService,
@@ -63,10 +64,10 @@ export class Tab1Page implements OnInit {
     private modalCtrl: ModalController,
     private actionSheetCtrl: ActionSheetController,
     private alertCtrl: AlertController,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
   ) {
     this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.updateEnrollmentSuccess.type:
           break;
@@ -181,16 +182,6 @@ export class Tab1Page implements OnInit {
     const midnight = endOfDay(today);
     const start = startOfDay(today);
     const { data } = await this.supabaseService.getUser();
-
-    if (data) {
-      this.store.dispatch(AppActions.getLatestEnrollments({ 
-        filter: { 
-          user_id: data?.user?.id as string, 
-          start_datetime: start.toISOString(),
-          target_completion_datetime: midnight.toISOString(),
-        }
-      }));
-    }
   }
 
   /**
@@ -299,6 +290,11 @@ export class Tab1Page implements OnInit {
         }));
       }
     }
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

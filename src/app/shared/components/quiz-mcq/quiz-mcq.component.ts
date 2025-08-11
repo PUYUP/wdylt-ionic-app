@@ -3,12 +3,12 @@ import { Component, computed, Input, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { GlobalState } from '../../state/reducers/app.reducer';
-import { ActionsSubject, select, Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import { AppActions } from '../../state/actions/app.actions';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, takeUntil } from 'rxjs';
 import { selectEnrollment, selectMCQQuestions } from '../../state/selectors/app.selectors';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SupabaseService } from '../../services/supabase.service';
+import { Actions } from '@ngrx/effects';
 
 interface QuizOption {
   id: number;
@@ -84,14 +84,16 @@ export class QuizMcqComponent  implements OnInit {
     }).length > 0;
   });
 
+  onDestroy$ = new Subject<boolean>();
+
   constructor(
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
     private supabaseService: SupabaseService,
   ) {
     this.enrolled$ = this.store.pipe(select(selectEnrollment({ id: this.enrolledId as string })));
     this.mcq$ = this.store.pipe(select(selectMCQQuestions));
-    this.mcq$.pipe(takeUntilDestroyed()).subscribe((mcq: any) => {
+    this.mcq$.pipe(takeUntil(this.onDestroy$)).subscribe((mcq: any) => {
       if (!mcq.isLoading && mcq.data && mcq.data.length >= 10) {
         this.resetQuiz();
 
@@ -124,7 +126,7 @@ export class QuizMcqComponent  implements OnInit {
       }
     });
 
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.getMCQQuestionsSuccess.type:
           break;
@@ -281,6 +283,8 @@ export class QuizMcqComponent  implements OnInit {
     console.log('QuizMCQComponent destroyed');
     this.resetQuiz();
     this.generatingQuiz$.complete();
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }

@@ -5,12 +5,12 @@ import { EntryFormComponent } from '../entry-form/entry-form.component';
 import { EntryTimeComponent } from '../entry-time/entry-time.component';
 import { Base64String } from 'capacitor-voice-recorder';
 import { format, setHours, setMinutes, setSeconds } from 'date-fns';
-import { ActionsSubject, Store } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { GlobalState } from '../../state/reducers/app.reducer';
 import { AppActions } from '../../state/actions/app.actions';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { SupabaseService } from '../../services/supabase.service';
+import { Actions } from '@ngrx/effects';
 
 @Component({
   selector: 'app-entry-dialog',
@@ -40,14 +40,15 @@ export class EntryDialogComponent  implements OnInit {
   updateEnrollment: Observable<{ data: any, isLoading: boolean, error: any }> | null = null;
   uploadedData: any | null = null;
   transcriptionStatus: string | null = null;
+  onDestroy$ = new Subject<boolean>();
 
   constructor(
     private modalCtrl: ModalController,
     private store: Store<GlobalState>,
-    private actionsSubject$: ActionsSubject,
+    private actions$: Actions,
     private supabaseService: SupabaseService,
   ) { 
-    this.actionsSubject$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+    this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
         case AppActions.updateLessonSuccess.type:
           const goalHours = this.hourSelected?.split(':');
@@ -196,6 +197,11 @@ export class EntryDialogComponent  implements OnInit {
   onTranscriptionProcessingListener(event: any) {
     const status = event.detail.value;
     this.transcriptionStatus = status;
+  }
+
+  ngOnDestroy() {
+    this.onDestroy$.next(true);
+    this.onDestroy$.complete();
   }
 
 }
