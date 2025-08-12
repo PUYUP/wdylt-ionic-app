@@ -994,9 +994,9 @@ export class AppEffects {
   // ...
   transcribeAudio$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.transcribeAudio),
-    switchMap(({ gcsUri }) => {
+    switchMap(({ gcsUri, mimeType }) => {
       this.spinner.show();
-      return this.httpService.transcribeAudio(gcsUri).pipe(
+      return this.httpService.transcribeAudio(gcsUri, mimeType).pipe(
         map((response: any) => AppActions.transcribeAudioSuccess({ data: response })),
         catchError((error: any) => of(AppActions.transcribeAudioFailure({ error })))
       )

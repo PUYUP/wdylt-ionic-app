@@ -17,9 +17,9 @@ export class HttpService {
     return this.httpClient.post(url, { context: topic });
   }
 
-  transcribeAudio(gcsUri: string): Observable<any> {
+  transcribeAudio(gcsUri: string, mimeType: string): Observable<any> {
     const url = environment.audioTranscriptionUrl;
-    return this.httpClient.post(url, { gcs_uri: gcsUri });
+    return this.httpClient.post(url, { gcs_uri: gcsUri, mime_type: mimeType });
   }
 
 }

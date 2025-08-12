@@ -84,6 +84,7 @@ export class EntryFormComponent  implements OnInit {
           this.store.dispatch(AppActions.transcribeAudio({
             // gcsUri: 'gs://wdylt-website.firebasestorage.app/audios/test-audio-1.mp3'
             gcsUri: action.data.storageLocation,
+            mimeType: this.currentRecordingData?.mimeType as string,
           }));
           break;
         

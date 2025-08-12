@@ -112,7 +112,7 @@ export const AppActions = createActionGroup({
     'Upload Audio Success': props<{ data: any }>(),
     'Upload Audio Failure': props<{ error: any }>(),
 
-    'Transcribe Audio': props<{ gcsUri: string }>(),
+    'Transcribe Audio': props<{ gcsUri: string, mimeType: string }>(),
     'Transcribe Audio Success': props<{ data: any }>(),
     'Transcribe Audio Failure': props<{ error: any }>(),
 
