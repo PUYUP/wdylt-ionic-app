@@ -7,11 +7,18 @@ const config: CapacitorConfig = {
   appName: 'What Did You Learn Today?',
   webDir: 'www',
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
     Keyboard: {
       resizeOnFullScreen: false
     },
     EdgeToEdge: {
       backgroundColor: '#000000',
+    },
+    StatusBar: {
+      overlaysWebView: false,
+      style: "DARK",
     },
   }
 };

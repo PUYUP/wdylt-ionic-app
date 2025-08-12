@@ -12,6 +12,8 @@ import { Capacitor } from '@capacitor/core';
 import { Store } from '@ngrx/store';
 import { GlobalState } from './shared/state/reducers/app.reducer';
 import { AppActions } from './shared/state/actions/app.actions';
+import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 // Register Swiper elements globally
 register();
@@ -95,6 +97,13 @@ export class AppComponent {
         }
       });
     });
+
+    const setBackgroundColor = async () => {
+      await EdgeToEdge.setBackgroundColor({ color: '#000000' });
+      await StatusBar.setStyle({ style: Style.Dark });
+    };
+
+    setBackgroundColor();
   }
 
   /**
