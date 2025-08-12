@@ -14,6 +14,7 @@ import { calculatePoints } from '../../helpers';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { getDownloadURL, ref, Storage, uploadBytes } from '@angular/fire/storage';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { decode } from 'base64-arraybuffer';
 
 @Injectable()
 export class AppEffects {
@@ -943,13 +944,21 @@ export class AppEffects {
     switchMap(async ({ fileData }) => {
       this.spinner.show();
 
-      try {
-        const directory = Directory.Data;
-        const path = fileData.value.path as string;
-        const storageRef = ref(this.fireStorage, `sounds${path}`);
-        const { data } = await Filesystem.readFile({ directory, path });
-        const snapshot = await uploadBytes(storageRef, data as Blob);
+      console.log('file data', fileData);
 
+      try {
+        const path = fileData.value.path as string;
+        const storageRef = ref(this.fireStorage, `sounds${path.includes('/') ? path : '/' + path}`);
+        let { data } = await Filesystem.readFile({ 
+          directory: Directory.Data,
+          path: path.includes('/') ? path : '/' + path,
+        });
+
+        if (typeof data === 'string') {
+          data = new Blob([new Uint8Array(decode(data))], { type: fileData.value.mimeType });
+        }
+
+        const snapshot = await uploadBytes(storageRef, data);
         if (snapshot) {
           const downloadURL = await getDownloadURL(snapshot.ref);
           const bucket = snapshot.metadata.bucket;

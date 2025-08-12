@@ -288,9 +288,6 @@ export class EntryFormComponent  implements OnInit {
         
         const audioUrl = await this.getBlobURL(this.currentRecordingData.path as string);
         this.audioUrl.set(audioUrl);
-
-        console.log('Audio URL:', this.getAudioUrl());
-
         this.prepareAudio(this.getAudioUrl() as string);
         this.duration = msToAudioDuration(this.currentRecordingData.msDuration);
 
