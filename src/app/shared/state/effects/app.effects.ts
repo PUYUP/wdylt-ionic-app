@@ -558,7 +558,7 @@ export class AppEffects {
     switchMap(async ({ data }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
-          .from('reminders')
+          .from('enrollment_reminders')
           .insert(data)
           .select(`*`)
 
@@ -567,7 +567,7 @@ export class AppEffects {
         }
         return AppActions.createReminderSuccess({ data: result });
       } catch (error) {
-        console.error('Error updating/creating reminders:', error);
+        console.error('Error updating/creating enrollment reminders:', error);
         return AppActions.createReminderFailure({ error });
       }
     })
@@ -576,14 +576,14 @@ export class AppEffects {
   createRemindersSuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.createReminderSuccess),
     tap(({ data }) => {
-      console.log('Reminders created successfully:', data);
+      console.log('Enrollment reminders created successfully:', data);
     })
   ), { dispatch: false });
 
   createRemindersFailure$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.createReminderFailure),
     tap(({ error }) => {
-      console.error('Error updating reminders:', error);
+      console.error('Error updating enrollment reminders:', error);
     })
   ), { dispatch: false });
 
@@ -596,7 +596,7 @@ export class AppEffects {
     switchMap(async ({ data }) => {
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
-          .from('reminders')
+          .from('enrollment_reminders')
           .update(data)
           .eq('lesson', data.lesson)
           .eq('enrollment', data.enrollment)
@@ -609,7 +609,7 @@ export class AppEffects {
         }
         return AppActions.createReminderSuccess({ data: result });
       } catch (error) {
-        console.error('Error updating/creating reminders:', error);
+        console.error('Error updating/creating enrollment reminders:', error);
         return AppActions.createReminderFailure({ error });
       }
     })
@@ -625,7 +625,7 @@ export class AppEffects {
   updateReminderFailure$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateReminderFailure),
     tap(({ error }) => {
-      console.error('Error updating reminders:', error);
+      console.error('Error updating enrollment reminders:', error);
     })
   ), { dispatch: false });
 

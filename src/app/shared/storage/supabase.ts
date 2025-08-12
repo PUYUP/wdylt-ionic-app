@@ -213,7 +213,7 @@ export type Database = {
           },
         ]
       }
-      reminders: {
+      enrollment_reminders: {
         Row: {
           buffer_minutes: number | null
           created_at: string
