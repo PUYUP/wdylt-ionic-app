@@ -7,11 +7,34 @@
     </ion-buttons>
 
     <ion-title>
-      Add Todo
+      {{ data ? 'Edit Todo' : 'Write Todo' }}
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content color="light">
+<ion-content color="light" class="ion-padding">
+  <app-entry-form 
+    [placeholder]="'Write your todo...'" 
+    [maxLength]="1000"
+    [rows]="1"
+    [content]="data ? data.title : null"
+    (onRecording)="onRecordingListener($event)"
+    (onRecordStop)="onRecordStopListener($event)"
+    (onTextChange)="onTextChangeListener($event)"
+    (onRecordingUploaded)="onRecordingUploadedListener($event)"
+    (onTranscriptionProcessing)="onTranscriptionProcessingListener($event)"
+  ></app-entry-form>
 
+  <div class="ion-margin-top ion-padding-top">
+    <ion-button 
+      expand="full" 
+      (click)="onSubmit()" 
+      mode="ios" 
+      size="large" 
+      shape="round" 
+      [disabled]="(!getTitle() && getTitle().trim() === '') || (getTranscriptionStatus() === 'IN_PROGRESS')"
+    >
+      Save Todo
+    </ion-button>
+  </div>
 </ion-content>

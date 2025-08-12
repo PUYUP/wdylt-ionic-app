@@ -5,7 +5,12 @@ export interface INote {
 }
 
 export interface ITodo {
-    description: string;
+    user?: string;
+    title: string;
+    priority: 'low' | 'medium' | 'high';
+    is_completed: boolean;
+    content_data?: any;
+    completed_at?: string;
 }
 
 export type QueryFilter = {

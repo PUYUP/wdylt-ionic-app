@@ -98,12 +98,14 @@ export class AppComponent {
       });
     });
 
-    const setBackgroundColor = async () => {
-      await EdgeToEdge.setBackgroundColor({ color: '#000000' });
-      await StatusBar.setStyle({ style: Style.Dark });
-    };
+    if (Capacitor.isNativePlatform()) {
+      const setBackgroundColor = async () => {
+        await EdgeToEdge.setBackgroundColor({ color: '#000000' });
+        await StatusBar.setStyle({ style: Style.Dark });
+      };
 
-    setBackgroundColor();
+      setBackgroundColor();
+    }
   }
 
   /**

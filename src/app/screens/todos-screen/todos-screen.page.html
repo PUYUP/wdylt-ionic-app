@@ -1,9 +1,9 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar color="light">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/" />
     </ion-buttons>
-    
+
     <ion-title>My Todos</ion-title>
   </ion-toolbar>
 
@@ -12,6 +12,83 @@
   </div>
 </ion-header>
 
-<ion-content [fullscreen]="true" color="light">
-  
+<ion-content color="light" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (todos$ | async; as todos) {
+    @if (todos.isLoading) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Loading todos...</span>
+        </div>
+      </div>
+    } @else {
+      @if (todos.data.length > 0) {
+        @for (item of todos.data; track item) {
+          <div class="shadow rounded-xl ion-padding border border-neutral-200 bg-white ion-margin-bottom">
+            <div class="block flex items-center ion-margin-bottom">
+              <ion-text class="text-sm text-neutral-600">{{ item.created_at | date: 'short' }}</ion-text>
+              <div class="ml-auto flex items-center">
+                <ion-button 
+                  fill="outline" 
+                  mode="ios" 
+                  size="small" 
+                  shape="round"
+                  [ngStyle]="{
+                    '--padding-start': '8px',
+                    '--padding-end': '10px',
+                  }"
+                  (click)="onMarkDone(item)"
+                >
+                  @if (item.is_completed) {
+                    <ion-icon name="return-up-back" slot="start"></ion-icon>  
+                    <ion-text class="ml-1">Undone</ion-text>
+                  } @else {
+                    <ion-icon name="checkmark" slot="start"></ion-icon>  
+                    <ion-text class="ml-1">Mark done</ion-text>
+                  }
+                </ion-button>
+                <ion-buttons class="ml-2">
+                  <ion-button 
+                    size="small" 
+                    [ngStyle]="{
+                      'width': '2rem',
+                      'height': '2rem',
+                      '--padding-start': '6px',
+                      '--padding-end': '6px',
+                      '--padding-top': '6px',
+                      '--padding-bottom': '6px'
+                    }"
+                    mode="ios"
+                    (click)="openOptions(item)"
+                  >
+                    <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </ion-buttons>
+              </div>
+            </div>
+
+            <div [innerHTML]="item.title" class="text-lg whitespace-pre-wrap"></div>
+          </div>
+        }
+      } @else {
+        <div class="ion-padding text-center">
+          <span class="text-gray-500">No todos available for this week.</span>
+        </div>
+      }
+    }
+  }
+
+  <ion-infinite-scroll (ionInfinite)="onIonInfinite($event)">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>
+  
+<ion-fab slot="fixed" vertical="bottom" horizontal="center" class="ml-auto mr-auto">
+  <ion-fab-button (click)="onAddTodo()" size="small" color="secondary">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

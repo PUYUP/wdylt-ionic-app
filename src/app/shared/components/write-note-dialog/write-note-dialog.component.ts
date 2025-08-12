@@ -42,101 +42,101 @@ export class WriteNoteDialogComponent  implements OnInit {
   getTranscriptionStatus = computed(() => this.transcriptionStatus());
 
   constructor(
-      private modalCtrl: ModalController,
-      private supabaseService: SupabaseService,
-      private store: Store<GlobalState>,
-      private actions$: Actions,
-    ) { 
-      this.actions$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
-        switch (action.type) {
-          case AppActions.createNoteSuccess.type:
-          case AppActions.updateNoteSuccess.type:
-            this.modalCtrl.dismiss();
-            break;
-        }
-      });
-    }
-
-    ngOnInit() {
-      if (this.data) {
-        this.content.set(this.data.content);
-        this.uploadedData.set(this.data.content_data);
+    private modalCtrl: ModalController,
+    private supabaseService: SupabaseService,
+    private store: Store<GlobalState>,
+    private actions$: Actions,
+  ) { 
+    this.actions$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
+      switch (action.type) {
+        case AppActions.createNoteSuccess.type:
+        case AppActions.updateNoteSuccess.type:
+          this.modalCtrl.dismiss();
+          break;
       }
+    });
+  }
+
+  ngOnInit() {
+    if (this.data) {
+      this.content.set(this.data.content);
+      this.uploadedData.set(this.data.content_data);
+    }
+  }
+
+  /**
+   * Input text changed
+   */
+  onTextChangeListener(event: any) {
+    this.content.set(event.detail.value);
+  }
+
+  /**
+   * Recording listeners.
+   */
+  onRecordingListener(event: any) {
+    this.isRecording.set(event.detail.value);
+  }
+
+  /**
+   * Record stop listener.
+   */
+  onRecordStopListener(event: any) {
+    this.recordingData.set(event.detail.value);
+    this.isRecording.set(false);
+  }
+
+  /**
+   * On recording uploaded
+   */
+  onRecordingUploadedListener(event: any) {
+    this.uploadedData.set(event.detail.value);
+  }
+
+  /**
+   * On transcription processing
+   */
+  onTranscriptionProcessingListener(event: any) {
+    this.transcriptionStatus.set(event.detail.value);
+  }
+
+  async onSubmit() {
+    const session = await this.supabaseService.session();
+    if (!session) {
+      console.error('No active session found');
+      return;
     }
 
-    /**
-     * Input text changed
-     */
-    onTextChangeListener(event: any) {
-      this.content.set(event.detail.value);
+    if (!this.getContent() || this.getContent().trim() === '') {
+      console.error('No content found');
+      return;
     }
 
-    /**
-     * Recording listeners.
-     */
-    onRecordingListener(event: any) {
-      this.isRecording.set(event.detail.value);
+    const user = session?.user;
+    let payload: INote = {
+      user: user.id,
+      content: this.getContent(),
+      content_data: this.getUploadedData(),
     }
 
-    /**
-     * Record stop listener.
-     */
-    onRecordStopListener(event: any) {
-      this.recordingData.set(event.detail.value);
-      this.isRecording.set(false);
+    if (this.data) {
+      // edit handler
+      this.store.dispatch(AppActions.updateNote({
+        id: this.data.id,
+        data: payload,
+        source: this.source,
+      }));
+    } else {
+      // create handler
+      this.store.dispatch(AppActions.createNote({
+        data: payload,
+        source: this.source,
+      }));
     }
+  }
 
-    /**
-     * On recording uploaded
-     */
-    onRecordingUploadedListener(event: any) {
-      this.uploadedData.set(event.detail.value);
-    }
-
-    /**
-     * On transcription processing
-     */
-    onTranscriptionProcessingListener(event: any) {
-      this.transcriptionStatus.set(event.detail.value);
-    }
-
-    async onSubmit() {
-      const session = await this.supabaseService.session();
-      if (!session) {
-        console.error('No active session found');
-        return;
-      }
-
-      if (!this.getContent() || this.getContent().trim() === '') {
-        console.error('No content found');
-        return;
-      }
-
-      const user = session?.user;
-      let payload: INote = {
-        user: user.id,
-        content: this.getContent(),
-        content_data: this.getUploadedData(),
-      }
-
-      if (this.data) {
-        // edit handler
-        this.store.dispatch(AppActions.updateNote({
-          id: this.data.id,
-          data: payload,
-          source: this.source,
-        }));
-      } else {
-        // create handler
-        this.store.dispatch(AppActions.createNote({
-          data: payload,
-          source: this.source,
-        }));
-      }
-    }
-
-    onClose() {
-      this.modalCtrl.dismiss();
-    }
+  onClose() {
+    this.modalCtrl.dismiss();
+  }
 
 }

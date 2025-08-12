@@ -202,7 +202,10 @@ export class HomeScreenPage implements OnInit {
   async onAddTodo() {
     const modal = await this.modalCtrl.create({
       component: WriteTodoDialogComponent,
-      backdropDismiss: false
+      backdropDismiss: false,
+      componentProps: {
+        source: 'home',
+      }
     });
 
     await modal.present();
