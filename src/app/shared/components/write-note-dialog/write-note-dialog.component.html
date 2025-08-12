@@ -1,0 +1,40 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-button (click)="onClose()">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <ion-title>
+      {{ data ? 'Edit Note' : 'Write Note' }}
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="light" class="ion-padding">
+  <app-entry-form 
+    [placeholder]="'Write your note...'" 
+    [maxLength]="1000"
+    [rows]="4"
+    [content]="data ? data.content : null"
+    (onRecording)="onRecordingListener($event)"
+    (onRecordStop)="onRecordStopListener($event)"
+    (onTextChange)="onTextChangeListener($event)"
+    (onRecordingUploaded)="onRecordingUploadedListener($event)"
+    (onTranscriptionProcessing)="onTranscriptionProcessingListener($event)"
+  ></app-entry-form>
+
+  <div class="ion-margin-top ion-padding-top">
+    <ion-button 
+      expand="full" 
+      (click)="onSubmit()" 
+      mode="ios" 
+      size="large" 
+      shape="round" 
+      [disabled]="(!getContent() && getContent().trim() === '') || (getTranscriptionStatus() === 'IN_PROGRESS')"
+    >
+      Save Note
+    </ion-button>
+  </div>
+</ion-content>

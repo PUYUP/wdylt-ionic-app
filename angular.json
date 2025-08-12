@@ -38,7 +38,8 @@
             ],
             "styles": [
               "src/global.scss",
-              "src/theme/variables.scss"
+              "src/theme/variables.scss",
+              "node_modules/ngx-spinner/animations/ball-pulse.css"
             ],
             "scripts": []
           },
@@ -121,7 +122,8 @@
             ],
             "styles": [
               "src/global.scss",
-              "src/theme/variables.scss"
+              "src/theme/variables.scss",
+              "node_modules/ngx-spinner/animations/ball-pulse.css"
             ],
             "scripts": []
           },

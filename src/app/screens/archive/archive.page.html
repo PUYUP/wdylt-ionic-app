@@ -38,7 +38,7 @@
         @for (item of enrolled.data; track item) {
           <ion-card mode="ios" class="mb-5">
             <ion-card-content>
-              <div [innerHTML]="item.lesson.description" class="text-xl block text-neutral-800"></div>
+              <div [innerHTML]="item.lesson.description" class="text-xl block text-neutral-800 whitespace-pre-wrap"></div>
               <div class="mt-2 border-t border-neutral-200 pt-2 text-sm">
                 <table>
                   <tr>

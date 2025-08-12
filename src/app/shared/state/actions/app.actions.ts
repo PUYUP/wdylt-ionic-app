@@ -1,5 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RecordingData } from 'capacitor-voice-recorder';
+import { INote, ITodo, QueryFilter } from '../../models';
 
 export const AppActions = createActionGroup({
   source: 'App',
@@ -113,6 +114,38 @@ export const AppActions = createActionGroup({
 
     'Transcribe Audio': props<{ gcsUri: string }>(),
     'Transcribe Audio Success': props<{ data: any }>(),
-    'Transcribe Audio Failure': props<{ error: any }>()
+    'Transcribe Audio Failure': props<{ error: any }>(),
+
+    'Create Note': props<{ data: INote, source?: string | null }>(),
+    'Create Note Success': props<{ data: any, source?: string | null }>(),
+    'Create Note Failure': props<{ error: any, source?: string | null }>(),
+
+    'Update Note': props<{ id: string | number, data: INote, source?: string | null }>(),
+    'Update Note Success': props<{ data: any, source?: string | null }>(),
+    'Update Note Failure': props<{ error: any, source?: string | null }>(),
+
+    'Delete Note': props<{ id: string | number }>(),
+    'Delete Note Success': props<{ id: string | number }>(),
+    'Delete Note Failure': props<{ id: string | number, error: any }>(),
+
+    'Get Notes': props<{ filter: QueryFilter, metadata?: any }>(),
+    'Get Notes Success': props<{ data: any, filter: QueryFilter, metadata?: any }>(),
+    'Get Notes Failure': props<{ error: any, filter: QueryFilter, metadata?: any }>(),
+
+    'Create Todo': props<{ data: ITodo, source?: string | null }>(),
+    'Create Todo Success': props<{ data: any, source?: string | null }>(),
+    'Create Todo Failure': props<{ error: any, source?: string | null }>(),
+
+    'Update Todo': props<{ id: string | number, data: ITodo, source?: string | null }>(),
+    'Update Todo Success': props<{ data: any, source?: string | null }>(),
+    'Update Todo Failure': props<{ error: any, source?: string | null }>(),
+
+    'Delete Todo': props<{ id: string | number }>(),
+    'Delete Todo Success': props<{ id: string | number }>(),
+    'Delete Todo Failure': props<{ id: string | number, error: any }>(),
+
+    'Get Todos': props<{ filter: QueryFilter, metadata?: any }>(),
+    'Get Todos Success': props<{ data: any, filter: QueryFilter, metadata?: any }>(),
+    'Get Todos Failure': props<{ error: any, filter: QueryFilter, metadata?: any }>(),
   }
 });

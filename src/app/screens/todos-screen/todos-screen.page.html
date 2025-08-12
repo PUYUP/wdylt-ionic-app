@@ -1,0 +1,17 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/" />
+    </ion-buttons>
+    
+    <ion-title>My Todos</ion-title>
+  </ion-toolbar>
+
+  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="ion-padding-bottom">
+    <app-simple-calendar (weekRangeLabel)="getWeekRangeLabel($event)" (weekDataResult)="getWeekDataResult($event)"></app-simple-calendar>
+  </div>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  
+</ion-content>

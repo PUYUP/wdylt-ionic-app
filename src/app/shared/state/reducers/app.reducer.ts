@@ -107,6 +107,52 @@ export interface GlobalState {
       isLoading: boolean;
     },
   },
+  notes: {
+    create: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+    },
+    update: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+    },
+    list: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+      metadata?: any;
+    },
+    delete: {
+      data: any;
+      error: any | null;
+      isLoading: boolean;
+    },
+  },
+  todos: {
+    create: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+    },
+    update: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+    },
+    list: {
+      data: any | null,
+      error: any | null,
+      isLoading: boolean,
+      metadata?: any;
+    },
+    delete: {
+      data: any;
+      error: any | null;
+      isLoading: boolean;
+    },
+  },
   uploadAudio: {
     data: null,
     error: null,
@@ -220,6 +266,52 @@ export const initialState: GlobalState = {
       error: null,
       isLoading: false,
     }
+  },
+  notes: {
+    create: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    update: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    list: {
+      data: [],
+      error: null,
+      isLoading: false,
+      metadata: null,
+    },
+    delete: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+  },
+  todos: {
+    create: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    update: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
+    list: {
+      data: [],
+      error: null,
+      isLoading: false,
+      metadata: null,
+    },
+    delete: {
+      data: null,
+      error: null,
+      isLoading: false,
+    },
   },
   uploadAudio: {
     data: null,
@@ -1214,5 +1306,401 @@ export const appReducer = createReducer(
       loading: false,
       error: error,
     }
-  }))
-)
+  })),
+
+
+  // ...
+  // Create note
+  // ...
+  on(AppActions.createNote, (state) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      create: {
+        ...state.notes.create,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.createNoteSuccess, (state, { data }) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      create: {
+        ...state.notes.create,
+        data: data,
+        isLoading: false,
+        error: null,
+      },
+      list: {
+        ...state.notes.list,
+        data: [...data, ...state.notes.list.data],
+      }
+    }
+  })),
+  on(AppActions.createNoteFailure, (state, { error }) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      create: {
+        ...state.notes.create,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Update note
+  // ...
+  on(AppActions.updateNote, (state) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      update: {
+        ...state.notes.update,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.updateNoteSuccess, (state, { data }) => {
+    const index = state.notes.list.data.findIndex((note: any) => note.id === data[0].id);
+
+    return {
+      ...state,
+      notes: {
+        ...state.notes,
+        update: {
+          ...state.notes.update,
+          data: data,
+          isLoading: false,
+          error: null,
+        },
+        list: {
+          ...state.notes.list,
+          data: [
+            ...state.notes.list.data.slice(0, index),
+            {
+              ...state.notes.list.data[index],
+              ...data[0],
+            },
+            ...state.notes.list.data.slice(index + 1),
+          ],
+          isLoading: false,
+          error: null,
+        }
+      }
+    }
+  }),
+  on(AppActions.updateNoteFailure, (state, { error }) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      update: {
+        ...state.notes.update,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Get notes
+  // ...
+  on(AppActions.getNotes, (state, { metadata }) => {
+    const isLoadMore = metadata?.isLoadMore;
+
+    return {
+      ...state,
+      notes: {
+        ...state.notes,
+        list: {
+          ...state.notes.list,
+          isLoading: isLoadMore ? false : true,
+          error: null,
+          metadata: metadata || null,
+        }
+      }
+    }
+  }),
+  on(AppActions.getNotesSuccess, (state, { data, metadata }) => {
+    const isLoadMore = metadata?.isLoadMore;
+    const combinedData = isLoadMore ? [...state.notes.list.data, ...data] : data;
+
+    return {
+      ...state,
+      notes: {
+        ...state.notes,
+        list: {
+          ...state.notes.list,
+          data: combinedData,
+          isLoading: false,
+          error: null,
+          metadata: metadata || null,
+        }
+      }
+    }
+  }),
+  on(AppActions.getNotesFailure, (state, { error, metadata }) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      list: {
+        ...state.notes.list,
+        isLoading: false,
+        error: error,
+        metadata: metadata || null,
+      }
+    }
+  })),
+
+
+  // ...
+  // Delete note
+  // ...
+  on(AppActions.deleteNote, (state) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      delete: {
+        ...state.notes.delete,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.deleteNoteSuccess, (state, { id }) => {
+    return {
+      ...state,
+      notes: {
+        ...state.notes,
+        delete: {
+          ...state.notes.delete,
+          isLoading: false,
+          error: null,
+        },
+        list: {
+          ...state.notes.list,
+          data: state.notes.list.data.filter((note: any) => note.id !== id),
+        }
+      }
+    }
+  }),
+  on(AppActions.deleteNoteFailure, (state, { error }) => ({
+    ...state,
+    notes: {
+      ...state.notes,
+      delete: {
+        ...state.notes.delete,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+
+
+
+
+
+
+
+
+  // ...
+  // Create Todo
+  // ...
+  on(AppActions.createTodo, (state) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      create: {
+        ...state.todos.create,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.createTodoSuccess, (state, { data }) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      create: {
+        ...state.todos.create,
+        data: data,
+        isLoading: false,
+        error: null,
+      },
+      list: {
+        ...state.todos.list,
+        data: [...data, ...state.todos.list.data],
+      }
+    }
+  })),
+  on(AppActions.createTodoFailure, (state, { error }) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      create: {
+        ...state.todos.create,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Update Todo
+  // ...
+  on(AppActions.updateTodo, (state) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      update: {
+        ...state.todos.update,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.updateTodoSuccess, (state, { data }) => {
+    const index = state.todos.list.data.findIndex((todo: any) => todo.id === data[0].id);
+
+    return {
+      ...state,
+      todos: {
+        ...state.todos,
+        update: {
+          ...state.todos.update,
+          data: data,
+          isLoading: false,
+          error: null,
+        },
+        list: {
+          ...state.todos.list,
+          data: [
+            ...state.todos.list.data.slice(0, index),
+            {
+              ...state.todos.list.data[index],
+              ...data[0],
+            },
+            ...state.todos.list.data.slice(index + 1),
+          ],
+          isLoading: false,
+          error: null,
+        }
+      }
+    }
+  }),
+  on(AppActions.updateTodoFailure, (state, { error }) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      update: {
+        ...state.todos.update,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+
+
+  // ...
+  // Get todos
+  // ...
+  on(AppActions.getTodos, (state, { metadata }) => {
+    const isLoadMore = metadata?.isLoadMore;
+
+    return {
+      ...state,
+      todos: {
+        ...state.todos,
+        list: {
+          ...state.todos.list,
+          isLoading: isLoadMore ? false : true,
+          error: null,
+          metadata: metadata || null,
+        }
+      }
+    }
+  }),
+  on(AppActions.getTodosSuccess, (state, { data, metadata }) => {
+    const isLoadMore = metadata?.isLoadMore;
+    const combinedData = isLoadMore ? [...state.todos.list.data, ...data] : data;
+
+    return {
+      ...state,
+      todos: {
+        ...state.todos,
+        list: {
+          ...state.todos.list,
+          data: combinedData,
+          isLoading: false,
+          error: null,
+          metadata: metadata || null,
+        }
+      }
+    }
+  }),
+  on(AppActions.getTodosFailure, (state, { error, metadata }) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      list: {
+        ...state.todos.list,
+        isLoading: false,
+        error: error,
+        metadata: metadata || null,
+      }
+    }
+  })),
+
+
+  // ...
+  // Delete todo
+  // ...
+  on(AppActions.deleteTodo, (state) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      delete: {
+        ...state.todos.delete,
+        isLoading: true,
+        error: null,
+      }
+    }
+  })),
+  on(AppActions.deleteTodoSuccess, (state, { id }) => {
+    return {
+      ...state,
+      todos: {
+        ...state.todos,
+        delete: {
+          ...state.todos.delete,
+          isLoading: false,
+          error: null,
+        },
+        list: {
+          ...state.todos.list,
+          data: state.todos.list.data.filter((todo: any) => todo.id !== id),
+        }
+      }
+    }
+  }),
+  on(AppActions.deleteTodoFailure, (state, { error }) => ({
+    ...state,
+    todos: {
+      ...state.todos,
+      delete: {
+        ...state.todos.delete,
+        isLoading: false,
+        error: error,
+      }
+    }
+  })),
+);

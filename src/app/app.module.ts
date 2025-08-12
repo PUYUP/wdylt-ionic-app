@@ -1,25 +1,26 @@
-import { inject, NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, inject, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
-
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { appReducer } from './shared/state/reducers/app.reducer';
 import { AppEffects } from './shared/state/effects/app.effects';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { FirebaseApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getStorage, provideStorage } from '@angular/fire/storage';
+import { NgxSpinnerModule } from "ngx-spinner";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
     BrowserModule,
-    HttpClientModule,
+    BrowserAnimationsModule,
+    NgxSpinnerModule,
     IonicModule.forRoot({
       mode: 'md',
     }),
@@ -29,7 +30,7 @@ import { getStorage, provideStorage } from '@angular/fire/storage';
     ]),
     StoreModule.forRoot({
       app: appReducer,
-    }, {})
+    }, {}),
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
@@ -42,8 +43,10 @@ import { getStorage, provideStorage } from '@angular/fire/storage';
       messagingSenderId: "928871794567"
     })),
     provideAuth(() => getAuth()),
-    provideStorage(() => getStorage(inject(FirebaseApp)))
+    provideStorage(() => getStorage(inject(FirebaseApp))),
+    provideHttpClient(),
   ],
   bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppModule {}

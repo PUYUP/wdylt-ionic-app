@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { SupabaseService } from '../../services/supabase.service';
-import { catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
+import { catchError, map, of, switchMap, tap } from 'rxjs';
 import { AppActions } from '../actions/app.actions';
 import { addDays, getISODay, setHours, setMinutes, setSeconds, subDays } from 'date-fns';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '../reducers/app.reducer';
-import { format, formatInTimeZone } from 'date-fns-tz';
+import { format } from 'date-fns-tz';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
-import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../../services/http.service';
 import { calculatePoints } from '../../helpers';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { getDownloadURL, ref, Storage, uploadBytes } from '@angular/fire/storage';
+import { NgxSpinnerService } from 'ngx-spinner';
 
 @Injectable()
 export class AppEffects {
@@ -25,11 +25,14 @@ export class AppEffects {
     private router: Router,
     private httpService: HttpService,
     private fireStorage: Storage,
+    private spinner: NgxSpinnerService,
   ) {}
 
   signInWithGoogle$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.signInWithGoogle),
     switchMap(async ({ source }) => {
+      this.spinner.show();
+
       try {
         const user = await this.supabaseService.signInWithGoogle(source);
         return AppActions.signInWithGoogleSuccess({ user, source });
@@ -44,6 +47,7 @@ export class AppEffects {
     ofType(AppActions.signInWithGoogleSuccess),
     tap(({ user }) => {
       console.log('User signed in with Google:', user);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -51,8 +55,9 @@ export class AppEffects {
     ofType(AppActions.signInWithGoogleFailure),
     tap(({ error }) => {
       console.error('Error signing in with Google:', error);
-    }
-  )), { dispatch: false });
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
 
 
   // ...
@@ -61,6 +66,8 @@ export class AppEffects {
   createLesson$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.createLesson),
     switchMap(async ({ data, source, metadata }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('lessons')
@@ -82,6 +89,7 @@ export class AppEffects {
     ofType(AppActions.createLessonSuccess),
     tap(({ data, source, metadata }) => {
       console.log('Lesson created successfully:', data);
+      this.spinner.hide();
       const enrollmentData = metadata?.enrollment;
 
       if (enrollmentData) {
@@ -108,6 +116,7 @@ export class AppEffects {
     ofType(AppActions.createLessonFailure),
     tap(({ error }) => {
       console.error('Error creating lesson:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -118,6 +127,8 @@ export class AppEffects {
   updateLesson$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateLesson),
     switchMap(async ({ id, data }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('lessons')
@@ -141,6 +152,7 @@ export class AppEffects {
     ofType(AppActions.updateLessonSuccess),
     tap(({ id, data }) => {
       console.log('Lesson updated successfully:', id, data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -148,6 +160,7 @@ export class AppEffects {
     ofType(AppActions.updateLessonFailure),
     tap(({ id, error }) => {
       console.error('Error updating lesson:', id, error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -158,6 +171,8 @@ export class AppEffects {
   enrollLesson$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.enrollLesson),
     switchMap(async ({ data }) => {
+      this.spinner.show();
+
       try {
         const { data: res, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -188,6 +203,7 @@ export class AppEffects {
     ofType(AppActions.enrollLessonSuccess),
     tap(({ data }) => {
       console.log('Lesson enrolled successfully:', data);
+      this.spinner.hide();
 
       // create reminder for the enrolled lesson
       const instance = data[0];
@@ -223,6 +239,7 @@ export class AppEffects {
     ofType(AppActions.enrollLessonFailure),
     tap(({ error }) => {
       console.error('Error enrolling lesson:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -233,6 +250,8 @@ export class AppEffects {
   updateEnrollment$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateEnrollment),
     switchMap(async ({ id, data, source, metadata }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -255,6 +274,7 @@ export class AppEffects {
     ofType(AppActions.updateEnrollmentSuccess),
     tap(({ id, data, source, metadata }) => {
       console.log('Enrolled lesson updated successfully:', id, data, source, metadata);
+      this.spinner.hide();
       const quizType = metadata?.quizType || 'mcq';
 
       if (source === 'answer-now-alert') {
@@ -292,6 +312,7 @@ export class AppEffects {
     ofType(AppActions.updateEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error updating enrolled lesson:', id, error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -302,6 +323,8 @@ export class AppEffects {
   deleteEnrollment$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.deleteEnrollment),
     switchMap(async ({ id }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -324,6 +347,7 @@ export class AppEffects {
     ofType(AppActions.deleteEnrollmentSuccess),
     tap(({ id }) => {
       console.log('Enrolled lesson deleted successfully:', id);
+      this.spinner.hide();
     })
   ), { dispatch: false })
 
@@ -331,6 +355,7 @@ export class AppEffects {
     ofType(AppActions.deleteEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error deleting enrolled lesson:', id, error);
+      this.spinner.hide();
     })
   ), { dispatch: false })
 
@@ -341,6 +366,10 @@ export class AppEffects {
   getEnrollments$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getEnrollments),
     switchMap(async ({ filter, metadata }) => {
+      if (!metadata?.isLoadMore) {
+        this.spinner.show();
+      }
+
       const lt = filter.lt_date;
       const gt = filter.gt_date;
 
@@ -394,6 +423,7 @@ export class AppEffects {
     ofType(AppActions.getEnrollmentsSuccess),
     tap(({ data }) => {
       console.log('Enrolled lessons retrieved successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -401,6 +431,7 @@ export class AppEffects {
     ofType(AppActions.getEnrollmentsFailure),
     tap(({ error }) => {
       console.error('Error getting enrolled lessons:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -411,6 +442,8 @@ export class AppEffects {
   getEnrollment$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getEnrollment),
     switchMap(async ({ id }) => {
+      this.spinner.show();
+
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -444,6 +477,7 @@ export class AppEffects {
     ofType(AppActions.getEnrollmentSuccess),
     tap(({ data }) => {
       console.log('Enrolled lesson retrieved successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -451,6 +485,7 @@ export class AppEffects {
     ofType(AppActions.getEnrollmentFailure),
     tap(({ id, error }) => {
       console.error('Error getting enrolled lesson:', id, error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -461,6 +496,8 @@ export class AppEffects {
   getLatestEnrollments$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getLatestEnrollments),
     switchMap(async ({ filter }) => {
+      this.spinner.show();
+      
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('enrollments')
@@ -500,6 +537,7 @@ export class AppEffects {
     ofType(AppActions.getLatestEnrollmentsSuccess),
     tap(({ data }) => {
       console.log('Latest enrolled lessons retrieved successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -507,6 +545,7 @@ export class AppEffects {
     ofType(AppActions.getLatestEnrollmentsFailure),
     tap(({ error }) => {
       console.error('Error getting latest enrolled lessons:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -517,6 +556,8 @@ export class AppEffects {
   updateProfile$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateProfile),
     switchMap(async ({ id, data }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('profiles')
@@ -539,6 +580,7 @@ export class AppEffects {
     ofType(AppActions.updateProfileSuccess),
     tap(({ data }) => {
       console.log('Profile updated successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -546,6 +588,7 @@ export class AppEffects {
     ofType(AppActions.updateProfileFailure),
     tap(({ error }) => {
       console.error('Error updating profile:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -556,6 +599,8 @@ export class AppEffects {
   createReminders$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.createReminder),
     switchMap(async ({ data }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('enrollment_reminders')
@@ -577,6 +622,7 @@ export class AppEffects {
     ofType(AppActions.createReminderSuccess),
     tap(({ data }) => {
       console.log('Enrollment reminders created successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -584,6 +630,7 @@ export class AppEffects {
     ofType(AppActions.createReminderFailure),
     tap(({ error }) => {
       console.error('Error updating enrollment reminders:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -594,6 +641,8 @@ export class AppEffects {
   updateReminders$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.updateReminder),
     switchMap(async ({ data }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('enrollment_reminders')
@@ -619,6 +668,7 @@ export class AppEffects {
     ofType(AppActions.updateReminderSuccess),
     tap(({ data }) => {
       console.log('Reminders updated successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -626,6 +676,7 @@ export class AppEffects {
     ofType(AppActions.updateReminderFailure),
     tap(({ error }) => {
       console.error('Error updating enrollment reminders:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -635,18 +686,20 @@ export class AppEffects {
   // ...
   aIGenerateMCQ$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.aIGenerateMCQ),
-    switchMap(({ topic }) => 
-      this.httpService.generateMCQ(topic).pipe(
+    switchMap(({ topic }) => {
+      this.spinner.show();
+      return this.httpService.generateMCQ(topic).pipe(
         map((response: any) => AppActions.aIGenerateMCQSuccess({ data: response })),
         catchError((error: any) => of(AppActions.aIGenerateMCQFailure({ error })))
       )
-    )
+    })
   ));
 
   aIGenerateMCQSuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.aIGenerateMCQSuccess),
     tap(({ data }) => {
       console.log('MCQ generated successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -654,6 +707,7 @@ export class AppEffects {
     ofType(AppActions.aIGenerateMCQFailure),
     tap(({ error }) => {
       console.error('Error generating MCQ:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -692,6 +746,8 @@ export class AppEffects {
   getMCQuestions$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getMCQQuestions),
     switchMap(async ({ lessonId }) => {
+      this.spinner.show();
+
       try {
       const { data, error } = await this.supabaseService.getSupabase()
         .from('questions')
@@ -720,6 +776,7 @@ export class AppEffects {
     ofType(AppActions.getMCQQuestionsSuccess),
     tap(({ data }) => {
       console.log('MC questions retrieved successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -727,6 +784,7 @@ export class AppEffects {
     ofType(AppActions.getMCQQuestionsFailure),
     tap(({ error }) => {
       console.error('Error getting MC questions:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -737,6 +795,8 @@ export class AppEffects {
   getEssayQuestions$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.getEssayQuestions),
     switchMap(async ({ lessonId }) => {
+      this.spinner.show();
+
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('questions')
@@ -760,6 +820,7 @@ export class AppEffects {
     ofType(AppActions.getEssayQuestionsSuccess),
     tap(({ data }) => {
       console.log('Essay questions retrieved successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -767,6 +828,7 @@ export class AppEffects {
     ofType(AppActions.getEssayQuestionsFailure),
     tap(({ error }) => {
       console.error('Error getting essay questions:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -777,6 +839,8 @@ export class AppEffects {
   saveAnsweredEssay$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredEssay),
     switchMap(async ({ data, enrollmentId }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('answers')
@@ -798,6 +862,8 @@ export class AppEffects {
     ofType(AppActions.saveAnsweredEssaySuccess),
     tap(({ data, enrollmentId }) => {
       console.log('Answered essay saved successfully:', data);
+      this.spinner.hide();
+
       // update enrollment to trigger function in supabase
       this.store.dispatch(AppActions.updateEnrollment({
         id: enrollmentId as string,
@@ -813,6 +879,7 @@ export class AppEffects {
     ofType(AppActions.saveAnsweredEssayFailure),
     tap(({ error }) => {
       console.error('Error saving answered essay:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -823,6 +890,8 @@ export class AppEffects {
   saveAnsweredMCQ$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.saveAnsweredMCQ),
     switchMap(async ({ data, enrollmentId }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('chosen_options')
@@ -844,6 +913,8 @@ export class AppEffects {
     ofType(AppActions.saveAnsweredMCQSuccess),
     tap(({ data, enrollmentId }) => {
       console.log('Answered MCQ saved successfully:', data);
+      this.spinner.hide();
+
       // update enrollment to trigger function in supabase
       this.store.dispatch(AppActions.updateEnrollment({
         id: enrollmentId as string,
@@ -859,6 +930,7 @@ export class AppEffects {
     ofType(AppActions.saveAnsweredMCQFailure),
     tap(({ error }) => {
       console.error('Error saving answered MCQ:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -869,6 +941,8 @@ export class AppEffects {
   uploadAudio$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.uploadAudio),
     switchMap(async ({ fileData }) => {
+      this.spinner.show();
+
       try {
         const directory = Directory.Data;
         const path = fileData.value.path as string;
@@ -902,6 +976,7 @@ export class AppEffects {
     ofType(AppActions.uploadAudioSuccess),
     tap(({ data }) => {
       console.log('Audio uploaded successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -909,6 +984,7 @@ export class AppEffects {
     ofType(AppActions.uploadAudioFailure),
     tap(({ error }) => {
       console.error('Error uploading audio:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -918,18 +994,20 @@ export class AppEffects {
   // ...
   transcribeAudio$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.transcribeAudio),
-    switchMap(({ gcsUri }) => 
-      this.httpService.transcribeAudio(gcsUri).pipe(
+    switchMap(({ gcsUri }) => {
+      this.spinner.show();
+      return this.httpService.transcribeAudio(gcsUri).pipe(
         map((response: any) => AppActions.transcribeAudioSuccess({ data: response })),
         catchError((error: any) => of(AppActions.transcribeAudioFailure({ error })))
       )
-    )
+    })
   ));
 
   transcribeAudioSuccess$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.transcribeAudioSuccess),
     tap(({ data }) => {
       console.log('Audio transcribed successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -937,6 +1015,7 @@ export class AppEffects {
     ofType(AppActions.transcribeAudioFailure),
     tap(({ error }) => {
       console.error('Error transcribing audio:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -947,6 +1026,8 @@ export class AppEffects {
   createAttempt$ = createEffect(() => this.actions$.pipe(
     ofType(AppActions.createAttempt),
     switchMap(async ({ data, source, metadata }) => {
+      this.spinner.show();
+
       try {
         const { data: result, error } = await this.supabaseService.getSupabase()
           .from('attempts')
@@ -972,6 +1053,7 @@ export class AppEffects {
     ofType(AppActions.createAttemptSuccess),
     tap(({ data, source, metadata }) => {
       console.log('Attempt created successfully:', data);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
@@ -979,7 +1061,395 @@ export class AppEffects {
     ofType(AppActions.createAttemptFailure),
     tap(({ error, source, metadata }) => {
       console.error('Error creating attempt:', error);
+      this.spinner.hide();
     })
   ), { dispatch: false });
 
+
+  // ...
+  // Create note
+  // ...
+  createNote$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createNote),
+    switchMap(async ({ data, source }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('notes')
+          .insert(data)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.createNoteSuccess({ data: result, source: source });
+      } catch (error) {
+        console.error('Error saving note:', error);
+        return AppActions.createNoteFailure({ error, source });
+      }
+    })
+  ));
+
+  createNoteSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createNoteSuccess),
+    tap(({ data, source }) => {
+      console.log('Note written successfully:', data);
+      this.spinner.hide();
+
+      if (source === 'home') {
+        this.router.navigate(['/notes']);
+      }
+    })
+  ), { dispatch: false });
+
+  createNoteFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createNoteFailure),
+    tap(({ error }) => {
+      console.error('Error writing note:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Update note
+  // ...
+  updateNote$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateNote),
+    switchMap(async ({ id, data }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('notes')
+          .update(data)
+          .eq('id', id)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.updateNoteSuccess({ data: result });
+      } catch (error) {
+        console.error('Error updating note:', error);
+        return AppActions.updateNoteFailure({ error });
+      }
+    })
+  ));
+
+  updateNoteSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateNoteSuccess),
+    tap(({ data }) => {
+      console.log('Note updated successfully:', data);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  updateNoteFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateNoteFailure),
+    tap(({ error }) => {
+      console.error('Error updating note:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Delete note
+  // ...
+  deleteNote$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteNote),
+    switchMap(async ({ id }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('notes')
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('id', id)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.deleteNoteSuccess({ id });
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        return AppActions.deleteNoteFailure({ id, error });
+      }
+    })
+  ));
+
+  deleteNoteSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteNoteSuccess),
+    tap(({ id }) => {
+      console.log('Note deleted successfully:', id);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  deleteNoteFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteNoteFailure),
+    tap(({ error }) => {
+      console.error('Error deleting note:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Get notes
+  // ...
+  getNotes$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getNotes),
+    switchMap(async ({ filter, metadata }) => {
+      if (!metadata?.isLoadMore) {
+        this.spinner.show();
+      }
+
+      const lt = filter.lt_date;
+      const gt = filter.gt_date;
+
+      try {
+        let query = this.supabaseService.getSupabase()
+          .from('notes')
+          .select(`*`)
+          .eq('user', filter.user_id);
+
+        if (lt) {
+          query = query.gte('created_at', new Date(subDays(lt, 0)).toISOString());
+        }
+
+        if (gt) {
+          query = query.lt('created_at', new Date(addDays(gt, 1)).toISOString());
+        }
+
+        query = query.is('deleted_at', null)
+          .range(filter.from_page, filter.to_page)
+          .order('created_at', { ascending: false })
+          .limit(environment.queryPerPage);
+          
+        const { data, error } = await query;
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.getNotesSuccess({ data, filter, metadata });
+      } catch (error) {
+        console.error('Error getting notes:', error);
+        return AppActions.getNotesFailure({ error, filter, metadata });
+      }
+    })
+  ));
+
+  getNotesSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getNotesSuccess),
+    tap(({ data }) => {
+      console.log('Notes retrieved successfully:', data);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  getNotesFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getNotesFailure),
+    tap(({ error }) => {
+      console.error('Error getting notes:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Create Todo
+  // ...
+  createTodo$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createTodo),
+    switchMap(async ({ data, source }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('todos')
+          .insert(data)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.createTodoSuccess({ data: result, source: source });
+      } catch (error) {
+        console.error('Error saving Todo:', error);
+        return AppActions.createTodoFailure({ error, source });
+      }
+    })
+  ));
+
+  createTodoSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createTodoSuccess),
+    tap(({ data, source }) => {
+      console.log('Todo created successfully:', data);
+      this.spinner.hide();
+
+      if (source === 'home') {
+        this.router.navigate(['/todos']);
+      }
+    })
+  ), { dispatch: false });
+
+  createTodoFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.createTodoFailure),
+    tap(({ error }) => {
+      console.error('Error creating Todo:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Update Todo
+  // ...
+  updateTodo$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateTodo),
+    switchMap(async ({ id, data }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('todos')
+          .update(data)
+          .eq('id', id)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.updateTodoSuccess({ data: result });
+      } catch (error) {
+        console.error('Error updating Todo:', error);
+        return AppActions.updateTodoFailure({ error });
+      }
+    })
+  ));
+
+  updateTodoSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateTodoSuccess),
+    tap(({ data }) => {
+      console.log('Todo updated successfully:', data);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  updateTodoFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.updateTodoFailure),
+    tap(({ error }) => {
+      console.error('Error updating Todo:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Delete Todo
+  // ...
+  deleteTodo$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteTodo),
+    switchMap(async ({ id }) => {
+      this.spinner.show();
+
+      try {
+        const { data: result, error } = await this.supabaseService.getSupabase()
+          .from('todos')
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('id', id)
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.deleteTodoSuccess({ id });
+      } catch (error) {
+        console.error('Error deleting Todo:', error);
+        return AppActions.deleteTodoFailure({ id, error });
+      }
+    })
+  ));
+
+  deleteTodoSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteTodoSuccess),
+    tap(({ id }) => {
+      console.log('Todo deleted successfully:', id);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  deleteTodoFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.deleteTodoFailure),
+    tap(({ error }) => {
+      console.error('Error deleting Todo:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+
+  // ...
+  // Get Todos
+  // ...
+  getTodos$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getTodos),
+    switchMap(async ({ filter, metadata }) => {
+      if (!metadata?.isLoadMore) {
+        this.spinner.show();
+      }
+
+      const lt = filter.lt_date;
+      const gt = filter.gt_date;
+
+      try {
+        let query = this.supabaseService.getSupabase()
+          .from('todos')
+          .select(`*`)
+          .eq('user', filter.user_id);
+
+        if (lt) {
+          query = query.gte('created_at', new Date(subDays(lt, 0)).toISOString());
+        }
+
+        if (gt) {
+          query = query.lt('created_at', new Date(addDays(gt, 1)).toISOString());
+        }
+
+        query = query.is('deleted_at', null)
+          .range(filter.from_page, filter.to_page)
+          .order('created_at', { ascending: false })
+          .limit(environment.queryPerPage);
+          
+        const { data, error } = await query;
+
+        if (error) {
+          throw error;
+        }
+        return AppActions.getTodosSuccess({ data, filter, metadata });
+      } catch (error) {
+        console.error('Error getting Todos:', error);
+        return AppActions.getTodosFailure({ error, filter, metadata });
+      }
+    })
+  ));
+
+  getTodosSuccess$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getTodosSuccess),
+    tap(({ data }) => {
+      console.log('Todos retrieved successfully:', data);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
+
+  getTodosFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(AppActions.getTodosFailure),
+    tap(({ error }) => {
+      console.error('Error getting Todos:', error);
+      this.spinner.hide();
+    })
+  ), { dispatch: false });
 }

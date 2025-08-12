@@ -57,19 +57,19 @@
       mode="ios" 
       class="border-2 border-neutral-200 rounded-2xl shadow bg-white px-4 py-2 goal-textarea"
       [autoGrow]="true"
-      rows="2"
+      [rows]="rows"
       [placeholder]="isRecording ? 'Listening...' : placeholder"
       [counter]="true"
       [readonly]="isRecording || (processingVoiceToText$ | async) == true"
       [disabled]="isRecording || (processingVoiceToText$ | async) == true"
-      (ionInput)="onGoalInput($event)"
+      (ionInput)="onTextInput($event)"
       [maxlength]="maxLength"
-      [(ngModel)]="goalText"
+      [(ngModel)]="content"
     >
     </ion-textarea>
 
     @if (getTranscriptionStatus() === 'ON_PROGRESS') {
-      <div class="absolute z-30 left-0 right-0 top-0 bottom-0 flex items-center justify-center p-4 text-center bg-yellow-100 rounded-2xl shadow">
+      <div class="absolute z-30 left-0 right-0 top-0 bottom-0 flex items-center justify-center p-4 text-center bg-yellow-50 rounded-2xl shadow">
         Converting audio to text... please wait.
       </div>
     }

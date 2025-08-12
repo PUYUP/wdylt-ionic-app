@@ -28,8 +28,8 @@ export class AppComponent {
     { title: 'Home', url: '/', icon: 'home' },
     { title: 'Profile', url: '/profile', icon: 'person' },
     { title: 'Learns', url: '/archive', icon: 'bulb' },
-    { title: 'Notes', url: '/notes', icon: 'document' },
-    { title: 'Todos', url: '/todos', icon: 'checkmark-circle' }
+    { title: 'Daily Notes', url: '/notes', icon: 'document' },
+    { title: 'My Todos', url: '/todos', icon: 'checkmark-circle' }
   ];
   public session$: Promise<any> = this.supabaseService.session();
 

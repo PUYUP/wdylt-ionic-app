@@ -31,7 +31,10 @@ export class EntryFormComponent  implements OnInit {
 
   @Input('placeholder') placeholder: string = 'Want to learn today?';
   @Input('data') data: any | null = null;
-  
+  @Input('maxLength') maxLength: number = 500;
+  @Input('rows') rows: number = 2;
+  @Input('content') content: string | null = null;
+
   @Output() onTextChange: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecordStop: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecording: EventEmitter<any | null> = new EventEmitter<any | null>();
@@ -47,7 +50,6 @@ export class EntryFormComponent  implements OnInit {
   getTranscriptionStatus = computed(() => this.transcriptionStatus());
 
   isRecording: boolean = false;
-  maxLength: number = 500;
   currentRecordingData: {
     mimeType: string;
     msDuration: number;
@@ -55,7 +57,6 @@ export class EntryFormComponent  implements OnInit {
     recordDataBase64?: Base64String;
   } | null = null;
   timerData: TimeInterface | null = null;
-  goalText: string | null = null;
   audioAssetId: string = 'recording';
   nativeAudio: NativeAudio | null = null;
   duration: string = '00:00';
@@ -87,8 +88,8 @@ export class EntryFormComponent  implements OnInit {
           break;
         
         case AppActions.transcribeAudioSuccess.type:
-          this.goalText = action.data.transcript;
-          this.onTextChange.emit({ detail: { value: this.goalText } });
+          this.content = action.data.transcript;
+          this.onTextChange.emit({ detail: { value: this.content } });
           this.processingVoiceToText$.next(false);
           this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
           this.transcriptionStatus.set('DONE');
@@ -128,7 +129,6 @@ export class EntryFormComponent  implements OnInit {
   ngOnInit() { 
     if (this.data) {
       // fill the form with data
-      this.goalText = this.data.lesson.description || null;
     }
   }
 
@@ -147,7 +147,7 @@ export class EntryFormComponent  implements OnInit {
    * Event from textarea input.
    * @param event - The input event.
    */
-  onGoalInput(event: any) {
+  onTextInput(event: any) {
     const value = event.target.value;
     this.onTextChange.emit({
       detail: {
@@ -157,7 +157,7 @@ export class EntryFormComponent  implements OnInit {
   }
 
   /**
-   * Start or stop recording the goal.
+   * Start or stop recording.
    */
   async onRecord() {
     // check if the device can record audio
@@ -399,7 +399,7 @@ export class EntryFormComponent  implements OnInit {
     this.currentRecordingData = null;
     this.isPlaying = false;
     this.progressLength = 0;
-    this.goalText = null;
+    this.content = null;
 
     this.onRecordingUploaded.emit({
       detail: {
@@ -416,7 +416,7 @@ export class EntryFormComponent  implements OnInit {
 
   ngOnDestroy() {
     this.processingVoiceToText$.complete();
-    this.goalText = null;
+    this.content = null;
     this.onDestroy$.next(true);
     this.onDestroy$.complete();
 

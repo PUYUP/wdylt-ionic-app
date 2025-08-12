@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/" />
+    </ion-buttons>
+
+    <ion-title>Daily Notes</ion-title>
+
+    <!-- <ion-button 
+      slot="end"
+      mode="ios" 
+      shape="round" 
+      size="small"
+      color="secondary"
+      class="ion-margin-end"
+      (click)="onAddNote()"
+    >
+      <ion-icon name="add-outline" slot="start"></ion-icon>
+      <ion-text>Add New</ion-text>
+    </ion-button> -->
+  </ion-toolbar>
+
+  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="ion-padding-bottom">
+    <app-simple-calendar (weekRangeLabel)="getWeekRangeLabel($event)" (weekDataResult)="getWeekDataResult($event)"></app-simple-calendar>
+  </div>
+</ion-header>
+
+<ion-content color="light" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  
+  @if (notes$ | async; as notes) {
+    @if (notes.isLoading) {
+      <div class="h-full flex flex-col items-center justify-center">
+        <ion-spinner name="dots" class="w-24"></ion-spinner>
+        <div class="block text-center mt-4">
+          <span class="text-gray-500">Loading notes...</span>
+        </div>
+      </div>
+    } @else {
+      @if (notes.data.length > 0) {
+        @for (item of notes.data; track item) {
+          <div class="shadow rounded-xl ion-padding border border-neutral-200 bg-white ion-margin-bottom">
+            <div class="block flex items-center ion-margin-bottom">
+              <ion-text class="text-sm text-neutral-600">{{ item.created_at | date: 'short' }}</ion-text>
+              <div class="ml-auto">
+                <ion-buttons>
+                  <ion-button 
+                    size="small" 
+                    [ngStyle]="{
+                      'width': '2rem',
+                      'height': '2rem',
+                      '--padding-start': '6px',
+                      '--padding-end': '6px',
+                      '--padding-top': '6px',
+                      '--padding-bottom': '6px'
+                    }"
+                    mode="ios"
+                    (click)="openOptions(item)"
+                  >
+                    <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </ion-buttons>
+              </div>
+            </div>
+
+            <div [innerHTML]="item.content" class="text-lg whitespace-pre-wrap"></div>
+          </div>
+        }
+      } @else {
+        <div class="ion-padding text-center">
+          <span class="text-gray-500">No notes available for this week.</span>
+        </div>
+      }
+    }
+  }
+
+  <ion-infinite-scroll (ionInfinite)="onIonInfinite($event)">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>
+  
+<ion-fab slot="fixed" vertical="bottom" horizontal="center" class="ml-auto mr-auto">
+  <ion-fab-button (click)="onAddNote()" size="small" color="secondary">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

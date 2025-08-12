@@ -11,6 +11,8 @@ import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-f
 import { EntryTimeComponent } from 'src/app/shared/components/entry-time/entry-time.component';
 import { LearnCardComponent } from 'src/app/shared/components/learn-card/learn-card.component';
 import { ProgressCardComponent } from 'src/app/shared/components/progress-card/progress-card.component';
+import { WriteNoteDialogComponent } from 'src/app/shared/components/write-note-dialog/write-note-dialog.component';
+import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-dialog/write-todo-dialog.component';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
@@ -185,6 +187,41 @@ export class HomeScreenPage implements OnInit {
     const modal = await this.modalCtrl.create({
       component: EntryDialogComponent,
       backdropDismiss: false,
+    });
+
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      console.log('Modal data:', data);
+    }
+  }
+
+  /**
+   * Add todo dialog
+   */
+  async onAddTodo() {
+    const modal = await this.modalCtrl.create({
+      component: WriteTodoDialogComponent,
+      backdropDismiss: false
+    });
+
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data) {
+      console.log('Modal data:', data);
+    }
+  }
+
+  /**
+   * Add note dialog
+   */
+  async onAddNote() {
+    const modal = await this.modalCtrl.create({
+      component: WriteNoteDialogComponent,
+      backdropDismiss: false,
+      componentProps: {
+        source: 'home',
+      }
     });
 
     await modal.present();

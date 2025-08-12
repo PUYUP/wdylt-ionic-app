@@ -27,6 +27,7 @@
   <div class="ion-padding">
     <app-entry-form 
       [data]="data"
+      [content]="data ? data.lesson.description : null"
       (onRecording)="onRecordingListener($event)"
       (onRecordStop)="onRecordStopListener($event)"
       (onTextChange)="onTextChangeListener($event)"

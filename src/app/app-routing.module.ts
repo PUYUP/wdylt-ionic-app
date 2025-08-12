@@ -42,6 +42,14 @@ const routes: Routes = [
     loadChildren: () => import('./screens/profile-screen/profile-screen.module').then( m => m.ProfileScreenPageModule)
   },
   {
+    path: 'notes',
+    loadChildren: () => import('./screens/notes-screen/notes-screen.module').then( m => m.NotesScreenPageModule)
+  },
+  {
+    path: 'todos',
+    loadChildren: () => import('./screens/todos-screen/todos-screen.module').then( m => m.TodosScreenPageModule)
+  },
+  {
     path: '',
     redirectTo: '/onboarding',
     pathMatch: 'full'

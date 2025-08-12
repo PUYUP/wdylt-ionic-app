@@ -88,3 +88,23 @@ export const selectTranscribeAudio = createSelector(
   selectAppState,
   (state: GlobalState) => state.transcribeAudio
 );
+
+export const selectCreateNote = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.notes.create
+);
+
+export const selectListNotes = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.notes.list
+);
+
+export const selectCreateTodo = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.todos.create
+);
+
+export const selectListTodos = createSelector(
+  selectAppState,
+  (state: GlobalState) => state.todos.list
+);
