@@ -4,7 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.wdylt.app',
-  appName: 'What Did You Learn Today?',
+  appName: 'WDYLT',
   webDir: 'www',
   plugins: {
     CapacitorHttp: {
