@@ -107,9 +107,8 @@ export class EntryFormComponent  implements OnInit {
       }
     });
 
-    this.entryFormService.state$.pipe(takeUntil(this.onDestroy$)).subscribe((state) => {
-      const content = state.content;
-      if (!content || content.trim() === '') {
+    this.entryFormService.state$.pipe(takeUntil(this.onDestroy$)).subscribe(({ content, recordedData, uploadedRecordedData }) => {
+      if ((!content || content.trim() === '') && !recordedData && !uploadedRecordedData) {
         this.reset();
       }
     });
