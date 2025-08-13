@@ -237,12 +237,7 @@ export class NotesScreenPage implements OnInit {
       to_page: environment.queryPerPage,
     }
 
-    this.store.dispatch(AppActions.getNotes({
-      filter: this.filter,
-      metadata: {
-        isLoadMore: true,
-      }
-    }));
+    this.store.dispatch(AppActions.getNotes({ filter: this.filter }));
   }
 
   /**

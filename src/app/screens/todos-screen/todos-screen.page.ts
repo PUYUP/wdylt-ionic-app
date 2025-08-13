@@ -259,12 +259,7 @@ export class TodosScreenPage implements OnInit {
       to_page: environment.queryPerPage,
     }
 
-    this.store.dispatch(AppActions.getTodos({
-      filter: this.filter,
-      metadata: {
-        isLoadMore: true,
-      }
-    }));
+    this.store.dispatch(AppActions.getTodos({ filter: this.filter }));
   }
 
   /**
