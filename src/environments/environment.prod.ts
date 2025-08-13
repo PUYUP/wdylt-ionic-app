@@ -10,4 +10,5 @@ export const environment = {
   queryPerPage: 25,
   generatedMCQ: 20,
   generatedEssay: 5,
+  maxRecordingDuration: 60, // 1 minutes in seconds
 };

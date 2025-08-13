@@ -1,8 +1,12 @@
 
 <ion-content class="ion-padding" color="light" scrollY="false" [fullscreen]="true">
   <div class="h-full flex flex-col items-center justify-center">
-    <div class="text-5xl font-semibold text-center mb-6 w-full">
-      <cd-timer format="hms" (onStop)="onStop()"></cd-timer>
+    <div class="mb-6">
+      <div class="text-5xl font-semibold text-center w-full">
+        <cd-timer format="ms" (onStop)="onStop()" (onTick)="onTick($event)"></cd-timer>
+      </div>
+
+      <div class="block w-full text-sm text-neutral-500 text-center mt-1">Max. {{ maxDuration }} seconds</div>
     </div>
 
     <div class="text-center block">
