@@ -44,6 +44,7 @@ export class NotesScreenPage implements OnInit {
     gt_date: '',
   };
 
+  selectedDay: Date | null = null;
   weekRangeLabel: string = '';
   ltDate: string = '';
   gtDate: string = '';
@@ -255,7 +256,8 @@ export class NotesScreenPage implements OnInit {
    * Day clicked
    */
   onDayClicked(day: Date) {
-    console.log('Day clicked:', day);
+    this.selectedDay = day;
+    
     const start = startOfDay(day);
     const end = endOfDay(day);
     

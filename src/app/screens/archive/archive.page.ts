@@ -48,6 +48,8 @@ export class ArchivePage implements OnInit {
     gt_date: '',
   };
   refreshEvent: RefresherCustomEvent | null = null;
+
+  selectedDay: Date | null = null;
   weekRangeLabel: string = '';
   ltDate: string = '';
   gtDate: string = '';
@@ -249,7 +251,8 @@ export class ArchivePage implements OnInit {
    * Day clicked
    */
   onDayClicked(day: Date) {
-    console.log('Day clicked:', day);
+    this.selectedDay = day;
+
     const start = startOfDay(day);
     const end = endOfDay(day);
     

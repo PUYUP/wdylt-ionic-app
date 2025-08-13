@@ -147,7 +147,7 @@
 
         @if (enrolled.data.length <= 0) {
           <div class="text-center text-gray-500">
-            No lessons found for this week.
+            No lessons found for this  {{ selectedDay ? 'day' : 'week' }}.
           </div>
         }
       }
