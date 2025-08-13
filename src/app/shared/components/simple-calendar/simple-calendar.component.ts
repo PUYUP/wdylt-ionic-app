@@ -31,10 +31,12 @@ export class SimpleCalendarComponent  implements OnInit {
 
   @Output() weekRangeLabel: EventEmitter<string> = new EventEmitter<string>();
   @Output() weekDataResult: EventEmitter<string> = new EventEmitter<string>();
+  @Output() dayClicked: EventEmitter<Date> = new EventEmitter<Date>();
 
   // Signals for reactive state
   currentWeekOffset = signal<number>(0);
   weekStartsOn = signal<number>(0); // 0 = Sunday, 1 = Monday
+  selectedDay = signal<Date | null>(null);
 
   // Computed signal for week data
   weekData = computed<WeekData>(() => {
@@ -69,6 +71,11 @@ export class SimpleCalendarComponent  implements OnInit {
     }, null, 2);
   });
 
+  // Computed selected day
+  getSelectedDay = computed<Date | null>(() => {
+    return this.selectedDay();
+  });
+
   constructor() { }
 
   ngOnInit() { 
@@ -88,7 +95,7 @@ export class SimpleCalendarComponent  implements OnInit {
       start: weekStart,
       end: weekEnd
     });
-    
+
     return {
       offset,
       weekStart,
@@ -120,6 +127,7 @@ export class SimpleCalendarComponent  implements OnInit {
     this.currentWeekOffset.set(0);
     this.weekRangeLabel.emit(this.weekRangeText());
     this.weekDataResult.emit(this.weekDataJson());
+    this.selectedDay.set(null); // Reset selected day when navigating to current week
   }
 
   // Handle week start change
@@ -130,17 +138,19 @@ export class SimpleCalendarComponent  implements OnInit {
   // Get CSS classes for day cells using date-fns
   getDayClasses(day: Date, index: number): string {
     const isTodayCheck = this.weekData().isCurrentWeek && isToday(day);
-    
     const baseClasses = 'p-1 text-center rounded-lg border-1 transition-all';
     const todayClasses = 'bg-lime-100 text-lime-800 border-lime-300';
     const normalClasses = 'bg-gray-50 border-gray-200 hover:bg-gray-100';
-    
-    return `${baseClasses} ${isTodayCheck ? todayClasses : normalClasses}`;
+    const daySelectedClasses = '!bg-blue-200 !border-blue-400';
+
+    return `${baseClasses} ${isTodayCheck ? todayClasses : normalClasses} ${this.getSelectedDay() === day ? daySelectedClasses : ''}`;
   }
 
   // Handle day click
   onDayClick(day: Date): void {
     console.log('Day clicked:', day);
+    this.dayClicked.emit(day);
+    this.selectedDay.set(day);
   }
 
 }

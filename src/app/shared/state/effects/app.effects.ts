@@ -15,6 +15,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { getDownloadURL, ref, Storage, uploadBytes } from '@angular/fire/storage';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { decode } from 'base64-arraybuffer';
+import { EntryFormService } from '../../services/entry-form.service';
 
 @Injectable()
 export class AppEffects {
@@ -22,6 +23,7 @@ export class AppEffects {
   constructor(
     private actions$: Actions,
     private supabaseService: SupabaseService,
+    private entryFormService: EntryFormService,
     private store: Store<GlobalState>,
     private router: Router,
     private httpService: HttpService,
@@ -91,6 +93,7 @@ export class AppEffects {
     tap(({ data, source, metadata }) => {
       console.log('Lesson created successfully:', data);
       this.spinner.hide();
+      this.entryFormService.resetState();
       const enrollmentData = metadata?.enrollment;
 
       if (enrollmentData) {
@@ -1105,6 +1108,7 @@ export class AppEffects {
     tap(({ data, source }) => {
       console.log('Note written successfully:', data);
       this.spinner.hide();
+      this.entryFormService.resetState();
 
       if (source === 'home') {
         this.router.navigate(['/notes']);
@@ -1299,6 +1303,7 @@ export class AppEffects {
     tap(({ data, source }) => {
       console.log('Todo created successfully:', data);
       this.spinner.hide();
+      this.entryFormService.resetState();
 
       if (source === 'home') {
         this.router.navigate(['/todos']);

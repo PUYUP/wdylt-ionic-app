@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { Actions } from '@ngrx/effects';
+import { endOfDay, startOfDay } from 'date-fns';
 
 @Component({
   selector: 'app-archive',
@@ -51,6 +52,7 @@ export class ArchivePage implements OnInit {
   ltDate: string = '';
   gtDate: string = '';
   onDestroy$ = new Subject<boolean>();
+  public haveMoreData: boolean = false;
 
   constructor(
     private store: Store<GlobalState>,
@@ -71,6 +73,12 @@ export class ArchivePage implements OnInit {
           if (this.refreshEvent) {
             this.refreshEvent.target.complete();
             this.refreshEvent = null;
+          }
+
+          if (action.data.length > environment.queryPerPage) {
+            this.haveMoreData = true;
+          } else {
+            this.haveMoreData = false;
           }
           break;
       }
@@ -235,6 +243,25 @@ export class ArchivePage implements OnInit {
     }
 
     this.getEnrollments();
+  }
+
+  /**
+   * Day clicked
+   */
+  onDayClicked(day: Date) {
+    console.log('Day clicked:', day);
+    const start = startOfDay(day);
+    const end = endOfDay(day);
+    
+    this.filter = {
+      ...this.filter,
+      lt_date: start.toDateString(),
+      gt_date: end.toDateString(),
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+
+    this.store.dispatch(AppActions.getEnrollments({ filter: this.filter }));
   }
 
   ngOnDestroy() {

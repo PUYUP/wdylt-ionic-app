@@ -1,9 +1,10 @@
-import { CommonModule, NgStyle } from '@angular/common';
+import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActionSheetController, InfiniteScrollCustomEvent, IonContent, IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
+import { endOfDay, startOfDay } from 'date-fns';
 import { firstValueFrom, Observable } from 'rxjs';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-dialog/write-todo-dialog.component';
@@ -25,11 +26,13 @@ import { environment } from 'src/environments/environment';
     IonicModule,
     SimpleCalendarComponent,
     NgStyle,
+    NgClass,
   ]
 })
 export class TodosScreenPage implements OnInit {
 
   @ViewChild(IonContent) ionContent!: IonContent;
+  @ViewChild(SimpleCalendarComponent) simpleCalendar!: SimpleCalendarComponent;
 
   infiniteEvent: InfiniteScrollCustomEvent | null = null;
   refreshEvent: RefresherCustomEvent | null = null;
@@ -46,6 +49,7 @@ export class TodosScreenPage implements OnInit {
   ltDate: string = '';
   gtDate: string = '';
   todos$: Observable<{ data: any, isLoading: boolean }>;
+  haveMoreData: boolean = false;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -68,6 +72,12 @@ export class TodosScreenPage implements OnInit {
           if (this.refreshEvent) {
             this.refreshEvent.target.complete();
             this.refreshEvent = null;
+          }
+
+          if (action.data.length > environment.queryPerPage) {
+            this.haveMoreData = true;
+          } else {
+            this.haveMoreData = false;
           }
 
           break;
@@ -201,7 +211,7 @@ export class TodosScreenPage implements OnInit {
   /**
    * Mark as done
    */
-  onMarkDone(item: any) {
+  onCheckboxChange(item: any) {
     this.store.dispatch(AppActions.updateTodo({ 
       id: item.id, 
       data: { 
@@ -247,6 +257,32 @@ export class TodosScreenPage implements OnInit {
         isLoadMore: true,
       }
     }));
+  }
+
+  /**
+   * Get the current week
+   */
+  getCurrentWeek() {
+    this.simpleCalendar.navigateToCurrentWeek();
+  }
+
+  /**
+   * Day clicked
+   */
+  onDayClicked(day: Date) {
+    console.log('Day clicked:', day);
+    const start = startOfDay(day);
+    const end = endOfDay(day);
+    
+    this.filter = {
+      ...this.filter,
+      lt_date: start.toDateString(),
+      gt_date: end.toDateString(),
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+
+    this.store.dispatch(AppActions.getTodos({ filter: this.filter }));
   }
 
 }

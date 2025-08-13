@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActionSheetButton, ActionSheetController, InfiniteScrollCustomEvent, IonContent, IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
+import { endOfDay, startOfDay } from 'date-fns';
 import { firstValueFrom, Observable } from 'rxjs';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { WriteNoteDialogComponent } from 'src/app/shared/components/write-note-dialog/write-note-dialog.component';
@@ -30,6 +31,7 @@ import { environment } from 'src/environments/environment';
 export class NotesScreenPage implements OnInit {
 
   @ViewChild(IonContent) ionContent!: IonContent;
+  @ViewChild(SimpleCalendarComponent) simpleCalendar!: SimpleCalendarComponent;
 
   infiniteEvent: InfiniteScrollCustomEvent | null = null;
   refreshEvent: RefresherCustomEvent | null = null;
@@ -46,6 +48,7 @@ export class NotesScreenPage implements OnInit {
   ltDate: string = '';
   gtDate: string = '';
   notes$: Observable<{ data: any, isLoading: boolean }>;
+  public haveMoreData: boolean = false;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -69,7 +72,12 @@ export class NotesScreenPage implements OnInit {
             this.refreshEvent.target.complete();
             this.refreshEvent = null;
           }
-
+          
+          if (action.data.length > environment.queryPerPage) {
+            this.haveMoreData = true;
+          } else {
+            this.haveMoreData = false;
+          }
           break;
 
         case AppActions.createNoteSuccess.type:
@@ -234,6 +242,32 @@ export class NotesScreenPage implements OnInit {
         isLoadMore: true,
       }
     }));
+  }
+
+  /**
+   * Get the current week
+   */
+  getCurrentWeek() {
+    this.simpleCalendar.navigateToCurrentWeek();
+  }
+
+  /**
+   * Day clicked
+   */
+  onDayClicked(day: Date) {
+    console.log('Day clicked:', day);
+    const start = startOfDay(day);
+    const end = endOfDay(day);
+    
+    this.filter = {
+      ...this.filter,
+      lt_date: start.toDateString(),
+      gt_date: end.toDateString(),
+      from_page: 0,
+      to_page: environment.queryPerPage,
+    }
+
+    this.store.dispatch(AppActions.getNotes({ filter: this.filter }));
   }
 
 }
