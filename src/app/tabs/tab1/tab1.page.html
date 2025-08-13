@@ -12,7 +12,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" color="light">
+<ion-content color="light">
   @if (latestEnrollments$ | async; as enrolled) {
     @if (enrolled.isLoading) {
       <div class="h-full flex flex-col items-center justify-center">

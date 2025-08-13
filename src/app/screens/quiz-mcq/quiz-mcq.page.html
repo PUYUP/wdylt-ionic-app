@@ -50,7 +50,7 @@
   }
 </ion-header>
 
-<ion-content [fullscreen]="true" color="light" class="ion-padding">
+<ion-content color="light" class="ion-padding">
   @if (isQuizGenerating$ | async; as state) {
     @if (state.status == 'generating') {
       <div class="h-full flex flex-col items-center justify-center">
