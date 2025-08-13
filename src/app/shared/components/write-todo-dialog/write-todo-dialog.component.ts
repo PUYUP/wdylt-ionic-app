@@ -125,7 +125,10 @@ export class WriteTodoDialogComponent  implements OnInit {
       // edit handler
       this.store.dispatch(AppActions.updateTodo({
         id: this.data.id,
-        data: payload,
+        data: {
+          ...payload,
+          is_completed: this.data.is_completed,
+        },
         source: this.source,
       }));
     } else {

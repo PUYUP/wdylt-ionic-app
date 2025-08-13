@@ -180,6 +180,13 @@ export class TodosScreenPage implements OnInit {
 
     await modal.present();
   }
+
+  /**
+   * Delete handler
+   */
+  async deleteTodo(item: any) {
+    this.store.dispatch(AppActions.deleteTodo({ id: item.id }));
+  }
   
   /**
    * Add todo dialog
