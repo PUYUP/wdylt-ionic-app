@@ -1,3 +1,7 @@
+import { inject } from "@angular/core";
+import { AlertController } from "@ionic/angular";
+import { EntryFormService } from "./services/entry-form.service";
+
 export const calculatePoints = (data: any[]): any[] => {
     const newData = data.map((item: any) => {
         // sum points from each lesson questions
@@ -75,4 +79,28 @@ export const msToAudioDuration = (milliseconds: number, format = 'mm:ss') => {
     default:
       return `${pad(minutes)}:${pad(seconds)}`;
   }
+}
+
+export const canDismissDialog = async (): Promise<boolean> => {
+    const alertController = new AlertController();
+    const alert = await alertController.create({
+        header: 'Confirm',
+        message: 'Do you really want to discard your changes?',
+        buttons: [
+        {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: () => false // Prevent dismissal
+        },
+        {
+            text: 'Discard',
+            role: 'discard',
+            handler: () => true // Allow dismissal
+        }
+        ]
+    });
+
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return role === 'discard'; // Only allow if 'Discard' is chosen
 }

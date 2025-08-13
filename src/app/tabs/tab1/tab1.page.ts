@@ -244,7 +244,7 @@ export class Tab1Page implements OnInit {
   /**
    * Listen for text change event.
    */
-  onTextChangeListener(event: any) {
+  onInputChangeListener(event: any) {
     this.goalText = event.detail.value;
   }
 

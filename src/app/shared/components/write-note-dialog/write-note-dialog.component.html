@@ -20,7 +20,7 @@
     [content]="data ? data.content : null"
     (onRecording)="onRecordingListener($event)"
     (onRecordStop)="onRecordStopListener($event)"
-    (onTextChange)="onTextChangeListener($event)"
+    (onInputChange)="onInputChangeListener($event)"
     (onRecordingUploaded)="onRecordingUploadedListener($event)"
     (onTranscriptionProcessing)="onTranscriptionProcessingListener($event)"
   ></app-entry-form>
@@ -32,7 +32,7 @@
       mode="ios" 
       size="large" 
       shape="round" 
-      [disabled]="(!getContent() && getContent().trim() === '') || (getTranscriptionStatus() === 'IN_PROGRESS')"
+      [disabled]="(!getContent() || getContent().trim() === '') || (getTranscriptionStatus() === 'IN_PROGRESS')"
     >
       Save Note
     </ion-button>

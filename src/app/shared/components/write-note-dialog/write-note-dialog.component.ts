@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, Input, OnInit, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular';
+import { AlertController, IonicModule, ModalController } from '@ionic/angular';
 import { EntryFormComponent } from '../entry-form/entry-form.component';
 import { SupabaseService } from '../../services/supabase.service';
 import { GlobalState } from '../../state/reducers/app.reducer';
@@ -43,6 +43,7 @@ export class WriteNoteDialogComponent  implements OnInit {
 
   constructor(
     private modalCtrl: ModalController,
+    private alertController: AlertController,
     private supabaseService: SupabaseService,
     private store: Store<GlobalState>,
     private actions$: Actions,
@@ -67,7 +68,7 @@ export class WriteNoteDialogComponent  implements OnInit {
   /**
    * Input text changed
    */
-  onTextChangeListener(event: any) {
+  onInputChangeListener(event: any) {
     this.content.set(event.detail.value);
   }
 

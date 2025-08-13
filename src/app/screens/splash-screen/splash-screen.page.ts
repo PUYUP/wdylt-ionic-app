@@ -109,7 +109,7 @@ export class SplashScreenPage implements OnInit {
   /**
    * Listen for text change event.
    */
-  onTextChangeListener(event: any) {
+  onInputChangeListener(event: any) {
     this.goalText = event.detail.value;
     this.goalTextLength = this.goalText.length;
 

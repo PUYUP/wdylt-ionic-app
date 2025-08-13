@@ -45,7 +45,7 @@
               [placeholder]="'Want to learn today ' + session.user.user_metadata.full_name + '?'"
               (onRecording)="onRecordingListener($event)"
               (onRecordStop)="onRecordStopListener($event)"
-              (onTextChange)="onTextChangeListener($event)"
+              (onInputChange)="onInputChangeListener($event)"
               (onRecordingUploaded)="onRecordingUploadedListener($event)"
               (onTranscriptionProcessing)="onTranscriptionProcessingListener($event)"
             ></app-entry-form>

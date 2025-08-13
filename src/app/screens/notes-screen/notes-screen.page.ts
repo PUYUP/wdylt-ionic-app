@@ -4,10 +4,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActionSheetButton, ActionSheetController, InfiniteScrollCustomEvent, IonContent, IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { WriteNoteDialogComponent } from 'src/app/shared/components/write-note-dialog/write-note-dialog.component';
+import { canDismissDialog } from 'src/app/shared/helpers';
 import { QueryFilter } from 'src/app/shared/models';
+import { EntryFormService } from 'src/app/shared/services/entry-form.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
@@ -47,6 +49,7 @@ export class NotesScreenPage implements OnInit {
 
   constructor(
     private supabaseService: SupabaseService,
+    private entryFormService: EntryFormService,
     private store: Store<GlobalState>,
     private actionSheetCtrl: ActionSheetController,
     private modalCtrl: ModalController,
@@ -173,7 +176,19 @@ export class NotesScreenPage implements OnInit {
   async onAddNote() {
     const modal = await this.modalCtrl.create({
       component: WriteNoteDialogComponent,
-      backdropDismiss: false,
+      backdropDismiss: true,
+      canDismiss: async (data?: any, role?: string) => {
+        const { content, recordedData, uploadedRecordedData } = await firstValueFrom(this.entryFormService.state$);
+        if ((content && content.trim() !== '') || recordedData || uploadedRecordedData) {
+          const canDismiss = await canDismissDialog();
+          if (canDismiss) {
+            this.entryFormService.resetState();
+            return true;
+          }
+        }
+
+        return true;
+      },
     });
 
     await modal.present();

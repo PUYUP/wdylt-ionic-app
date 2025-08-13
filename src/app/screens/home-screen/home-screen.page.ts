@@ -1,11 +1,11 @@
 import { AsyncPipe, CommonModule, NgStyle } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
-import { IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
+import { AlertController, IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
 import { Base64String } from 'capacitor-voice-recorder';
 import { differenceInMinutes, endOfDay, startOfDay } from 'date-fns';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Observable, Subject, takeUntil } from 'rxjs';
 import { EntryDialogComponent } from 'src/app/shared/components/entry-dialog/entry-dialog.component';
 import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-form.component';
 import { EntryTimeComponent } from 'src/app/shared/components/entry-time/entry-time.component';
@@ -13,6 +13,8 @@ import { LearnCardComponent } from 'src/app/shared/components/learn-card/learn-c
 import { ProgressCardComponent } from 'src/app/shared/components/progress-card/progress-card.component';
 import { WriteNoteDialogComponent } from 'src/app/shared/components/write-note-dialog/write-note-dialog.component';
 import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-dialog/write-todo-dialog.component';
+import { canDismissDialog } from 'src/app/shared/helpers';
+import { EntryFormService } from 'src/app/shared/services/entry-form.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
@@ -38,7 +40,7 @@ import { selectLatestEnrollments } from 'src/app/shared/state/selectors/app.sele
 export class HomeScreenPage implements OnInit {
 
   @ViewChild(ProgressCardComponent, { static: false }) progressCard!: ProgressCardComponent;
-  
+
   public startDatetime: Date = new Date('2025-07-30T08:00:00');
   public targetCompletionDatetime: Date = new Date('2025-07-30T22:00:00');
   public learnDurationInMinutes: number = 0;
@@ -63,6 +65,8 @@ export class HomeScreenPage implements OnInit {
     private store: Store<GlobalState>,
     private modalCtrl: ModalController,
     private actions$: Actions,
+    private entryFormService: EntryFormService,
+    private alertController: AlertController,
   ) {
     this.latestEnrollments$ = this.store.pipe(select(selectLatestEnrollments));
     this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
@@ -117,7 +121,7 @@ export class HomeScreenPage implements OnInit {
   /**
    * Listen for text change event.
    */
-  onTextChangeListener(event: any) {
+  onInputChangeListener(event: any) {
     this.goalText = event.detail.value;
   }
 
@@ -186,7 +190,22 @@ export class HomeScreenPage implements OnInit {
   async onAddNewLearn() {
     const modal = await this.modalCtrl.create({
       component: EntryDialogComponent,
-      backdropDismiss: false,
+      backdropDismiss: true,
+      canDismiss: async (data?: any, role?: string) => {
+        const { content, recordedData, uploadedRecordedData } = await firstValueFrom(this.entryFormService.state$);
+        if ((content && content.trim() !== '') || recordedData || uploadedRecordedData) {
+          const canDismiss = await canDismissDialog();
+          if (canDismiss) {
+            this.entryFormService.resetState();
+            return true;
+          }
+        }
+
+        return true;
+      },
+      componentProps: {
+        source: 'home',
+      }
     });
 
     await modal.present();
@@ -202,7 +221,19 @@ export class HomeScreenPage implements OnInit {
   async onAddTodo() {
     const modal = await this.modalCtrl.create({
       component: WriteTodoDialogComponent,
-      backdropDismiss: false,
+      backdropDismiss: true,
+      canDismiss: async (data?: any, role?: string) => {
+        const { content, recordedData, uploadedRecordedData } = await firstValueFrom(this.entryFormService.state$);
+        if ((content && content.trim() !== '') || recordedData || uploadedRecordedData) {
+          const canDismiss = await canDismissDialog();
+          if (canDismiss) {
+            this.entryFormService.resetState();
+            return true;
+          }
+        }
+
+        return true;
+      },
       componentProps: {
         source: 'home',
       }
@@ -221,7 +252,19 @@ export class HomeScreenPage implements OnInit {
   async onAddNote() {
     const modal = await this.modalCtrl.create({
       component: WriteNoteDialogComponent,
-      backdropDismiss: false,
+      backdropDismiss: true,
+      canDismiss: async (data?: any, role?: string) => {
+        const { content, recordedData, uploadedRecordedData } = await firstValueFrom(this.entryFormService.state$);
+        if ((content && content.trim() !== '') || recordedData || uploadedRecordedData) {
+          const canDismiss = await canDismissDialog();
+          if (canDismiss) {
+            this.entryFormService.resetState();
+            return true;
+          }
+        }
+
+        return true;
+      },
       componentProps: {
         source: 'home',
       }

@@ -42,7 +42,7 @@
         </div>
 
         <ion-buttons>
-          <ion-button type="button" (click)="clearAudio()">
+          <ion-button type="button" (click)="reset()">
             <ion-icon slot="icon-only" name="close-circle"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -62,7 +62,7 @@
       [counter]="true"
       [readonly]="isRecording || (processingVoiceToText$ | async) == true"
       [disabled]="isRecording || (processingVoiceToText$ | async) == true"
-      (ionInput)="onTextInput($event)"
+      (ionInput)="inputChanged($event)"
       [maxlength]="maxLength"
       [(ngModel)]="content"
     >

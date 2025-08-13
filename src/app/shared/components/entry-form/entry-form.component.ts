@@ -14,6 +14,7 @@ import { Store } from '@ngrx/store';
 import { GlobalState } from '../../state/reducers/app.reducer';
 import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 import { Actions } from '@ngrx/effects';
+import { EntryFormService } from '../../services/entry-form.service';
 
 @Component({
   selector: 'app-entry-form',
@@ -35,7 +36,7 @@ export class EntryFormComponent  implements OnInit {
   @Input('rows') rows: number = 2;
   @Input('content') content: string | null = null;
 
-  @Output() onTextChange: EventEmitter<any | null> = new EventEmitter<any | null>();
+  @Output() onInputChange: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecordStop: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecording: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecordingUploaded: EventEmitter<any | null> = new EventEmitter<any | null>();
@@ -69,6 +70,7 @@ export class EntryFormComponent  implements OnInit {
     private modalCtrl: ModalController,
     private store: Store<GlobalState>,
     private actions$: Actions,
+    private entryFormService: EntryFormService,
   ) { 
     this.actions$.pipe(takeUntil(this.onDestroy$)).subscribe((action: any) => {
       switch (action.type) {
@@ -86,19 +88,29 @@ export class EntryFormComponent  implements OnInit {
             gcsUri: action.data.storageLocation,
             mimeType: this.currentRecordingData?.mimeType as string,
           }));
+
+          this.entryFormService.updateUploadedRecordedData({ uploadedRecordedData: action.data });
           break;
         
         case AppActions.transcribeAudioSuccess.type:
           this.content = action.data.transcript;
-          this.onTextChange.emit({ detail: { value: this.content } });
+          this.onInputChange.emit({ detail: { value: this.content } });
           this.processingVoiceToText$.next(false);
           this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
           this.transcriptionStatus.set('DONE');
+          this.entryFormService.updateContent({ content: this.content as string });
           break;
         
         case AppActions.transcribeAudioFailure.type:
           this.cancelHandler();
           break;
+      }
+    });
+
+    this.entryFormService.state$.pipe(takeUntil(this.onDestroy$)).subscribe((state) => {
+      const content = state.content;
+      if (!content || content.trim() === '') {
+        this.reset();
       }
     });
   }
@@ -138,7 +150,7 @@ export class EntryFormComponent  implements OnInit {
    */
   cancelHandler() {
     this.isRecording = false;
-    this.onTextChange.emit({ detail: { value: null } });
+    this.onInputChange.emit({ detail: { value: null } });
     this.processingVoiceToText$.next(false);
     this.onTranscriptionProcessing.emit({ detail: { value: 'DONE' } });
     this.transcriptionStatus.set('DONE');
@@ -148,13 +160,15 @@ export class EntryFormComponent  implements OnInit {
    * Event from textarea input.
    * @param event - The input event.
    */
-  onTextInput(event: any) {
+  inputChanged(event: any) {
     const value = event.target.value;
-    this.onTextChange.emit({
+    this.onInputChange.emit({
       detail: {
         value: value,
       }
     });
+
+    this.entryFormService.updateContent({ content: value });
   }
 
   /**
@@ -296,6 +310,8 @@ export class EntryFormComponent  implements OnInit {
         this.processingVoiceToText$.next(true);
         this.onTranscriptionProcessing.emit({ detail: { value: 'ON_PROGRESS' } });
         this.transcriptionStatus.set('ON_PROGRESS');
+
+        this.entryFormService.updateRecordedData({ recordedData: result });
       }
     }).catch((error) => {
       console.error('Error stopping recording:', error);
@@ -393,7 +409,7 @@ export class EntryFormComponent  implements OnInit {
   /**
    * Clear audio
    */
-  clearAudio() {
+  reset() {
     this.currentRecordingData = null;
     this.isPlaying = false;
     this.progressLength = 0;

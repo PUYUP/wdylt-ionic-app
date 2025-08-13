@@ -67,7 +67,7 @@ export class WriteTodoDialogComponent  implements OnInit {
   /**
    * Input text changed
    */
-  onTextChangeListener(event: any) {
+  onInputChangeListener(event: any) {
     this.title.set(event.detail.value);
   }
 
