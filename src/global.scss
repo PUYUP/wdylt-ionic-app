@@ -94,3 +94,9 @@ ion-button {
         min-height: 36px !important;
     }
 }
+
+ion-card {
+    -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-2xl);
+}

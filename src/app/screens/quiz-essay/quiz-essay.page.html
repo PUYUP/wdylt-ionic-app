@@ -85,39 +85,39 @@
             </div>
 
             <!-- Options Section -->
-            <div class="p-0 space-y-4 ion-padding-top">
-              <div class="space-y-3">
-                <div class="flex items-center">
-                  <div class="block text-sm text-neutral-600">
-                    Your answer:
+            @if (currentQuestion().is_answered) {
+              <div class="p-0 space-y-4 ion-padding-top">
+                <div class="space-y-3">
+                  <div class="flex items-center">
+                    <div class="block text-sm text-neutral-600">
+                      Your answer:
+                    </div>
+                    
+                    @if (currentQuestion().answers?.[0]?.points != null) {
+                      <span class="bg-lime-100 text-lime-800 px-2 py-1 rounded-full text-sm font-bold ml-2">
+                        {{ currentQuestion().answers?.[0]?.points }} points
+                      </span>
+                    }
                   </div>
 
-                  @if (currentQuestion().answers?.[0]?.points != null) {
-                    <span class="bg-lime-100 text-lime-800 px-2 py-1 rounded-full text-sm font-bold ml-2">
-                      {{ currentQuestion().answers?.[0]?.points }} points
-                    </span>
-                  }
-                </div>
-
-                @if (currentQuestion().answers?.length) {
                   <div class="text-lg text-neutral-800">
                     {{ currentQuestion().answers?.[0]?.content }}
                   </div>
-                } @else {
-                  <ion-textarea 
-                    placeholder="Type your answer here..." 
-                    [(ngModel)]="answerValue"
-                    [autoGrow]="true"
-                    [counter]="true"
-                    [maxlength]="500"
-                    (ionInput)="onAnswerChange($event)"
-                    rows="3"
-                  ></ion-textarea>
-                }
+                </div>
               </div>
-            </div>
+            }
           </ion-card-content>
         </ion-card>
+
+        @if (!currentQuestion().is_answered) {
+          <div class="ion-margin-top">
+            <app-entry-form 
+              [content]="userAnswers()[currentQuestionIndex()]"
+              [placeholder]="'Type your answer here...'"
+              (onInputChange)="onAnswerChange($event)"
+            ></app-entry-form>
+          </div>
+        }
       </div>
     }
   }

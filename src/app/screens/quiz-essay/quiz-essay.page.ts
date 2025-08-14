@@ -1,4 +1,4 @@
-import { CommonModule, NgStyle } from '@angular/common';
+import { CommonModule, JsonPipe, NgStyle } from '@angular/common';
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { Preferences } from '@capacitor/preferences';
 import { IonicModule } from '@ionic/angular';
 import { select, Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { EntryFormComponent } from 'src/app/shared/components/entry-form/entry-form.component';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
@@ -17,6 +18,7 @@ interface Question {
   id: number;
   content_text: string;
   answers?: any[];
+  is_answered?: boolean; // Indicates if the question has been answered
 }
 
 @Component({
@@ -28,7 +30,9 @@ interface Question {
     IonicModule,
     FormsModule,
     ReactiveFormsModule,
+    EntryFormComponent,
     NgStyle,
+    JsonPipe,
   ]
 })
 export class QuizEssayPage implements OnInit {

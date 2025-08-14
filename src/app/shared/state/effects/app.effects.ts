@@ -804,15 +804,23 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('questions')
-          .select('*, answers(id, content, points)', { count: 'exact' })
+          .select(`
+            *, 
+            answers(id, content, points)
+          `, { count: 'exact' })
           .eq('lesson', lessonId)
-          .eq('question_type', 'essay')
           .order('created_at', { ascending: true });
 
         if (error) {
           throw error;
         }
-        return AppActions.getEssayQuestionsSuccess({ data });
+        const newData = data.map((item: any) => {
+          return {
+            ...item,
+            is_answered: item.answers.length > 0
+          };
+        });
+        return AppActions.getEssayQuestionsSuccess({ data: newData });
       } catch (error) {
         console.error('Error getting essay questions:', error);
         return AppActions.getEssayQuestionsFailure({ error });
