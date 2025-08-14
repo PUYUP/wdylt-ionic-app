@@ -50,7 +50,11 @@
           <div class="p-2 shadow-sm bg-lime-50 border border-neutral-300 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
             <div>
               <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
-                {{ item.summary.mcq.success_rate }} <sup class="font-normal !text-sm leading-3">%</sup>
+                @if (item.summary.mcq.success_rate != '0.00') {
+                  {{ item.summary.mcq.success_rate }} <sup class="font-normal !text-sm leading-3">%</sup>
+                } @else {
+                  --
+                }
               </div>
               <div class="text-sm text-gray-700 leading-4">
                 @if (item.mcq_answers && item.mcq_answers.length <= 0) {

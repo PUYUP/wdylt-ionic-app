@@ -510,8 +510,8 @@ export class AppEffects {
             attempts(*),
             lesson(
               id, content_type, description, content_data,
-              mcq_questions: questions(*),
-              essay_questions: questions(*)
+              mcq_questions: questions!lesson(*),
+              essay_questions: questions!lesson(*)
             ),
             mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
@@ -804,22 +804,22 @@ export class AppEffects {
       try {
         const { data, error } = await this.supabaseService.getSupabase()
           .from('questions')
-          .select(`
-            *, 
-            answers(id, content, points)
-          `, { count: 'exact' })
+          .select('*, answers(id, content, points)', { count: 'exact' })
           .eq('lesson', lessonId)
+          .eq('question_type', 'essay')
           .order('created_at', { ascending: true });
 
         if (error) {
           throw error;
         }
+
         const newData = data.map((item: any) => {
           return {
             ...item,
             is_answered: item.answers.length > 0
           };
         });
+
         return AppActions.getEssayQuestionsSuccess({ data: newData });
       } catch (error) {
         console.error('Error getting essay questions:', error);

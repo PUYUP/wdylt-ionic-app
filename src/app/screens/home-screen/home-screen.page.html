@@ -5,7 +5,7 @@
     </ion-buttons>
 
     <ion-title class="ion-padding-start">
-      What Did You Learn Today?
+      Set Up Your Learning Session
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -42,7 +42,7 @@
         <div class="ion-padding">
           @if (session$ | async; as session) {
             <app-entry-form 
-              [placeholder]="'Want to learn today ' + session.user.user_metadata.full_name + '?'"
+              [placeholder]="'Today\'s learning goal ' + session.user.user_metadata.full_name + '?'"
               (onRecording)="onRecordingListener($event)"
               (onRecordStop)="onRecordStopListener($event)"
               (onInputChange)="onInputChangeListener($event)"
