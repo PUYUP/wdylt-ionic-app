@@ -57,33 +57,23 @@ export class SupabaseService {
   }
 
   signInWithGoogle(source: string = 'signup') {
-    let deeplinkRedirectUrl = environment.deepLinkRedirectUrl;
-    if (Capacitor.isNativePlatform()) {
-      // For native platforms, use the deeplink redirect URL
-      deeplinkRedirectUrl = document.URL;
-    }
-
-    // Use the redirect method for Google sign-in
-    let redirectUrl = `${deeplinkRedirectUrl}/identify`; // OR com.wydlt.app://identify
-    if (source === 'signin') {
-      // redirect directly to home page
-      redirectUrl = deeplinkRedirectUrl;
-    }
+    // For native platforms, use the deeplink redirect URL
+    let deeplinkRedirectUrl = `${environment.deepLinkRedirectUrl}${source === 'signup' ? '/identify' : ''}`;
 
     // if pwa
     if (!Capacitor.isNativePlatform()) {
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       if (source === 'signin') {
-        redirectUrl = `${baseUrl}`;
+        deeplinkRedirectUrl = `${baseUrl}`;
       } else if (source === 'signup') {
-        redirectUrl = `${baseUrl}/identify`;
+        deeplinkRedirectUrl = `${baseUrl}/identify`;
       }
     }
 
     return this.supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
+        redirectTo: deeplinkRedirectUrl,
         skipBrowserRedirect: false,
         queryParams: {
           access_type: 'offline',
