@@ -10,6 +10,7 @@ import { AppActions } from '../../state/actions/app.actions';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ITodo } from '../../models';
 import { EntryFormComponent } from '../entry-form/entry-form.component';
+import { EntryFormService } from '../../services/entry-form.service';
 
 @Component({
   selector: 'app-write-todo-dialog',
@@ -44,6 +45,7 @@ export class WriteTodoDialogComponent  implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     private supabaseService: SupabaseService,
+    private entryFormService: EntryFormService,
     private store: Store<GlobalState>,
     private actions$: Actions,
   ) { 
@@ -68,7 +70,8 @@ export class WriteTodoDialogComponent  implements OnInit {
    * Input text changed
    */
   onInputChangeListener(event: any) {
-    this.title.set(event.detail.value);
+    const value = event.detail.value;
+    this.title.set(value);
   }
 
   /**

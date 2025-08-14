@@ -417,7 +417,9 @@ export class EntryFormComponent  implements OnInit {
 
     this.onRecordingUploaded.emit({ detail: { value: null } });
     this.onRecordStop.emit({ detail: { value: null } });
+    this.onRecording.emit({ detail: { value: false } });
     this.onInputChange.emit({ detail: { value: null } });
+    this.onTranscriptionProcessing.emit({ detail: { value: null } });
   }
 
   ngOnDestroy() {

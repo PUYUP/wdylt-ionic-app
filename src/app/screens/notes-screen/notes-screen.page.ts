@@ -194,8 +194,8 @@ export class NotesScreenPage implements OnInit {
             this.entryFormService.resetState();
             return true;
           }
+          return false;
         }
-
         return true;
       },
     });

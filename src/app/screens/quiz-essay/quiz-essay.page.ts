@@ -1,4 +1,4 @@
-import { CommonModule, JsonPipe, NgStyle } from '@angular/common';
+import { CommonModule, NgStyle } from '@angular/common';
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -32,7 +32,6 @@ interface Question {
     ReactiveFormsModule,
     EntryFormComponent,
     NgStyle,
-    JsonPipe,
   ]
 })
 export class QuizEssayPage implements OnInit {

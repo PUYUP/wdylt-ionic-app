@@ -87,16 +87,16 @@ export const canDismissDialog = async (): Promise<boolean> => {
         header: 'Confirm',
         message: 'Do you really want to discard your changes?',
         buttons: [
-        {
-            text: 'Cancel',
-            role: 'cancel',
-            handler: () => false // Prevent dismissal
-        },
-        {
-            text: 'Discard',
-            role: 'discard',
-            handler: () => true // Allow dismissal
-        }
+            {
+                text: 'Cancel',
+                role: 'cancel',
+                handler: () => false // Prevent dismissal
+            },
+            {
+                text: 'Discard',
+                role: 'discard',
+                handler: () => true // Allow dismissal
+            }
         ]
     });
 
