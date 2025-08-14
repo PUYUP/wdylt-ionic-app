@@ -16,6 +16,7 @@
 
         <div class="mt-autox ion-padding relative">
           <app-entry-form 
+            [placeholder]="'Today\'s learning goal?'"
             (onRecording)="onRecordingListener($event)"
             (onRecordStop)="onRecordStopListener($event)"
             (onInputChange)="onInputChangeListener($event)"
