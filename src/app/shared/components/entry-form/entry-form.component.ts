@@ -35,6 +35,7 @@ export class EntryFormComponent  implements OnInit {
   @Input('maxLength') maxLength: number = 500;
   @Input('rows') rows: number = 2;
   @Input('content') content: string | null = null;
+  @Input('showAudioPlayer') showAudioPlayer: boolean = true;
 
   @Output() onInputChange: EventEmitter<any | null> = new EventEmitter<any | null>();
   @Output() onRecordStop: EventEmitter<any | null> = new EventEmitter<any | null>();
@@ -414,17 +415,9 @@ export class EntryFormComponent  implements OnInit {
     this.progressLength = 0;
     this.content = null;
 
-    this.onRecordingUploaded.emit({
-      detail: {
-        value: null,
-      }
-    });
-
-    this.onRecordStop.emit({
-      detail: {
-        value: null,
-      }
-    });
+    this.onRecordingUploaded.emit({ detail: { value: null } });
+    this.onRecordStop.emit({ detail: { value: null } });
+    this.onInputChange.emit({ detail: { value: null } });
   }
 
   ngOnDestroy() {

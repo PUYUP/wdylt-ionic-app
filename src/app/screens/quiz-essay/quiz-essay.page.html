@@ -114,6 +114,7 @@
             <app-entry-form 
               [content]="userAnswers()[currentQuestionIndex()]"
               [placeholder]="'Type your answer here...'"
+              [showAudioPlayer]="false"
               (onInputChange)="onAnswerChange($event)"
             ></app-entry-form>
           </div>
