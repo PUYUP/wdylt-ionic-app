@@ -31,23 +31,28 @@ const routes: Routes = [
   },
   {
     path: 'quiz-essay',
-    loadChildren: () => import('./screens/quiz-essay/quiz-essay.module').then( m => m.QuizEssayPageModule)
+    loadChildren: () => import('./screens/quiz-essay/quiz-essay.module').then( m => m.QuizEssayPageModule),
+    canActivate: [isAuthorizedGuard],
   },
   {
     path: 'quiz-mcq',
-    loadChildren: () => import('./screens/quiz-mcq/quiz-mcq.module').then( m => m.QuizMcqPageModule)
+    loadChildren: () => import('./screens/quiz-mcq/quiz-mcq.module').then( m => m.QuizMcqPageModule),
+    canActivate: [isAuthorizedGuard],
   },
   {
     path: 'profile-screen',
-    loadChildren: () => import('./screens/profile-screen/profile-screen.module').then( m => m.ProfileScreenPageModule)
+    loadChildren: () => import('./screens/profile-screen/profile-screen.module').then( m => m.ProfileScreenPageModule),
+    canActivate: [isAuthorizedGuard],
   },
   {
     path: 'notes',
-    loadChildren: () => import('./screens/notes-screen/notes-screen.module').then( m => m.NotesScreenPageModule)
+    loadChildren: () => import('./screens/notes-screen/notes-screen.module').then( m => m.NotesScreenPageModule),
+    canActivate: [isAuthorizedGuard],
   },
   {
     path: 'todos',
-    loadChildren: () => import('./screens/todos-screen/todos-screen.module').then( m => m.TodosScreenPageModule)
+    loadChildren: () => import('./screens/todos-screen/todos-screen.module').then( m => m.TodosScreenPageModule),
+    canActivate: [isAuthorizedGuard],
   },
   {
     path: '',
