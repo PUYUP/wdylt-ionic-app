@@ -4,7 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
 
-    <ion-title class="ion-padding-start">
+    <ion-title>
       Set Up Your Learning Session
     </ion-title>
   </ion-toolbar>
@@ -51,7 +51,7 @@
             ></app-entry-form>
 
             <div class="ion-padding-top">
-              <div class="text-neutral-700 mb-1">Time to start the quiz.</div>
+              <div class="text-neutral-700 mb-2 font-semibold">What time for the quiz?</div>
               <app-entry-time 
                 (onHourChanged)="onHourChangedListener($event)"
               ></app-entry-time>
