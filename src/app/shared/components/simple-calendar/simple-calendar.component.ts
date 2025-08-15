@@ -139,7 +139,7 @@ export class SimpleCalendarComponent  implements OnInit {
   getDayClasses(day: Date, index: number): string {
     const isTodayCheck = this.weekData().isCurrentWeek && isToday(day);
     const baseClasses = 'p-1 text-center rounded-lg border-1 transition-all';
-    const todayClasses = 'bg-lime-100 text-lime-800 border-lime-300';
+    const todayClasses = 'bg-[#e8f7f3] text-teal-800 border-teal-500';
     const normalClasses = 'bg-gray-50 border-gray-200 hover:bg-gray-100';
     const daySelectedClasses = '!bg-blue-200 !border-blue-400';
 

@@ -184,6 +184,18 @@ export class LearnCardComponent  implements OnInit {
   }
 
   /**
+   * Start todo.
+   */
+  onStartTodo(enrolled: any) {
+    this.router.navigate(['/todos'], {
+      queryParams: {
+        lessonId: enrolled.lesson.id,
+        enrolledId: enrolled.id,
+      }
+    });
+  }
+
+  /**
    * Timer complete listener.
    */
   onTimerCompleteListener(event: any) {

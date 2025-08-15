@@ -386,7 +386,8 @@ export class AppEffects {
             lesson(
               id, content_type, description, content_data,
               mcq_questions: questions(*),
-              essay_questions: questions(*)
+              essay_questions: questions(*),
+              todos(*)
             ),
             mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
@@ -511,7 +512,8 @@ export class AppEffects {
             lesson(
               id, content_type, description, content_data,
               mcq_questions: questions!lesson(*),
-              essay_questions: questions!lesson(*)
+              essay_questions: questions!lesson(*),
+              todos(*)
             ),
             mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))

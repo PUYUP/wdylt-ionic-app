@@ -20,3 +20,7 @@ export type QueryFilter = {
     lt_date?: string;
     gt_date?: string;
 }
+
+export type TodoFilter = QueryFilter & {
+    lesson?: number;
+}

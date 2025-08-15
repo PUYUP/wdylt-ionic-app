@@ -38,8 +38,8 @@ export class ProgressCardComponent  implements OnInit {
   strokeDasharray = this.circumference;
   strokeDashoffset = this.circumference - (this.animatedPercentage / 100) * this.circumference;
   currentGradient: any = {
-    start: '#000000',
-    end: '#ffffff',
+    start: '#20C997',
+    end: '#343A40',
   }
 
   constructor() { }

@@ -184,6 +184,18 @@ export class ArchivePage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * Start todo.
+   */
+  onStartTodo(enrolled: any) {
+    this.router.navigate(['/todos'], {
+      queryParams: {
+        lessonId: enrolled.lesson.id,
+        enrolledId: enrolled.id,
+      }
+    });
+  }
+
   /** Refresh the enrolled lessons */
   onRefresh() {
     this.filter = {

@@ -1,6 +1,7 @@
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { ActionSheetController, InfiniteScrollCustomEvent, IonContent, IonicModule, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { Actions } from '@ngrx/effects';
 import { select, Store } from '@ngrx/store';
@@ -9,7 +10,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-dialog/write-todo-dialog.component';
 import { canDismissDialog } from 'src/app/shared/helpers';
-import { QueryFilter } from 'src/app/shared/models';
+import { QueryFilter, TodoFilter } from 'src/app/shared/models';
 import { EntryFormService } from 'src/app/shared/services/entry-form.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
@@ -37,7 +38,7 @@ export class TodosScreenPage implements OnInit {
   infiniteEvent: InfiniteScrollCustomEvent | null = null;
   refreshEvent: RefresherCustomEvent | null = null;
 
-  private filter: QueryFilter = {
+  private filter: TodoFilter = {
     user_id: '',
     from_page: 0,
     to_page: environment.queryPerPage,
@@ -51,6 +52,7 @@ export class TodosScreenPage implements OnInit {
   gtDate: string = '';
   todos$: Observable<{ data: any, isLoading: boolean }>;
   haveMoreData: boolean = false;
+  lesson: number | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -59,6 +61,7 @@ export class TodosScreenPage implements OnInit {
     private actionSheetCtrl: ActionSheetController,
     private modalCtrl: ModalController,
     private actions$: Actions,
+    private route: ActivatedRoute,
   ) { 
     this.todos$ = this.store.pipe(select(selectListTodos));
 
@@ -126,6 +129,13 @@ export class TodosScreenPage implements OnInit {
   }
 
   ngOnInit() {
+    this.lesson = this.route.snapshot.queryParamMap.get('lessonId') as unknown as number;
+    if (this.lesson) {
+      this.filter = {
+        ...this.filter,
+        lesson: this.lesson
+      }
+    }
   }
 
   /**

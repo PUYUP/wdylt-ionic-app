@@ -7,8 +7,14 @@
   ></app-progress-card>
 
   <div class="ion-padding mt-1">
-    <div class="bg-white rounded-xl shadow-md p-4 relative">
-      <div (click)="openActionSheet(item)" class="block">
+    <div class="bg-white rounded-xl shadow p-4 relative">
+      <div (click)="openActionSheet(item)" class="block relative">
+        <div class="absolute -top-3 -right-1">
+          <ion-button mode="md" shape="round" size="small" color="light">
+            <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+
         <div 
           class="text-xl font-semibold whitespace-pre-wrap" 
           [innerHTML]="item.lesson.description"
@@ -38,68 +44,77 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <div class="flex gap-3 items-center">
-        <div>
-          <ion-button (click)="openActionSheet(item)" mode="ios" fill="clear">
-            <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
-          </ion-button>
-        </div>
-
-        <div class="w-full grid grid-cols-2 gap-2 items-center">
-          <div class="p-2 shadow-sm bg-lime-50 border border-neutral-300 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
-            <div>
-              <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
-                @if (item.summary.mcq.success_rate != '0.00') {
-                  {{ item.summary.mcq.success_rate }} <sup class="font-normal !text-sm leading-3">%</sup>
-                } @else {
-                  --
-                }
-              </div>
-              <div class="text-sm text-gray-700 leading-4">
-                @if (item.mcq_answers && item.mcq_answers.length <= 0) {
-                  @if (item.summary.mcq.total_questions === 0) {
-                    Start MCQ
-                  } @else {
-                    {{ item.summary.mcq.total_questions }} questions
-                  }
-                } @else {
-                  {{ item.summary.mcq.correct_answer }} of {{ item.summary.mcq.total_questions }}
-                }
-              </div>
+    <div class="flex gap-3 items-center ion-margin-top">
+      <div class="w-full grid grid-cols-3 gap-3 items-center">
+        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
+          <div>
+            <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+              {{ item.lesson.todos?.length > 0 ? item.lesson.todos.length : '--' }}
             </div>
-
-            <div>
-              <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+            <div class="text-sm text-teal-900 leading-4 line-clamp-1">
+              Todos
             </div>
           </div>
 
-          <div class="p-2 shadow-sm bg-lime-50 border border-neutral-300 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
-            <div>
-              <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
-                @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
-                  <span class="text-base !leading-4">Scoring...</span>
-                } @else {
-                  @if (item.summary.essay.total_points > 0) {
-                    {{ item.summary.essay.total_points }}
-                    <sup class="font-normal !text-sm leading-3">points</sup>
-                  } @else {
-                    --
-                  }
-                }
-              </div>
-              <div class="text-sm text-gray-700 leading-4">
-                @if (item.summary.essay.total_questions === 0) {
-                  Start Essay
-                } @else {
-                  {{ item.summary.essay.total_questions }} essays
-                }
-              </div> 
-            </div>
+          <div>
+            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+          </div>
+        </div>
 
-            <div>
-              <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
+          <div>
+            <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+              @if (item.summary.mcq.success_rate != '0.00') {
+                {{ item.summary.mcq.success_rate.replace('.00', '') }} <sup class="font-normal !text-sm leading-3">%</sup>
+              } @else {
+                --
+              }
             </div>
+            <div class="text-sm text-teal-900 leading-4">
+              @if (item.mcq_answers && item.mcq_answers.length <= 0) {
+                @if (item.summary.mcq.total_questions === 0) {
+                  Start MCQ
+                } @else {
+                  {{ item.summary.mcq.total_questions }} MCQ
+                }
+              } @else {
+                {{ item.summary.mcq.correct_answer }} of {{ item.summary.mcq.total_questions }}
+              }
+            </div>
+          </div>
+
+          <div>
+            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+          </div>
+        </div>
+
+        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
+          <div>
+            <div class="font-bold text-lg text-teal-900 !leading-4 mb-1">
+              @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
+                <span class="text-base !leading-4">Scoring...</span>
+              } @else {
+                @if (item.summary.essay.total_points > 0) {
+                  {{ item.summary.essay.total_points }}
+                  <sup class="font-normal !text-sm leading-3">points</sup>
+                } @else {
+                  --
+                }
+              }
+            </div>
+            <div class="text-sm text-teal-900 leading-4">
+              @if (item.summary.essay.total_questions === 0) {
+                Start Essay
+              } @else {
+                {{ item.summary.essay.total_questions }} Essays
+              }
+            </div> 
+          </div>
+
+          <div>
+            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
           </div>
         </div>
       </div>
