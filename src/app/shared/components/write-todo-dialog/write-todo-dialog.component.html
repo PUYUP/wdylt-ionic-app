@@ -7,14 +7,14 @@
     </ion-buttons>
 
     <ion-title>
-      {{ data ? 'Edit Todo' : 'Write Todo' }}
+      {{ data ? 'Edit Todo' : 'Add Todo' }}
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content color="light" class="ion-padding">
   <app-entry-form 
-    [placeholder]="'Write your todo...'" 
+    [placeholder]="'Typing your todo...'" 
     [maxLength]="1000"
     [rows]="1"
     [content]="data ? data.title : null"
