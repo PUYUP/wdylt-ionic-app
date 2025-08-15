@@ -1435,6 +1435,10 @@ export class AppEffects {
           .select(`*`)
           .eq('user', filter.user_id);
 
+        if (filter.lesson) {
+          query = query.eq('lesson', filter.lesson);
+        }
+
         if (lt) {
           query = query.gte('created_at', new Date(subDays(lt, 0)).toISOString());
         }

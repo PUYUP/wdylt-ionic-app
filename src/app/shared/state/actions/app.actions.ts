@@ -1,6 +1,6 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { RecordingData } from 'capacitor-voice-recorder';
-import { INote, ITodo, QueryFilter } from '../../models';
+import { INote, ITodo, QueryFilter, TodoFilter } from '../../models';
 
 export const AppActions = createActionGroup({
   source: 'App',
@@ -144,8 +144,8 @@ export const AppActions = createActionGroup({
     'Delete Todo Success': props<{ id: string | number }>(),
     'Delete Todo Failure': props<{ id: string | number, error: any }>(),
 
-    'Get Todos': props<{ filter: QueryFilter, metadata?: any }>(),
-    'Get Todos Success': props<{ data: any, filter: QueryFilter, metadata?: any }>(),
-    'Get Todos Failure': props<{ error: any, filter: QueryFilter, metadata?: any }>(),
+    'Get Todos': props<{ filter: TodoFilter, metadata?: any }>(),
+    'Get Todos Success': props<{ data: any, filter: TodoFilter, metadata?: any }>(),
+    'Get Todos Failure': props<{ error: any, filter: TodoFilter, metadata?: any }>(),
   }
 });

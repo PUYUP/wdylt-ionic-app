@@ -7,8 +7,8 @@
   ></app-progress-card>
 
   <div class="ion-padding mt-1">
-    <div class="bg-white rounded-xl shadow p-4 relative">
-      <div (click)="openActionSheet(item)" class="block relative">
+    <div class="bg-white rounded-xl shadow relative">
+      <div (click)="openActionSheet(item)" class="block relative p-4">
         <div class="absolute -top-3 -right-1">
           <ion-button mode="md" shape="round" size="small" color="light">
             <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
@@ -20,7 +20,7 @@
           [innerHTML]="item.lesson.description"
         ></div>
 
-        <div class="mt-2 mb-4 border-t border-neutral-200 pt-2">
+        <div class="mt-2 border-t border-neutral-200 pt-2">
           <table>
             <tr>
               <td class="w-36">Created</td>
@@ -44,11 +44,9 @@
           </table>
         </div>
       </div>
-    </div>
 
-    <div class="flex gap-3 items-center ion-margin-top">
-      <div class="w-full grid grid-cols-3 gap-3 items-center">
-        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
+      <div class="w-full grid grid-cols-3 items-center bg-[#e8f7f3] border-t border-teal-500 rounded-b-xl">
+        <div class="p-2 rounded-bl-xl border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
           <div>
             <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
               {{ item.lesson.todos?.length > 0 ? item.lesson.todos.length : '--' }}
@@ -63,7 +61,7 @@
           </div>
         </div>
 
-        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
+        <div class="p-2 border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
           <div>
             <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
               @if (item.summary.mcq.success_rate != '0.00') {
@@ -90,7 +88,7 @@
           </div>
         </div>
 
-        <div class="p-2 shadow-sm bg-[#e8f7f3] border border-teal-500 rounded-lg cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
+        <div class="p-2 rounded-br-xl cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
           <div>
             <div class="font-bold text-lg text-teal-900 !leading-4 mb-1">
               @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {

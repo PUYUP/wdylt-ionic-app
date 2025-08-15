@@ -6,7 +6,7 @@
     <ion-title>
       <div class="flex flex-col items-center justify-center">
         <div class="block leading-6">Learning Notes</div>
-        <ion-text class="!text-xs text-neutral-600">{{ weekRangeLabel }}</ion-text>
+        <!-- <ion-text class="!text-xs text-neutral-600">{{ weekRangeLabel }}</ion-text> -->
       </div>
     </ion-title>
     <ion-buttons slot="end">
@@ -16,7 +16,7 @@
     </ion-buttons>
   </ion-toolbar>
 
-  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="ion-padding-bottom">
+  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="pb-2">
     <app-simple-calendar (weekRangeLabel)="getWeekRangeLabel($event)" (weekDataResult)="getWeekDataResult($event)" (dayClicked)="onDayClicked($event)"></app-simple-calendar>
   </div>
 </ion-header>

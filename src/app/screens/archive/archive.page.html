@@ -6,7 +6,7 @@
     <ion-title>
       <div class="flex flex-col items-center justify-center">
         <div class="block leading-6">Learn Sessions</div>
-        <ion-text class="!text-xs text-neutral-600">{{ weekRangeLabel }}</ion-text>
+        <!-- <ion-text class="!text-xs text-neutral-600">{{ weekRangeLabel }}</ion-text> -->
       </div>
     </ion-title>
     <ion-buttons slot="end">
@@ -16,7 +16,7 @@
     </ion-buttons>
   </ion-toolbar>
 
-  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="ion-padding-bottom">
+  <div [ngStyle]="{'background-color': 'var(--ion-color-light)'}" class="pb-2">
     <app-simple-calendar (weekRangeLabel)="getWeekRangeLabel($event)" (weekDataResult)="getWeekDataResult($event)" (dayClicked)="onDayClicked($event)"></app-simple-calendar>
   </div>
 </ion-header>
@@ -92,7 +92,7 @@
               <div class="mt-0 bg-[#e8f7f3] border-t border-teal-500">
                 <div class="w-full grid grid-cols-3 gap-0 items-center px-2">
                   <div class="p-2 border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
-                    <div>
+                    <div class="w-full">
                       <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
                         {{ item.lesson.todos?.length > 0 ? item.lesson.todos.length : '--' }}
                       </div>
@@ -107,7 +107,7 @@
                   </div>
 
                   <div class="p-2 border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
-                    <div>
+                    <div class="w-full">
                       <div class="font-bold text-2xl text-teal-900 !leading-4 mb-1">
                         @if (item.summary.mcq.success_rate != '0.00') {
                           {{ item.summary.mcq.success_rate.replace('.00', '') }} <sup class="font-normal !text-sm leading-3">%</sup>
@@ -134,7 +134,7 @@
                   </div>
 
                   <div class="p-2 cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
-                    <div>
+                    <div class="w-full">
                       <div class="font-bold text-2xl text-teal-900 !leading-4 mb-1">
                         @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
                           <span class="text-base">Scoring...</span>
