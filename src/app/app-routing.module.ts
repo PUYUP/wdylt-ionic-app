@@ -55,6 +55,10 @@ const routes: Routes = [
     canActivate: [isAuthorizedGuard],
   },
   {
+    path: 'lesson',
+    loadChildren: () => import('./screens/lesson-detail/lesson-detail.module').then( m => m.LessonDetailPageModule)
+  },
+  {
     path: '',
     redirectTo: '/onboarding',
     pathMatch: 'full'
