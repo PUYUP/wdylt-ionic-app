@@ -269,7 +269,6 @@ export class QuizEssayPage implements OnInit {
   }
 
   onAnswerChange(event: any): void {
-    console.log(event);
     this.textInputFilled.set(event.detail.value);
     this.saveCurrentAnswer(); // Save the selected option immediately
   }
