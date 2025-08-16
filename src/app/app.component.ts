@@ -14,6 +14,7 @@ import { GlobalState } from './shared/state/reducers/app.reducer';
 import { AppActions } from './shared/state/actions/app.actions';
 import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { LOG_LEVEL, Purchases } from '@revenuecat/purchases-capacitor';
 
 // Register Swiper elements globally
 register();
@@ -52,6 +53,18 @@ export class AppComponent {
 
       if (Capacitor.isNativePlatform()) {
         this.initializeOneSignal();
+      }
+
+      if (Capacitor.isNativePlatform()) {
+        const session = await this.supabaseService.session();
+        await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG }); // Enable to get debug logs
+
+        if (Capacitor.getPlatform() === 'android') {
+          await Purchases.configure({
+            apiKey: "goog_bKvwJZncMeeAHCbzwrUIWvegDHm",
+            appUserID: session?.user?.id // Optional
+          });
+        }
       }
     });
   }

@@ -15,6 +15,8 @@ export const environment = {
   generatedMCQ: 20,
   generatedEssay: 5,
   maxRecordingDuration: 60, // 1 minutes in seconds
+  monthlyPrice: 2.99,
+  annualPrice: 29.99,
 };
 
 /*

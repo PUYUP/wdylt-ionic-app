@@ -116,6 +116,10 @@ export class QuizMcqPage implements OnInit {
     }).length > 0;
   });
 
+  // Subscription
+  monthlyPrice: number = environment.monthlyPrice;
+  annualPrice: number = environment.annualPrice;
+
   constructor(
     private store: Store<GlobalState>,
     private route: ActivatedRoute,
@@ -361,7 +365,7 @@ export class QuizMcqPage implements OnInit {
    * Subscribe handler
    */
   onSubscribe() {
-    
+
   }
 
   ngOnDestroy() {

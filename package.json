@@ -36,6 +36,8 @@
     "@ionic/angular": "^8.7.2",
     "@ngrx/effects": "^20.0.0",
     "@ngrx/store": "^20.0.0",
+    "@revenuecat/purchases-capacitor": "^11.1.1",
+    "@revenuecat/purchases-capacitor-ui": "^11.1.1",
     "@supabase/supabase-js": "^2.54.0",
     "@tailwindcss/postcss": "^4.1.11",
     "angular-cd-timer": "^3.0.0",

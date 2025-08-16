@@ -12,6 +12,7 @@ import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-d
 import { canDismissDialog } from 'src/app/shared/helpers';
 import { QueryFilter, TodoFilter } from 'src/app/shared/models';
 import { EntryFormService } from 'src/app/shared/services/entry-form.service';
+import { PaywallService } from 'src/app/shared/services/paywall.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
@@ -56,6 +57,10 @@ export class TodosScreenPage implements OnInit {
   lessonId: number | null = null;
   enrollmentId: number | null = null;
 
+  // Subscription
+  monthlyPrice: number = environment.monthlyPrice;
+  annualPrice: number = environment.annualPrice;
+
   constructor(
     private supabaseService: SupabaseService,
     private entryFormService: EntryFormService,
@@ -64,6 +69,7 @@ export class TodosScreenPage implements OnInit {
     private modalCtrl: ModalController,
     private actions$: Actions,
     private route: ActivatedRoute,
+    private paywallService: PaywallService,
   ) { 
     this.lessonId = this.route.snapshot.queryParamMap.get('lessonId') as unknown as number;
     this.enrollmentId = this.route.snapshot.queryParamMap.get('enrolledId') as unknown as number;
@@ -319,7 +325,7 @@ export class TodosScreenPage implements OnInit {
    * Subscribe to PRO tier
    */
   onSubscribe() {
-    
+    this.paywallService.presentPaywall();
   }
 
 }
