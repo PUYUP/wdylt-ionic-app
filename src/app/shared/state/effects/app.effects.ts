@@ -513,7 +513,7 @@ export class AppEffects {
               id, content_type, description, content_data,
               mcq_questions: questions!lesson(*),
               essay_questions: questions!lesson(*),
-              todos(*)
+              todos: todos(*)
             ),
             mcq_answers: chosen_options!enrollment(*),
             essay_answers: answers!enrollment(*, question(id, question_type))
@@ -522,6 +522,7 @@ export class AppEffects {
           .eq('lesson.mcq_questions.question_type', 'mcq')
           .eq('lesson.essay_questions.question_type', 'essay')
           .eq('user', filter.user_id)
+          .is('lesson.todos.deleted_at', null)
           .is('deleted_at', null)
           .gte('created_at', filter.created_at)
           .lte('target_completion_datetime', filter.target_completion_datetime)

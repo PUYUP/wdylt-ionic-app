@@ -3,6 +3,9 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angu
 import { IonicModule } from '@ionic/angular';
 import { CdTimerComponent, CdTimerModule } from 'angular-cd-timer';
 import { differenceInSeconds } from 'date-fns';
+import { AppActions } from '../../state/actions/app.actions';
+import { GlobalState } from '../../state/reducers/app.reducer';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'app-progress-card',
@@ -42,7 +45,9 @@ export class ProgressCardComponent  implements OnInit {
     end: '#343A40',
   }
 
-  constructor() { }
+  constructor(
+    private store: Store<GlobalState>,
+  ) { }
 
   ngOnInit() { }
 
@@ -73,6 +78,26 @@ export class ProgressCardComponent  implements OnInit {
         value: 'complete',
       },
     });
+
+    this.onTimerCompleteListener();
+  }
+
+  /**
+   * Timer complete listener.
+   */
+  onTimerCompleteListener() {
+    if (this.data) {
+      if (this.data.status === 'in_progress') {
+        this.store.dispatch(AppActions.updateEnrollment({
+          id: this.data.id,
+          data: {
+            status: 'waiting_answer',
+            updated_at: new Date().toISOString(),
+            start_datetime: new Date().toISOString(),
+          }
+        }));
+      }
+    }
   }
 
 }

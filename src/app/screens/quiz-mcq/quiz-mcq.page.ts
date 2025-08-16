@@ -357,6 +357,13 @@ export class QuizMcqPage implements OnInit {
     }));
   }
 
+  /**
+   * Subscribe handler
+   */
+  onSubscribe() {
+    
+  }
+
   ngOnDestroy() {
     console.log('QuizMCQComponent destroyed');
     this.resetQuiz();

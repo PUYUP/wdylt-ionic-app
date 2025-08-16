@@ -34,7 +34,15 @@
         >
           @for (item of enrolled.data; track item) {
             <swiper-slide>
-              <app-learn-card [item]="item"></app-learn-card>
+              <app-progress-card 
+                [data]="item"
+                [startDatetime]="item.created_at | uctToLocalTime" 
+                [targetCompletionDatetime]="item.target_completion_datetime | uctToLocalTime"
+              ></app-progress-card>
+
+              <div class="ion-padding mt-2">
+                <app-learn-card [item]="item"></app-learn-card>
+              </div>
             </swiper-slide>
           }
         </swiper-container>

@@ -15,7 +15,7 @@ import { EntryFormService } from 'src/app/shared/services/entry-form.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
 import { GlobalState } from 'src/app/shared/state/reducers/app.reducer';
-import { selectListTodos } from 'src/app/shared/state/selectors/app.selectors';
+import { selectEnrollment, selectListTodos } from 'src/app/shared/state/selectors/app.selectors';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -51,8 +51,10 @@ export class TodosScreenPage implements OnInit {
   ltDate: string = '';
   gtDate: string = '';
   todos$: Observable<{ data: any, isLoading: boolean }>;
+  enrollment$: Observable<{ data: any, isLoading: boolean }>;
   haveMoreData: boolean = false;
-  lesson: number | null = null;
+  lessonId: number | null = null;
+  enrollmentId: number | null = null;
 
   constructor(
     private supabaseService: SupabaseService,
@@ -63,7 +65,16 @@ export class TodosScreenPage implements OnInit {
     private actions$: Actions,
     private route: ActivatedRoute,
   ) { 
+    this.lessonId = this.route.snapshot.queryParamMap.get('lessonId') as unknown as number;
+    this.enrollmentId = this.route.snapshot.queryParamMap.get('enrolledId') as unknown as number;
+
     this.todos$ = this.store.pipe(select(selectListTodos));
+    this.enrollment$ = this.store.pipe(select(selectEnrollment({ id: this.enrollmentId })));
+    // this.enrollment$.pipe(takeUntilDestroyed()).subscribe((enrollment) => {
+    //   if (!enrollment.isLoading && !enrollment.data) {
+    //     this.store.dispatch(AppActions.getEnrollment({ id: this.enrollmentId as number }));
+    //   }
+    // });
 
     this.actions$.pipe(takeUntilDestroyed()).subscribe((action: any) => {
       switch (action.type) {
@@ -129,11 +140,13 @@ export class TodosScreenPage implements OnInit {
   }
 
   ngOnInit() {
-    this.lesson = this.route.snapshot.queryParamMap.get('lessonId') as unknown as number;
-    if (this.lesson) {
+    this.lessonId = this.route.snapshot.queryParamMap.get('lessonId') as unknown as number;
+    this.enrollmentId = this.route.snapshot.queryParamMap.get('enrollmentId') as unknown as number;
+
+    if (this.lessonId) {
       this.filter = {
         ...this.filter,
-        lesson: this.lesson
+        lesson: this.lessonId,
       }
     }
   }
@@ -204,6 +217,9 @@ export class TodosScreenPage implements OnInit {
   async onAddTodo() {
     const modal = await this.modalCtrl.create({
       component: WriteTodoDialogComponent,
+      componentProps: {
+        lessonId: this.lessonId,
+      },
       backdropDismiss: true,
       canDismiss: async (data?: any, role?: string) => {
         const { content, recordedData, uploadedRecordedData } = await firstValueFrom(this.entryFormService.state$);
@@ -297,6 +313,13 @@ export class TodosScreenPage implements OnInit {
     }
 
     this.store.dispatch(AppActions.getTodos({ filter: this.filter }));
+  }
+
+  /**
+   * Subscribe to PRO tier
+   */
+  onSubscribe() {
+    
   }
 
 }

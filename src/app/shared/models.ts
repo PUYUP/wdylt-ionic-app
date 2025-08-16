@@ -11,6 +11,7 @@ export interface ITodo {
     is_completed: boolean;
     content_data?: any;
     completed_at?: string;
+    lesson?: number;
 }
 
 export type QueryFilter = {

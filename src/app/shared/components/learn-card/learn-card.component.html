@@ -1,120 +1,109 @@
-<div class="block">
-  <app-progress-card 
-    [data]="item"
-    [startDatetime]="item.created_at | uctToLocalTime" 
-    [targetCompletionDatetime]="item.target_completion_datetime | uctToLocalTime"
-    (onTimerComplete)="onTimerCompleteListener($event)"
-  ></app-progress-card>
+<div class="bg-white rounded-xl shadow relative">
+  <div (click)="openActionSheet(item)" class="block relative p-4">
+    <div class="absolute -top-3 -right-1">
+      <ion-button mode="md" shape="round" size="small" color="light">
+        <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
 
-  <div class="ion-padding mt-1">
-    <div class="bg-white rounded-xl shadow relative">
-      <div (click)="openActionSheet(item)" class="block relative p-4">
-        <div class="absolute -top-3 -right-1">
-          <ion-button mode="md" shape="round" size="small" color="light">
-            <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
-          </ion-button>
+    <div 
+      class="text-xl font-semibold whitespace-pre-wrap" 
+      [innerHTML]="item.lesson.description"
+    ></div>
+
+    <div class="mt-2 border-t border-neutral-200 pt-2 text-sm">
+      <table>
+        <tr>
+          <td class="w-36">Created</td>
+          <td>: {{ item.created_at | date: 'short' }}</td>
+        </tr>
+
+        <!-- <tr>
+          <td class="w-36">Quiz start on</td>
+          <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
+        </tr> -->
+
+        <tr>
+          <td class="w-36">Start quiz at</td>
+          <td>: {{ item.start_datetime ? (item.start_datetime | date: 'short') : 'N/A' }}</td>
+        </tr>
+
+        <tr>
+          <td class="w-36">Duration</td>
+          <td>: {{ item.created_at | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="w-full grid grid-cols-3 items-center bg-[#e8f7f3] border-t border-teal-500 rounded-b-xl">
+    <div class="p-2 rounded-bl-xl border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
+      <div>
+        <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+          {{ item.lesson.todos?.length > 0 ? item.lesson.todos.length : '--' }}
         </div>
-
-        <div 
-          class="text-xl font-semibold whitespace-pre-wrap" 
-          [innerHTML]="item.lesson.description"
-        ></div>
-
-        <div class="mt-2 border-t border-neutral-200 pt-2">
-          <table>
-            <tr>
-              <td class="w-36">Created</td>
-              <td>: {{ item.created_at | date: 'short' }}</td>
-            </tr>
-
-            <!-- <tr>
-              <td class="w-36">Quiz start on</td>
-              <td>: {{ item.target_completion_datetime | date: 'short' }}</td>
-            </tr> -->
-
-            <tr>
-              <td class="w-36">Start quiz at</td>
-              <td>: {{ item.start_datetime ? (item.start_datetime | date: 'short') : 'N/A' }}</td>
-            </tr>
-
-            <tr>
-              <td class="w-36">Duration</td>
-              <td>: {{ item.created_at | timeDifferenceInMinutes: item.target_completion_datetime }} minutes</td>
-            </tr>
-          </table>
+        <div class="text-sm text-teal-900 leading-4 line-clamp-1">
+          Todo list
         </div>
       </div>
 
-      <div class="w-full grid grid-cols-3 items-center bg-[#e8f7f3] border-t border-teal-500 rounded-b-xl">
-        <div class="p-2 rounded-bl-xl border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartTodo(item)">
-          <div>
-            <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
-              {{ item.lesson.todos?.length > 0 ? item.lesson.todos.length : '--' }}
-            </div>
-            <div class="text-sm text-teal-900 leading-4 line-clamp-1">
-              Todos
-            </div>
-          </div>
+      <div>
+        <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+      </div>
+    </div>
 
-          <div>
-            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
-          </div>
+    <div class="p-2 border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
+      <div>
+        <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
+          @if (item.summary.mcq.success_rate != '0.00') {
+            {{ item.summary.mcq.success_rate.replace('.00', '') }} <sup class="font-normal !text-sm leading-3">%</sup>
+          } @else {
+            --
+          }
         </div>
-
-        <div class="p-2 border-r border-teal-500 cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'mcq')">
-          <div>
-            <div class="font-bold text-lg text-green-700 !leading-4 mb-1">
-              @if (item.summary.mcq.success_rate != '0.00') {
-                {{ item.summary.mcq.success_rate.replace('.00', '') }} <sup class="font-normal !text-sm leading-3">%</sup>
-              } @else {
-                --
-              }
-            </div>
-            <div class="text-sm text-teal-900 leading-4">
-              @if (item.mcq_answers && item.mcq_answers.length <= 0) {
-                @if (item.summary.mcq.total_questions === 0) {
-                  Start MCQ
-                } @else {
-                  {{ item.summary.mcq.total_questions }} MCQ
-                }
-              } @else {
-                {{ item.summary.mcq.correct_answer }} of {{ item.summary.mcq.total_questions }}
-              }
-            </div>
-          </div>
-
-          <div>
-            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
-          </div>
+        <div class="text-sm text-teal-900 leading-4">
+          @if (item.mcq_answers && item.mcq_answers.length <= 0) {
+            @if (item.summary.mcq.total_questions === 0) {
+              Start MCQ
+            } @else {
+              {{ item.summary.mcq.total_questions }} MCQ
+            }
+          } @else {
+            {{ item.summary.mcq.correct_answer }} of {{ item.summary.mcq.total_questions }}
+          }
         </div>
+      </div>
 
-        <div class="p-2 rounded-br-xl cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
-          <div>
-            <div class="font-bold text-lg text-teal-900 !leading-4 mb-1">
-              @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
-                <span class="text-base !leading-4">Scoring...</span>
-              } @else {
-                @if (item.summary.essay.total_points > 0) {
-                  {{ item.summary.essay.total_points }}
-                  <sup class="font-normal !text-sm leading-3">points</sup>
-                } @else {
-                  --
-                }
-              }
-            </div>
-            <div class="text-sm text-teal-900 leading-4">
-              @if (item.summary.essay.total_questions === 0) {
-                Start Essay
-              } @else {
-                {{ item.summary.essay.total_questions }} Essays
-              }
-            </div> 
-          </div>
+      <div>
+        <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
+      </div>
+    </div>
 
-          <div>
-            <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
-          </div>
+    <div class="p-2 rounded-br-xl cursor-pointer flex items-center justify-between h-14" (click)="onStartQuiz(item, 'essay')">
+      <div>
+        <div class="font-bold text-lg text-teal-900 !leading-4 mb-1">
+          @if (item.essay_answers?.length > 0 && item.summary.essay.total_points <= 0 ) {
+            <span class="text-base !leading-4">Scoring...</span>
+          } @else {
+            @if (item.summary.essay.total_points > 0) {
+              {{ item.summary.essay.total_points }}
+              <sup class="font-normal !text-sm leading-3">points</sup>
+            } @else {
+              --
+            }
+          }
         </div>
+        <div class="text-sm text-teal-900 leading-4">
+          @if (item.summary.essay.total_questions === 0) {
+            Start Essay
+          } @else {
+            {{ item.summary.essay.total_questions }} Essays
+          }
+        </div> 
+      </div>
+
+      <div>
+        <ion-icon name="chevron-forward" slot="end" class="text-gray-500"></ion-icon>
       </div>
     </div>
   </div>

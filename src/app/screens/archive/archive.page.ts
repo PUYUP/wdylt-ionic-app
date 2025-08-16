@@ -13,6 +13,7 @@ import { environment } from 'src/environments/environment';
 import { SimpleCalendarComponent } from 'src/app/shared/components/simple-calendar/simple-calendar.component';
 import { Actions } from '@ngrx/effects';
 import { endOfDay, startOfDay } from 'date-fns';
+import { LearnCardComponent } from 'src/app/shared/components/learn-card/learn-card.component';
 
 @Component({
   selector: 'app-archive',
@@ -26,6 +27,7 @@ import { endOfDay, startOfDay } from 'date-fns';
     NgStyle,
     TimeDifferenceInMinutesPipe,
     SimpleCalendarComponent,
+    LearnCardComponent,
   ]
 })
 export class ArchivePage implements OnInit {
@@ -113,7 +115,6 @@ export class ArchivePage implements OnInit {
    */
   onStartQuiz(enrolled: any, type: 'mcq' | 'essay') {
     const status = enrolled.status;
-    console.log('Enrolled lesson status:', status);
 
     if (status === 'in_progress') {
       this.startQuizNow(enrolled, type);

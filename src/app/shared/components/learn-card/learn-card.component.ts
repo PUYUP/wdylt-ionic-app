@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { ActionSheetController, AlertController, IonicModule, ModalController } from '@ionic/angular';
-import { ProgressCardComponent } from '../progress-card/progress-card.component';
 import { EntryDialogComponent } from '../entry-dialog/entry-dialog.component';
 import { GlobalState } from '../../state/reducers/app.reducer';
 import { Store } from '@ngrx/store';
@@ -17,7 +16,6 @@ import { UctToLocalTimePipe } from "../../pipes/uct-to-local-time.pipe";
   imports: [
     IonicModule,
     CommonModule,
-    ProgressCardComponent,
     TimeDifferenceInMinutesPipe,
     UctToLocalTimePipe
 ]
@@ -193,26 +191,6 @@ export class LearnCardComponent  implements OnInit {
         enrolledId: enrolled.id,
       }
     });
-  }
-
-  /**
-   * Timer complete listener.
-   */
-  onTimerCompleteListener(event: any) {
-    console.log('Timer complete event:', event);
-
-    if (this.item) {
-      if (this.item.status === 'in_progress') {
-        this.store.dispatch(AppActions.updateEnrollment({
-          id: this.item.id,
-          data: {
-            status: 'waiting_answer',
-            updated_at: new Date().toISOString(),
-            start_datetime: new Date().toISOString(),
-          }
-        }));
-      }
-    }
   }
 
 }

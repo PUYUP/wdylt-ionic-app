@@ -31,7 +31,12 @@ export const selectUpdateEnrollment = createSelector(
 export const selectEnrollment = (props: { id: string | number }) => createSelector(
   selectAppState,
   (state: GlobalState) => {
-    const findFromList = state.enrollment.list.data.find((item: any) => item.id == props.id);
+    let findFromList = state.enrollment.list.data.find((item: any) => item.id == props.id);
+    
+    if (!findFromList) {
+      findFromList = state.enrollment.latest.data.find((item: any) => item.id == props.id);
+    }
+
     if (findFromList) {
       return {
         data: findFromList,

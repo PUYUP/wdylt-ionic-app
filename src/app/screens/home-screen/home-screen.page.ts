@@ -14,6 +14,7 @@ import { ProgressCardComponent } from 'src/app/shared/components/progress-card/p
 import { WriteNoteDialogComponent } from 'src/app/shared/components/write-note-dialog/write-note-dialog.component';
 import { WriteTodoDialogComponent } from 'src/app/shared/components/write-todo-dialog/write-todo-dialog.component';
 import { canDismissDialog } from 'src/app/shared/helpers';
+import { UctToLocalTimePipe } from 'src/app/shared/pipes/uct-to-local-time.pipe';
 import { EntryFormService } from 'src/app/shared/services/entry-form.service';
 import { SupabaseService } from 'src/app/shared/services/supabase.service';
 import { AppActions } from 'src/app/shared/state/actions/app.actions';
@@ -31,7 +32,9 @@ import { selectLatestEnrollments } from 'src/app/shared/state/selectors/app.sele
     EntryFormComponent,
     EntryTimeComponent,
     LearnCardComponent,
+    ProgressCardComponent,
     NgStyle,
+    UctToLocalTimePipe,
   ],
   schemas: [
     CUSTOM_ELEMENTS_SCHEMA,

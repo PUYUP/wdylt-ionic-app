@@ -27,6 +27,7 @@ import { EntryFormService } from '../../services/entry-form.service';
 export class WriteTodoDialogComponent  implements OnInit {
 
   @Input('data') data: any;
+  @Input('lessonId') lessonId: number | null = null;
   @Input('source') source: string | null = null;
   
   title: WritableSignal<string> = signal('');
@@ -122,6 +123,13 @@ export class WriteTodoDialogComponent  implements OnInit {
       priority: 'medium', // Default priority
       is_completed: false, // Default completion status
       content_data: this.getUploadedData() || null,
+    }
+
+    if (this.lessonId) {
+      payload = {
+        ...payload,
+        lesson: this.lessonId,
+      }
     }
 
     if (this.data) {

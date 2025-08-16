@@ -35,6 +35,16 @@
         </div>
       </div>
     } @else {
+      @if (enrollment$ | async; as enrollment) {
+        @if (!enrollment.isLoading && enrollment.data?.lesson) {
+          <div class="ion-padding bg-green-100 shadow">
+            <div class="text-neutral-700 font-semibold">
+              Todos for: {{ enrollment.data.lesson.description }}
+            </div>
+          </div>
+        }
+      }
+
       @if (todos.data.length > 0) {
         <ion-list lines="full" color="light" [ngStyle]="{'--ion-item-background': 'var(--ion-color-light)'}">
           @for (item of todos.data; track item; let last = $last) {
@@ -69,7 +79,25 @@
         </ion-list>
       } @else {
         <div class="ion-padding text-center">
-          <span class="text-gray-500">No todos available for this  {{ selectedDay ? 'day' : 'week' }}.</span>
+          @if (this.lessonId) {
+            <div class="text-gray-500 block">
+              No todos available for this learn session. <br />
+              Tap <strong>'+'</strong> to add one.
+            </div>
+
+            <div class="block bg-teal-100 ion-padding shadow rounded-lg mt-4">
+              <div class="block">
+                It's a great way to organize your learning tasks and ensure you <strong>don't miss anything important</strong>.
+                But confused about where to start? Subscribe to the <strong><u>PRO</u></strong> tier and <strong>create a to-do list automatically.</strong>
+              </div>
+
+              <ion-button expand="block" color="success" mode="ios" shape="round" class="mt-4" (click)="onSubscribe()">
+                Subscribe $7 / month
+              </ion-button>
+            </div>
+          } @else {
+            <span class="text-gray-500">No todos available for this  {{ selectedDay ? 'day' : 'week' }}.</span>
+          }
         </div>
       }
     }
@@ -80,8 +108,8 @@
   </ion-infinite-scroll>
 </ion-content>
   
-<ion-fab slot="fixed" vertical="bottom" horizontal="center" class="ml-auto mr-auto">
-  <ion-fab-button (click)="onAddTodo()" size="small" color="success">
+<ion-fab slot="fixed" vertical="bottom" horizontal="end">
+  <ion-fab-button (click)="onAddTodo()">
     <ion-icon name="add"></ion-icon>
   </ion-fab-button>
 </ion-fab>

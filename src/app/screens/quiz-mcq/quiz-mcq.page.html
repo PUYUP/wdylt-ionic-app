@@ -143,6 +143,26 @@
           </ion-card-content>
         </ion-card>
       </div>
+
+      @if ((totalAnswered() == questions().length)) {
+        @if (!haveQuestionsWithNoAnswer()) {
+          <div class="block bg-teal-100 ion-padding shadow rounded-lg mt-4">
+            <div class="block">
+              Great! You've completed the quiz. But it <strong>seems too easy</strong>, 
+              huh? Subscribe to <strong><u>PRO</u></strong> then you can choose the difficulty level of questions. <br />
+              <ul class="list-disc pl-5 mt-2">
+                <li>Beginner. <span class="bg-orange-600 text-white rounded-full text-xs px-2 py-0.5">current</span></li>
+                <li>Intermediate. <span class="bg-neutral-600 text-white rounded-full text-xs px-2 py-0.5">pro</span></li>
+                <li>Advanced. <span class="bg-neutral-600 text-white rounded-full text-xs px-2 py-0.5">pro</span></li>
+              </ul>
+            </div>
+
+            <ion-button expand="block" color="success" mode="ios" shape="round" class="mt-4" (click)="onSubscribe()">
+              Subscribe $7 / month
+            </ion-button>
+          </div>
+        }
+      }
     }
   }
 </ion-content>
